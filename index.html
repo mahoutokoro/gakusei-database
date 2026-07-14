@@ -7,9 +7,7 @@
   <title>MAHOUTOKORO GAKUSEI DATABASE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./style.css">
 
 </head>
@@ -23,7 +21,7 @@
         <span class="recapArrow" aria-hidden="true">↗</span>
       </button>
       <div class="heroContent">
-        <div class="logo"><img src="https://lh3.googleusercontent.com/d/1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK=w700" alt="Mahoutokoro"></div>
+        <div class="logo"><img src="https://drive.google.com/thumbnail?id=1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK&sz=w700" alt="Mahoutokoro"></div>
         <div class="heroCore">
           <div class="eyebrow jp">魔法所's</div>
           <h1 class="mainTitle">GAKUSEI DATABASE</h1>
@@ -90,14 +88,34 @@
 
   <div id="promotionModal" class="modal hidden">
     <div class="modalCard">
-      <div class="modalHeader"><div><h2 class="modalTitle">NENSEI PROMOTION RECAP</h2><div id="modalSub" class="modalSubtitle"></div></div><div class="modalButtons"><button class="download" type="button" onclick="downloadPromotionPdf()">VIEW FULL DETAIL</button><button type="button" onclick="closePromotionRecap()">CLOSE</button></div></div>
+      <div class="modalHeader"><div><h2 class="modalTitle">NENSEI PROMOTION RECAP</h2><div id="modalSub" class="modalSubtitle"></div></div><div class="modalButtons"><button class="download" type="button" onclick="openPromotionDocumentReview()">VIEW FULL DETAIL</button><button type="button" onclick="closePromotionRecap()">CLOSE</button></div></div>
       <div id="promotionContent"><div class="empty">Loading...</div></div>
     </div>
   </div>
-  <div id="pdfRoot" class="pdfRoot"></div>
-  <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING PDF</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
+  <div id="documentReviewModal" class="documentReviewModal hidden" role="dialog" aria-modal="true" aria-labelledby="documentReviewTitle">
+    <div class="documentReviewCard">
+      <div class="documentReviewHeader">
+        <div class="documentReviewHeading">
+          <div class="documentReviewEyebrow">DOCUMENT REVIEW</div>
+          <h2 id="documentReviewTitle" class="documentReviewTitle">DOCUMENT PREVIEW</h2>
+          <div id="documentReviewSubtitle" class="documentReviewSubtitle">Review the document before downloading.</div>
+        </div>
+        <div class="documentReviewActions">
+          <button id="documentDownloadButton" class="documentReviewDownload" type="button" onclick="downloadReviewedDocumentAsPdf()">DOWNLOAD AS PDF</button>
+          <button class="documentReviewClose" type="button" onclick="closeDocumentReview()">CLOSE</button>
+        </div>
+      </div>
+      <div id="documentReviewViewport" class="documentReviewViewport">
+        <div id="documentReviewPages" class="documentReviewPages"></div>
+      </div>
+    </div>
+  </div>
 
-    <script src="./script.js?v=20260714-cuti-column-k-fix" defer></script>
+  <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING DOCUMENT</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+    <script src="./script.js?v=20260714-progressive-pdf-final" defer></script>
 
 </body>
 </html>
