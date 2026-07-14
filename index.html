@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280,initial-scale=.3,minimum-scale=.1,maximum-scale=5,user-scalable=yes">
+  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
+  <title>MAHOUTOKORO GAKUSEI DATABASE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <link rel="stylesheet" href="./style.css">
+
+</head>
+<body class="front-mode">
+  <div id="backdrop" class="backdrop" aria-hidden="true"></div>
+  <main class="shell">
+    <section class="hero">
+      <div id="heroBackdrop" class="heroBackdrop" aria-hidden="true"></div>
+      <button class="recapButton recapButtonCorner" type="button" onclick="openPromotionRecap()">
+        <span>NENSEI PROMOTION RECAP</span>
+        <span class="recapArrow" aria-hidden="true">↗</span>
+      </button>
+      <div class="heroContent">
+        <div class="logo"><img src="https://lh3.googleusercontent.com/d/1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK=w700" alt="Mahoutokoro"></div>
+        <div class="heroCore">
+          <div class="eyebrow jp">魔法所's</div>
+          <h1 class="mainTitle">GAKUSEI DATABASE</h1>
+          <div class="searchBar">
+            <input id="idInput" placeholder="Type your Gakusei ID number..." autocomplete="off">
+            <button id="searchButton" type="button" onclick="searchGakusei()">SEARCH DATA</button>
+          </div>
+          <p class="heroNote jp">データは、学校システムに登録されている識別番号に基づいて表示されます。</p>
+          <div id="statusLine" class="statusLine"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="resultSection" class="hidden">
+      <div class="resultGrid">
+        <article class="panel"><div class="panelInner">
+          <div class="profileHeader">
+            <div id="profileAvatar" class="avatar"><div class="empty">NO PHOTO</div></div>
+            <div class="identity">
+              <h2 id="studentName" class="studentName">-</h2>
+              <div class="metaLine"><div id="studentKanji" class="studentKanji jp">-</div><div class="divider">|</div><div id="badges" class="badges"></div></div>
+            </div>
+            <div id="dormCrest" class="crest"><div class="empty">DORM</div></div>
+          </div>
+
+          <div class="infoGrid">
+            <div class="infoCard compact"><div class="label">Gakusei ID Number</div><div id="studentId" class="value">-</div></div>
+            <div class="infoCard compact"><div class="label">X Username</div><div id="xUsername" class="value">-</div></div>
+            <div class="infoCard compact"><div class="label">Current Grade</div><div id="currentGrade" class="value">-</div></div>
+            <div class="infoCard compact"><div class="label">Date of Birth</div><div id="birthDate" class="value">-</div></div>
+            <div class="infoCard wide finance"><div class="label">Finance Balance</div><div id="financeBalance" class="financeValue">-</div></div>
+            <div class="infoCard wide"><div class="label">Side Occupations</div><div id="occupationList" class="occupationList"><div class="empty">No occupation data.</div></div></div>
+            <div class="infoCard wide academicCard">
+              <div class="academicTop">
+                <div><div class="label">Academic Semester Records</div><div class="academicIntro">From the first recorded semester through the latest semester.</div></div>
+                <div class="academicActions"><div id="academicCount" class="count">0 / 0 RECORDED</div><button id="ledgerButton" class="ledgerButton" type="button" onclick="downloadLedger(this)">VIEW COMPLETE LEDGER</button></div>
+              </div>
+              <div id="academicRecords" class="academicRecords"><div class="empty">No academic record loaded.</div></div>
+            </div>
+          </div>
+        </div></article>
+
+        <div class="rightColumn">
+          <aside class="panel">
+            <div class="sectionHeader single"><h3 class="sectionTitle">Gakusei ID Card / Nametag</h3></div>
+            <div class="mediaStack"><div class="mediaCard"><div id="idCardPreview" class="mediaPreview"><div class="empty">ID CARD UNAVAILABLE</div></div><div id="idCardAction" class="mediaAction hidden"></div></div></div>
+          </aside>
+          <section class="panel">
+            <div class="sectionHeader"><h3 class="sectionTitle">Student Point Log</h3><div id="semesterBadge" class="semesterBadge">CURRENT SEMESTER</div></div>
+            <div class="semesterNote">Only point logs from the current semester are displayed.</div>
+            <div class="totals">
+              <div class="total gp"><div class="totalLabel">Total GP Earned</div><div id="totalGp" class="totalValue">0GP</div></div>
+              <div class="total rp"><div class="totalLabel">Total RP Earned</div><div id="totalRp" class="totalValue">0RP</div></div>
+              <div class="total fhp"><div class="totalLabel">Total FHP Earned</div><div id="totalFhp" class="totalValue">0FHP</div></div>
+            </div>
+            <div class="logBar"><span>Current Semester Activity</span><span id="pointUpdated" class="updated"></span></div>
+            <div id="pointLogs" class="pointLogs"><div class="empty">No point log loaded.</div></div>
+          </section>
+        </div>
+      </div>
+    </section>
+    <footer class="footer">Developed by <span class="footerBrand">Ryoumen Shō</span></footer>
+  </main>
+
+  <div id="promotionModal" class="modal hidden">
+    <div class="modalCard">
+      <div class="modalHeader"><div><h2 class="modalTitle">NENSEI PROMOTION RECAP</h2><div id="modalSub" class="modalSubtitle"></div></div><div class="modalButtons"><button class="download" type="button" onclick="downloadPromotionPdf()">VIEW FULL DETAIL</button><button type="button" onclick="closePromotionRecap()">CLOSE</button></div></div>
+      <div id="promotionContent"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
+  <div id="pdfRoot" class="pdfRoot"></div>
+  <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING PDF</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
+
+    <script src="./script.js?v=20260714-cuti-column-k-fix" defer></script>
+
+</body>
+</html>

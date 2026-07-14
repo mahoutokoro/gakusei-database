@@ -1,0 +1,277 @@
+:root{--w:1220px;--bg1:#000;--bg2:#090504;--panel:rgba(15,15,18,.84);--panel2:rgba(4,4,7,.93);--card:rgba(20,19,21,.82);--text:#f7f0e4;--muted:#aaa096;--accent:#d3ad79;--accent2:#9f1019;--strong:#fff0d0;--border:rgba(231,198,148,.31);--glow:rgba(222,180,116,.4);--title1:#fff8e9;--title2:#e8cda0;--title3:#b77e4f;--gp:#ead8b4;--rp:#c88e76;--fhp:#a2484f}
+    body.dorm-kosei{--bg1:#050704;--bg2:#17170d;--text:#f1eee4;--muted:#a9ad9e;--accent:#747f3e;--accent2:#d9bf87;--strong:#f0dfb6;--border:rgba(176,187,112,.35);--glow:rgba(156,170,83,.43);--title1:#fff1cb;--title2:#d6c18f;--title3:#849148;--gp:#ecdcb7;--rp:#bdc889;--fhp:#78864a}
+    body.dorm-yamiyo{--bg1:#010102;--bg2:#120817;--text:#f1edf4;--muted:#a69daa;--accent:#744087;--accent2:#ad78c7;--strong:#eadcff;--border:rgba(151,103,174,.36);--glow:rgba(128,73,150,.47);--title1:#f5ebff;--title2:#c5a6dd;--title3:#673977;--gp:#dfcfee;--rp:#ad76c8;--fhp:#8a6b99}
+    body.dorm-tsukiyomi{--bg1:#02050b;--bg2:#150b18;--text:#eef3fc;--muted:#9faabd;--accent:#618bd8;--accent2:#e092bc;--strong:#f2c6df;--border:rgba(123,161,221,.36);--glow:rgba(99,143,219,.45);--title1:#edf5ff;--title2:#aac8fa;--title3:#e6a0c6;--gp:#a8c9fb;--rp:#f0a5cc;--fhp:#9d9de7}
+    *{box-sizing:border-box}html,body{min-width:1280px;min-height:100%;margin:0}html{overflow-x:auto;touch-action:pan-x pan-y pinch-zoom}body{color:var(--text);font-family:"League Spartan",Arial,sans-serif;font-weight:600;background:radial-gradient(circle at 6% 0%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 30%),radial-gradient(circle at 94% 15%,color-mix(in srgb,var(--accent2) 18%,transparent),transparent 28%),linear-gradient(145deg,var(--bg1),#050505 55%,var(--bg2));transition:.55s}.jp{font-family:"Noto Sans JP",sans-serif}.hidden{display:none!important}button,input,a{font:inherit}.shell{position:relative;z-index:2;width:var(--w);margin:0 auto;padding:28px 0 42px}.backdrop{position:fixed;inset:0;z-index:0;overflow:hidden;pointer-events:none}.faller{position:absolute;top:-220px;opacity:var(--o,.12);width:var(--s,90px);height:var(--s,90px);animation:fall var(--d,18s) linear var(--delay,0s) infinite;filter:drop-shadow(0 5px 14px var(--glow));will-change:transform,opacity}.faller svg{width:100%;height:100%}@keyframes fall{0%{transform:translate3d(0,-180px,0) rotate(0);opacity:0}10%{opacity:var(--o,.12)}50%{transform:translate3d(var(--x1,50px),50vh,0) rotate(var(--r1,300deg))}90%{opacity:var(--o,.12)}100%{transform:translate3d(var(--x2,-70px),calc(100vh + 300px),0) rotate(var(--r2,760deg));opacity:0}}
+    .heroBackdrop{position:absolute;inset:0;z-index:1;overflow:hidden;pointer-events:none;border-radius:inherit}
+    .heroFaller{position:absolute;top:-150px;width:var(--s,76px);height:var(--s,76px);opacity:var(--o,.22);animation:heroFall var(--d,13s) linear var(--delay,0s) infinite;filter:drop-shadow(0 5px 16px var(--glow));will-change:transform,opacity}
+    .heroFaller svg{width:100%;height:100%}
+    @keyframes heroFall{0%{transform:translate3d(0,-130px,0) rotate(0deg);opacity:0}12%{opacity:var(--o,.22)}55%{transform:translate3d(var(--x1,36px),240px,0) rotate(var(--r1,260deg));opacity:var(--o,.22)}88%{opacity:var(--o,.22)}100%{transform:translate3d(var(--x2,-44px),620px,0) rotate(var(--r2,620deg));opacity:0}}
+    .hero{position:relative;isolation:isolate;overflow:hidden;min-height:440px;display:grid;place-items:center;padding:26px;border:1px solid var(--border);border-radius:30px;background:radial-gradient(circle at 50% -15%,rgba(255,255,255,.07),transparent 34%),radial-gradient(circle at 0 100%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 42%),linear-gradient(135deg,rgba(0,0,0,.91),rgba(12,10,10,.88));box-shadow:0 24px 80px rgba(0,0,0,.52),inset 0 0 75px color-mix(in srgb,var(--accent) 12%,transparent)}.heroContent{position:relative;z-index:3;width:720px;text-align:center}.logo{width:130px;height:130px;margin:-8px auto 4px}.logo img{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 16px var(--glow))}.heroCore{width:600px;margin:auto}.eyebrow{margin:0 0 18px;color:var(--accent);font-size:17px;font-weight:800;letter-spacing:.15em;text-shadow:0 0 18px var(--glow)}.mainTitle{margin:0 0 24px;color:transparent;font-size:61px;font-weight:900;line-height:.96;letter-spacing:2px;white-space:nowrap;background:linear-gradient(92deg,var(--title1),var(--title2) 52%,var(--title3));-webkit-background-clip:text;background-clip:text}.searchBar{display:grid;grid-template-columns:1fr 158px;gap:10px}.searchBar input{height:54px;padding:0 20px;color:var(--text);text-align:center;font-weight:750;border:1px solid var(--border);border-radius:17px;outline:0;background:rgba(0,0,0,.82);box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--accent) 14%,transparent)}.searchBar input:focus{border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 17%,transparent)}.gradientButton,.searchBar button{border:1px solid rgba(255,255,255,.13);border-radius:17px;color:#140f0c;font-size:12px;font-weight:900;cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--strong) 58%,var(--accent2));box-shadow:0 14px 30px rgba(0,0,0,.38),0 0 24px color-mix(in srgb,var(--accent) 18%,transparent);transition:.2s}.gradientButton:hover,.searchBar button:hover{transform:translateY(-2px);filter:brightness(1.07)}button:disabled{opacity:.5;cursor:wait}.recapButton{min-width:270px;min-height:38px;padding:8px 18px;border:1px solid var(--border);border-radius:999px;color:var(--accent);font-size:10px;font-weight:900;letter-spacing:.08em;background:rgba(0,0,0,.62);cursor:pointer}.recapButtonCorner{position:absolute;top:22px;right:24px;z-index:4;min-width:0;min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:9px;padding:8px 15px;border-color:color-mix(in srgb,var(--accent) 48%,transparent);background:linear-gradient(135deg,rgba(0,0,0,.74),color-mix(in srgb,var(--accent) 8%,rgba(0,0,0,.85)));box-shadow:inset 0 0 18px color-mix(in srgb,var(--accent) 7%,transparent);transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease,color .2s ease}.recapButtonCorner:hover{transform:translateY(-2px);color:var(--strong);border-color:var(--accent);box-shadow:0 0 18px color-mix(in srgb,var(--accent) 26%,transparent),inset 0 0 18px color-mix(in srgb,var(--accent) 12%,transparent)}.recapArrow{width:21px;height:21px;display:grid;place-items:center;border-radius:50%;color:#111;background:linear-gradient(135deg,var(--accent),var(--strong));font-size:11px;line-height:1}.heroNote{margin:15px 0 0;color:var(--muted);font-size:13px;line-height:1.65}.statusLine{min-height:20px;margin-top:7px;color:var(--accent);font-size:12px}
+    .resultGrid{margin-top:20px;display:grid;grid-template-columns:700px 500px;gap:20px;align-items:start}.rightColumn{display:grid;gap:20px}.panel{overflow:hidden;border:1px solid var(--border);border-radius:26px;background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 40%),linear-gradient(145deg,var(--panel),var(--panel2));box-shadow:0 20px 64px rgba(0,0,0,.38);backdrop-filter:blur(9px)}.panelInner{padding:28px}.sectionHeader{min-height:55px;display:grid;grid-template-columns:max-content 205px;align-items:center;justify-content:space-between;gap:14px;padding:16px 24px;border-bottom:1px solid var(--border)}.sectionHeader.single{grid-template-columns:1fr}.sectionTitle{margin:0;color:var(--accent);font-size:14px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;white-space:nowrap}.profileHeader{display:grid;grid-template-columns:114px 1fr 96px;gap:22px;align-items:center;padding-bottom:24px;border-bottom:1px solid var(--border)}.avatar{width:114px;height:114px;overflow:hidden;display:grid;place-items:center;border:1px solid var(--border);border-radius:24px;background:#050608;box-shadow:inset 0 0 30px color-mix(in srgb,var(--accent) 15%,transparent)}.avatar img{width:100%;height:100%;object-fit:cover;object-position:50% 17%;transform:scale(1.17)}.identity{min-width:0;overflow:hidden}.studentName{margin:0;color:var(--strong);font-size:28px;font-weight:900;line-height:1;text-transform:uppercase;white-space:nowrap}.metaLine{margin-top:11px;display:flex;align-items:center;gap:10px;white-space:nowrap}.studentKanji{min-width:0;overflow:hidden;color:var(--accent);font-size:17px;text-overflow:ellipsis}.divider{opacity:.45}.badges{display:flex;gap:7px}.badge{display:inline-flex;align-items:center;min-height:28px;padding:5px 10px;border:1px solid var(--border);border-radius:999px;font-size:9px;font-weight:850;text-transform:uppercase;background:rgba(255,255,255,.04)}.badge.active{color:#bff4d5;background:rgba(38,122,76,.28)}.badge.leave{color:#ffd0d3;background:rgba(142,39,49,.34)}.badge.first{color:#302400;background:linear-gradient(135deg,#b88b1e,#f5dc7a)}.badge.second{color:#5c2840;background:linear-gradient(135deg,#e8a9c3,#ffe0ec)}.crest{width:96px;height:116px;display:grid;place-items:center;padding:7px;border:1px solid var(--border);border-radius:22px;background:rgba(5,6,8,.65)}.crest img{width:72px;height:72px;object-fit:contain}.crestName{color:var(--accent);font-size:9px;font-weight:850;text-align:center;text-transform:uppercase}.infoGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:11px;margin-top:18px}.infoCard{padding:13px 16px;border:1px solid var(--border);border-radius:18px;background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 48%),linear-gradient(135deg,var(--card),rgba(5,5,8,.92));box-shadow:inset 4px 0 0 var(--accent)}.compact{min-height:76px;display:flex;flex-direction:column;justify-content:center}.wide{grid-column:1/-1}.label{margin-bottom:6px;color:var(--accent);font-size:10px;font-weight:850;letter-spacing:.09em;text-transform:uppercase}.value{color:var(--strong);font-size:16px;font-weight:700}.finance{min-height:92px}.financeValue{font-size:32px;font-weight:900;color:var(--strong)}.xLink{display:inline-flex;align-items:center;gap:8px;color:var(--strong);text-decoration:none}.xMark{width:24px;height:24px;display:grid;place-items:center;border-radius:50%;color:#111;background:linear-gradient(135deg,var(--strong),var(--accent));font-size:11px}.occupationList,.academicRecords,.pointLogs{display:grid;gap:9px;overflow-y:auto;padding-right:4px}.occupationList{max-height:280px}.occupation{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;padding:11px 13px;border:1px solid var(--border);border-radius:15px;background:rgba(255,255,255,.025)}.occupation.single{grid-template-columns:1fr}.occupationNo{width:35px;height:35px;display:grid;place-items:center;border-radius:12px;color:#111;background:linear-gradient(135deg,var(--accent),var(--strong));font-size:11px;font-weight:900}.workplace{color:var(--accent);font-size:12px;font-weight:850;text-transform:uppercase}.position{margin-top:5px;color:var(--strong);font-size:16px}.empty{padding:16px;color:var(--muted);border:1px dashed var(--border);border-radius:14px;text-align:center;font-size:13px}
+    .academicCard{padding:16px}.academicTop{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-bottom:13px;border-bottom:1px solid var(--border)}.academicIntro{color:var(--muted);font-size:11px;line-height:1.35}.academicActions{display:flex;align-items:center;gap:8px}.count,.ledgerButton{padding:7px 11px;border:1px solid var(--border);border-radius:999px;color:var(--accent);background:color-mix(in srgb,var(--accent) 12%,transparent);font-size:8px;font-weight:900;white-space:nowrap}.ledgerButton{cursor:pointer;background:linear-gradient(135deg,var(--accent),var(--strong) 60%,var(--accent2));color:#111}.academicRecords{max-height:900px;margin-top:13px}.semesterCard{overflow:hidden;border:1px solid var(--border);border-radius:17px;background:rgba(5,5,8,.76);box-shadow:inset 3px 0 0 var(--accent)}.semesterCard.missing{border-style:dashed;opacity:.78}.semesterHead{display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border-bottom:1px solid var(--border)}.semesterTitle{color:var(--strong);font-size:16px;font-weight:900;text-transform:uppercase}.nensei{padding:6px 10px;border:1px solid var(--border);border-radius:999px;color:var(--accent);font-size:9px}.miniTitle{margin:12px 14px 8px;color:var(--accent);font-size:9px;font-weight:850;letter-spacing:.08em;text-transform:uppercase}.participation{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;padding:0 14px}.part{min-height:55px;display:grid;align-content:center;gap:4px;padding:8px;border:1px solid var(--border);border-radius:12px;text-align:center}.partName{color:var(--muted);font-size:8px;text-transform:uppercase}.partState{font-size:8px;font-weight:900}.part.yes{background:rgba(42,126,80,.16)}.part.yes .partState{color:#bff4d5}.part.no{background:rgba(133,38,48,.15)}.part.no .partState{color:#f4b5bc}.part.locked .partState{color:#aaa29a}.subjects{display:grid;gap:6px;padding:0 14px}.subjectHeader,.subjectRow{display:grid;grid-template-columns:minmax(0,1fr) 86px 118px;gap:8px;align-items:center}.subjectHeader{padding:0 11px;color:var(--muted);font-size:8px;text-transform:uppercase}.subjectRow{padding:8px 10px;border:1px solid var(--border);border-radius:12px}.subjectName{min-width:0;color:var(--strong);font-size:11px}.mark{min-height:30px;display:grid;place-items:center;padding:0 7px;overflow:hidden;border:1px solid var(--border);border-radius:9px;color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,transparent);font-size:12px;font-weight:900;white-space:nowrap;text-overflow:ellipsis}.mark.numberMark{font-size:13px}.mark.kanjiMark{font-family:"Noto Sans JP",sans-serif;font-size:12px}.semesterFoot{display:grid;grid-template-columns:1fr 1fr 155px;gap:8px;padding:13px 14px}.outcome{padding:8px 10px;border:1px solid var(--border);border-radius:12px}.outcomeLabel{color:var(--muted);font-size:8px;text-transform:uppercase}.outcomeValue{margin-top:4px;color:var(--strong);font-size:11px;font-weight:900}.promoted{color:#bff4d5!important}.retained{color:#ffb3bb!important}.rank1{color:#f4d66f!important}.rank2{color:#f3b6d1!important}.reportButton{min-height:49px;padding:8px;border:0;border-radius:12px;color:#111;background:linear-gradient(135deg,var(--accent),var(--strong) 58%,var(--accent2));font-size:9px;font-weight:900;cursor:pointer}.missingNote{margin:13px 14px;padding:13px;border:1px dashed var(--border);border-radius:12px;color:var(--muted);font-size:10px;line-height:1.45}
+    .mediaStack{padding:16px 24px 24px}.mediaCard{overflow:hidden;border:1px solid var(--border);border-radius:20px}.mediaPreview{min-height:250px;display:grid;place-items:center;background:rgba(0,0,0,.45)}.mediaPreview img{width:100%;max-height:575px;object-fit:contain}.mediaAction{padding:13px;border-top:1px solid var(--border)}.openButton{width:100%;min-height:44px;display:grid;place-items:center;text-decoration:none}.semesterBadge{max-width:205px;padding:7px 10px;border:1px solid var(--border);border-radius:999px;color:var(--accent);font-size:9px;text-align:center}.semesterNote{margin:12px 24px 0;color:var(--muted);font-size:12px}.totals{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:15px 24px}.total{min-height:93px;padding:14px;border:1px solid var(--border);border-radius:18px;background:rgba(255,255,255,.025)}.total.gp{box-shadow:inset 4px 0 0 var(--gp)}.total.rp{box-shadow:inset 4px 0 0 var(--rp)}.total.fhp{box-shadow:inset 4px 0 0 var(--fhp)}.totalLabel{font-size:9px;text-transform:uppercase}.gp .totalLabel,.gp .totalValue{color:var(--gp)}.rp .totalLabel,.rp .totalValue{color:var(--rp)}.fhp .totalLabel,.fhp .totalValue{color:var(--fhp)}.totalValue{margin-top:9px;font-size:37px;font-weight:900}.logBar{display:flex;justify-content:space-between;padding:0 24px 11px;border-bottom:1px solid var(--border);color:var(--accent);font-size:11px}.updated{color:var(--muted)}.pointLogs{max-height:405px;padding:14px 24px 24px}.logItem{display:grid;grid-template-columns:128px 1fr;gap:12px;padding:13px 14px;border:1px solid var(--border);border-radius:16px}.logDate{color:var(--muted);font-size:11px}.logDesc{color:var(--strong);font-size:14px}.chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px}.chip{padding:5px 10px;border:1px solid var(--border);border-radius:999px;font-size:11px}.chip.gp{color:var(--gp)}.chip.rp{color:var(--rp)}.chip.fhp{color:var(--fhp)}
+    .footer{margin-top:25px;padding:18px;border-top:1px solid var(--border);color:var(--muted);text-align:center;font-size:12px;text-transform:uppercase}.footerBrand{color:var(--strong);font-weight:900;text-shadow:0 0 12px var(--glow)}
+    .modal{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:30px;background:rgba(0,0,0,.8);backdrop-filter:blur(10px)}.modalCard{width:1120px;max-height:88vh;overflow:hidden;border:1px solid var(--border);border-radius:26px;background:#0b0908}.modalHeader{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--border)}.modalTitle{margin:0;color:#f0d6aa;font-size:20px}.modalSubtitle{margin-top:5px;color:#a99d90;font-size:11px}.modalButtons{display:flex;gap:9px}.modalButtons button{padding:9px 14px;border:1px solid var(--border);border-radius:12px;color:#e7caa3;background:rgba(255,255,255,.045);cursor:pointer}.modalButtons .download{color:#111;background:linear-gradient(135deg,#97151e,#e6c38f 58%,#b77e4f)}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px 24px}.summaryCard{padding:12px 14px;border:1px solid var(--border);border-radius:16px}.summaryLabel{color:#9d9287;font-size:9px;text-transform:uppercase}.summaryValue{margin-top:5px;color:#f0d6aa;font-size:24px;font-weight:900}.tableWrap{max-height:58vh;overflow:auto;padding:0 24px 24px}.recapTable{width:100%;border-collapse:collapse;color:#e8d7c0;font-size:11px}.recapTable th{position:sticky;top:0;padding:12px 10px;background:#8f0e16;font-size:9px}.recapTable td{padding:11px 10px;border:1px solid rgba(231,198,148,.15)}
+
+    /* NENSEI PROMOTION RECAP PDF */
+    .promotionPage{padding:42px 44px 38px;border-top:12px solid #8e1118}
+    .promotionHeader{display:grid;grid-template-columns:84px minmax(0,1fr);gap:18px;align-items:center;padding-bottom:16px;border-bottom:3px solid #d9b98a}
+    .promotionLogoWrap{width:84px;height:84px;display:grid;place-items:center}
+    .promotionLogo{width:78px;height:78px;object-fit:contain}
+    .promotionJp{color:#8e1118;font-family:"Noto Sans JP",sans-serif;font-size:15px;font-weight:900;line-height:1.1}
+    .promotionTitle{margin-top:4px;color:#251e19;font-size:25px;font-weight:900;line-height:1;letter-spacing:.015em;white-space:nowrap}
+    .promotionSub{margin-top:7px;color:#806c59;font-size:9px;font-weight:700;letter-spacing:.035em}
+    .promotionGroupBanner{margin-top:16px;padding:11px 14px;border-radius:10px;color:#fff6e8;background:linear-gradient(135deg,#251e19,#8e1118);border-left:7px solid #d6ad72}
+    .promotionGroupBanner.promotedGroup{border-left-color:#2f8a5f}
+    .promotionGroupBanner.retainedGroup{border-left-color:#b42334}
+    .promotionGroupTitle{font-size:15px;font-weight:900;letter-spacing:.06em}
+    .promotionGroupMeta{margin-top:4px;color:#ead9c2;font-size:8px;font-weight:700}
+    .promotionSummaryLine{margin-top:12px;padding:10px 12px;border:1px solid #c9a877;border-radius:9px;background:#fffaf2;color:#5f4d3e;font-size:9px;font-weight:800}
+    .promotionTable{width:100%;margin-top:12px;border-collapse:collapse;table-layout:fixed}
+    .promotionTable th,.promotionTable td{border:1px solid #c9a877}
+    .promotionTable th{padding:7px 5px;color:#fff1da;background:#251e19;font-size:7.5px;line-height:1.2;text-align:center}
+    .promotionTable td{padding:7px 6px;background:#fffaf2;color:#2a211a;font-size:8.4px;line-height:1.28;text-align:center;vertical-align:middle;overflow-wrap:anywhere}
+    .promotionTable th:nth-child(1),.promotionTable td:nth-child(1){width:5%}
+    .promotionTable th:nth-child(2),.promotionTable td:nth-child(2){width:14%}
+    .promotionTable th:nth-child(3),.promotionTable td:nth-child(3){width:20%;text-align:left}
+    .promotionTable th:nth-child(4),.promotionTable td:nth-child(4){width:10%}
+    .promotionTable th:nth-child(5),.promotionTable td:nth-child(5){width:10%}
+    .promotionTable th:nth-child(6),.promotionTable td:nth-child(6){width:11%}
+    .promotionTable th:nth-child(7),.promotionTable td:nth-child(7){width:30%;text-align:left}
+    .promotionEmpty{margin-top:16px;padding:28px;border:1px dashed #c9a877;border-radius:12px;background:#fffaf2;color:#806c59;text-align:center;font-size:11px;font-weight:800}
+    .promotionPageFooter{position:absolute;left:44px;right:44px;bottom:26px;padding-top:10px;border-top:2px solid #d9b98a;color:#6d5948;font-size:8px;text-align:center}
+
+    .pdfRoot{position:fixed;left:-14000px;top:0;width:816px;z-index:-9999}
+    .pdfPage{position:relative;width:816px;height:1344px;overflow:hidden;color:#2a211a;background:linear-gradient(180deg,#fbf7ef,#f3eadc);font-family:Georgia,"Times New Roman",serif}
+    .pdfPage *{box-sizing:border-box}
+    .reportPage{padding:32px 42px 28px;border-top:12px solid #8e1118}
+    .reportHeader{display:grid;grid-template-columns:74px minmax(0,1fr) 136px;gap:14px;align-items:center;padding-bottom:14px;border-bottom:3px solid #d9b98a}
+    .reportLogo{width:68px;height:68px;object-fit:contain}
+    .reportInstitution{color:#8e1118;font-size:12px;font-weight:900;letter-spacing:.18em}.reportJp{color:#8e1118;font-size:15px;font-weight:800}
+    .reportTitle{margin-top:4px;font-size:21px;font-weight:900;line-height:1;letter-spacing:.025em;text-transform:uppercase;white-space:nowrap}
+    .reportSub{margin-top:6px;color:#806c59;font-size:8.5px;letter-spacing:.035em}
+    .termBadge{padding:10px 8px;border-radius:11px;color:#fff6e8;background:linear-gradient(135deg,#251e19,#8e1118);text-align:center}
+    .termMain{font-size:15px;font-weight:900;line-height:1.1}
+    .termSub{margin-top:5px;font-size:8px;font-weight:700}
+    .pdfIdentity{display:grid;grid-template-columns:132px minmax(0,1fr);gap:17px;margin-top:15px;padding:13px;border:1px solid #d9b98a;border-radius:13px;background:rgba(255,255,255,.6)}
+    .pdfPhoto{width:132px;height:158px;overflow:hidden;display:grid;place-items:center;border:1px solid #c8a574;border-radius:9px;background:#efe6d8}
+    .pdfPhoto img{width:100%;height:100%;object-fit:contain;object-position:center}
+    .photoFallback{height:100%;display:grid;place-items:center;color:#7b6a5b;font-size:9px}
+    .pdfName{color:#8e1118;font-size:21px;font-weight:900;line-height:1.05;text-transform:uppercase}
+    .pdfKanji{margin-top:4px;color:#7a654f;font-size:13px}
+    .idGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 16px;margin-top:11px}
+    .idItem{padding-bottom:6px;border-bottom:1px solid #dac7ad}
+    .idLabel{color:#8e1118;font-size:7.5px;font-weight:900;text-transform:uppercase}
+    .idValue{margin-top:3px;font-size:10.5px;font-weight:800}
+    .pdfScoreSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+    .pdfScoreCard{padding:9px 10px;border:1px solid #cba978;border-radius:10px;background:#fffaf2;text-align:center}
+    .pdfScoreLabel{color:#7d6751;font-size:7.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
+    .pdfScoreValue{margin-top:5px;color:#8e1118;font-size:17px;font-weight:900}
+    .pdfSection{margin-top:13px;padding:7px 10px;color:#fff2dc;background:#8e1118;border-left:6px solid #d6ad72;font-size:9.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase}
+    .pdfPartGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:8px}
+    .pdfPart{padding:8px 6px;border:1px solid #d8bc94;border-radius:9px;background:#fffaf2;text-align:center}
+    .pdfPartName{color:#7e674f;font-size:7.5px}
+    .pdfPartState{margin-top:5px;font-size:8.5px;font-weight:900}
+    .scoreTable{width:100%;margin-top:8px;border-collapse:collapse;table-layout:fixed}
+    .scoreTable th,.scoreTable td{border:1px solid #c9a877}
+    .scoreTable th{padding:6px 4px;color:#fff1da;background:#251e19;font-size:7.3px;line-height:1.2}
+    .scoreTable td{height:45px;padding:5px;background:#fffaf2;text-align:center;font-size:9.5px}
+    .scoreTable th:nth-child(1),.scoreTable td:nth-child(1){width:32%;text-align:left}
+    .scoreTable th:nth-child(2),.scoreTable td:nth-child(2){width:11%}
+    .scoreTable th:nth-child(3),.scoreTable td:nth-child(3){width:13%}
+    .scoreTable th:nth-child(4),.scoreTable td:nth-child(4){width:13%}
+    .scoreTable th:nth-child(5),.scoreTable td:nth-child(5){width:13%}
+    .scoreTable th:nth-child(6),.scoreTable td:nth-child(6){width:18%}
+    .scoreSubject{font-size:8.6px!important;font-weight:900!important;line-height:1.25;text-transform:uppercase}
+    .scoreNumber{color:#8e1118!important;font-size:14px!important;font-weight:900!important}
+    .scoreKanji{font-family:"Noto Sans JP",sans-serif;font-size:12px!important;font-weight:900!important;white-space:nowrap}
+    .pdfOutcome{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+    .pdfOutcomeCard{padding:8px;border:1px solid #cba978;border-radius:9px;background:#fffaf2;text-align:center}
+    .pdfOutcomeLabel{color:#7d6751;font-size:7.5px;text-transform:uppercase}
+    .pdfOutcomeValue{margin-top:4px;font-size:12.5px;font-weight:900}
+    .pdfRemarks{margin-top:8px;padding:9px 11px;border:1px solid #cba978;border-radius:9px;background:#fffaf2}
+    .pdfRemarksLabel{color:#8e1118;font-size:7.5px;font-weight:900}
+    .pdfRemarksText{margin-top:5px;font-size:8.8px;line-height:1.35}
+    .pdfFooter{position:absolute;left:42px;right:42px;bottom:20px;padding-top:8px;border-top:2px solid #d9b98a}
+    .pdfDate{text-align:center;color:#5f4d3e;font-size:7.5px}
+    .signatures{display:grid;grid-template-columns:1fr 1fr;gap:110px;margin-top:6px;text-align:center}
+    .stamp{width:68px;height:68px;margin:3px auto;object-fit:contain}
+    .signRole,.signName{font-size:8px;font-weight:800}
+    .ledgerPage{padding:48px 46px 42px;border-top:12px solid #8e1118}
+    .ledgerHeader{display:grid;grid-template-columns:70px 1fr;gap:14px;align-items:center;padding-bottom:14px;border-bottom:3px solid #d9b98a}
+    .ledgerLogo{width:66px;height:66px;object-fit:contain}
+    .ledgerTitle{font-size:23px;font-weight:900}
+    .ledgerStudent{margin-top:15px;padding:12px 14px;border:1px solid #c9a877;border-radius:9px;background:#fffaf2;font-size:10px}
+    .ledgerTable{width:100%;margin-top:15px;border-collapse:collapse;table-layout:fixed}
+    .ledgerTable th,.ledgerTable td{border:1px solid #c9a877}
+    .ledgerTable th{padding:6px;color:#fff1da;background:#251e19;font-size:8px}
+    .ledgerTable td{height:42px;padding:5px;background:#fffaf2;text-align:center;font-size:8px}
+    .ledgerSubjects{text-align:left!important;font-size:7px!important}
+    .pdfOverlay{position:fixed;inset:0;z-index:12000;display:grid;place-items:center;background:rgba(0,0,0,.84)}
+    .pdfBox{min-width:340px;padding:28px 32px;border:1px solid var(--border);border-radius:22px;color:#efd5aa;background:#120f0d;text-align:center}
+    .pdfText{margin-top:8px;color:#a99b8d;font-size:11px}
+  
+  /* WARNA STATUS KHUSUS PDF — LEBIH TEGAS */
+
+.pdfPage .promoted {
+  color: #18794e !important;
+  font-weight: 900 !important;
+}
+
+.pdfPage .retained {
+  color: #b42334 !important;
+  font-weight: 900 !important;
+}
+
+.pdfPage .rank1 {
+  color: #a66c00 !important;
+  font-weight: 900 !important;
+}
+
+.pdfPage .rank2 {
+  color: #963d69 !important;
+  font-weight: 900 !important;
+}
+
+.pdfPage .pdfPartState,
+.pdfPage .pdfOutcomeValue {
+  font-weight: 900 !important;
+}
+/* =====================================================
+   SCROLLBAR — OTOMATIS MENGIKUTI WARNA ASRAMA
+   ===================================================== */
+
+.academicRecords,
+.occupationList,
+.pointLogs,
+.tableWrap {
+  scrollbar-width: thin;
+  scrollbar-color:
+    var(--accent)
+    color-mix(in srgb, var(--panel2) 92%, #000);
+
+  scrollbar-gutter: stable;
+}
+
+
+/* CHROME, EDGE, SAFARI */
+
+.academicRecords::-webkit-scrollbar,
+.occupationList::-webkit-scrollbar,
+.pointLogs::-webkit-scrollbar,
+.tableWrap::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+
+/* JALUR SCROLLBAR */
+
+.academicRecords::-webkit-scrollbar-track,
+.occupationList::-webkit-scrollbar-track,
+.pointLogs::-webkit-scrollbar-track,
+.tableWrap::-webkit-scrollbar-track {
+  margin-block: 7px;
+
+  border: 1px solid
+    color-mix(
+      in srgb,
+      var(--accent) 24%,
+      transparent
+    );
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(
+        in srgb,
+        var(--panel2) 94%,
+        #000
+      ),
+      color-mix(
+        in srgb,
+        var(--accent) 8%,
+        #050505
+      )
+    );
+
+  box-shadow:
+    inset 0 0 8px
+    rgba(0, 0, 0, .58);
+}
+
+
+/* BAGIAN YANG DIGESER */
+
+.academicRecords::-webkit-scrollbar-thumb,
+.occupationList::-webkit-scrollbar-thumb,
+.pointLogs::-webkit-scrollbar-thumb,
+.tableWrap::-webkit-scrollbar-thumb {
+  min-height: 55px;
+
+  border: 2px solid
+    color-mix(
+      in srgb,
+      var(--panel2) 88%,
+      #000
+    );
+
+  border-radius: 999px;
+
+  background:
+    linear-gradient(
+      180deg,
+      var(--strong) 0%,
+      var(--accent) 48%,
+      var(--accent2) 100%
+    );
+
+  box-shadow:
+    0 0 10px
+    color-mix(
+      in srgb,
+      var(--accent) 42%,
+      transparent
+    ),
+
+    inset 0 1px 1px
+    rgba(255, 255, 255, .26);
+
+  transition:
+    filter .2s ease,
+    box-shadow .2s ease;
+}
+
+
+/* SAAT CURSOR DI ATAS SCROLLBAR */
+
+.academicRecords::-webkit-scrollbar-thumb:hover,
+.occupationList::-webkit-scrollbar-thumb:hover,
+.pointLogs::-webkit-scrollbar-thumb:hover,
+.tableWrap::-webkit-scrollbar-thumb:hover {
+  filter: brightness(1.2);
+
+  box-shadow:
+    0 0 15px
+    color-mix(
+      in srgb,
+      var(--accent) 68%,
+      transparent
+    ),
+
+    inset 0 1px 1px
+    rgba(255, 255, 255, .34);
+}
+
+
+/* SUDUT SCROLLBAR */
+
+.academicRecords::-webkit-scrollbar-corner,
+.occupationList::-webkit-scrollbar-corner,
+.pointLogs::-webkit-scrollbar-corner,
+.tableWrap::-webkit-scrollbar-corner {
+  background: transparent;
+}
