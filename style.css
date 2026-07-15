@@ -360,3 +360,40 @@ body.document-review-open{overflow:hidden}
   body.printing-document-review .pdfPage{width:8.5in!important;height:14in!important;margin:0!important;box-shadow:none!important;break-after:page;page-break-after:always}
   body.printing-document-review .pdfPage:last-child{break-after:auto;page-break-after:auto}
 }
+
+/* =====================================================
+   REVISION 2026-07-15 — VECTOR PDF + HD PNG
+   ===================================================== */
+.documentReviewPng{
+  color:var(--strong);
+  background:linear-gradient(135deg,rgba(255,255,255,.08),color-mix(in srgb,var(--accent) 18%,rgba(0,0,0,.72)));
+}
+
+.reportInstitution{
+  color:#8e1118;
+  font-size:8.2px;
+  font-weight:900;
+  line-height:1.18;
+  letter-spacing:.035em;
+  white-space:nowrap;
+}
+
+.reportInstitutionJp{
+  font-size:10.5px;
+  letter-spacing:.14em;
+}
+
+.pdfPhotoImage,
+.pdfPhoto img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:50% 17%;
+  transform:scale(1.17);
+  transform-origin:50% 17%;
+}
+
+.scoreTable th{
+  font-size:6.55px;
+  line-height:1.18;
+}

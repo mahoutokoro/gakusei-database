@@ -20,7 +20,7 @@ const GakuseiDataService = (() => {
     POINT_RECAP_SHEET: 'REKAP POIN',
     POINT_LOG_SHEET: 'LOG POINT',
 
-    ACADEMIC_SPREADSHEET_ID: '1LXbCIYV5RGjEKarl_1T7NgliKfyAiC_IDZ7TRItI15E',
+    ACADEMIC_SPREADSHEET_ID: '1oMojS3CofQr4q9Wm9tByRB3xflpJuhsXeDaHJ1QyIC8',
 
     /*
      * GViz tidak menyediakan daftar nama tab. Karena nama semester memakai
@@ -76,7 +76,7 @@ const GakuseiDataService = (() => {
 
       /*
        * Data utama sengaja tidak menunggu seluruh sheet A.R.
-       * Academic Semester Records dimuat terpisah oleh getAcademicData()
+       * Academic Records dimuat terpisah oleh getAcademicData()
        * agar profil siswa dapat tampil lebih dahulu.
        */
       const [status, occupations, financeBalance, studentPoint] =
@@ -172,7 +172,7 @@ const GakuseiDataService = (() => {
         success: false,
         message: error && error.message
           ? error.message
-          : 'Academic Semester Records tidak dapat dimuat.'
+          : 'Academic Records tidak dapat dimuat.'
       };
     }
   }
@@ -646,6 +646,19 @@ const GakuseiDataService = (() => {
       }
     })).filter(Boolean).sort(sortAcademicNewest);
 
+    /*
+     * Beberapa tab dapat menyimpan label Nensei sebagai merged/formatted cell
+     * yang tidak dikirim GViz sebagai teks biasa. Bila label sel tidak terbaca,
+     * pulihkan Nensei dari kesinambungan semester dan status PROMOTED/RETAINED.
+     * Contoh: 18 A.R. = PROMOTED, sedangkan 19 A.R. = 2 NENSEI, maka 18 A.R.
+     * dipastikan merupakan 1 NENSEI.
+     */
+    resolveMissingAcademicNensei(records, dormCode);
+
+    records.forEach(record => {
+      if (record && record._academicContext) delete record._academicContext;
+    });
+
     return {
       available: records.length > 0,
       records,
@@ -714,7 +727,7 @@ const GakuseiDataService = (() => {
     const selectedIndex = candidates[0].index;
     const displayRow = display[selectedIndex];
     const rawRow = raw[selectedIndex];
-    const nensei = findNenseiForStudentRow(display, selectedIndex);
+    const nensei = findNenseiForStudentRow(display, raw, selectedIndex);
     const subjects = getAcademicSubjects(
       nensei,
       dormCode,
@@ -747,7 +760,15 @@ const GakuseiDataService = (() => {
       rankingResult: cleanAcademicText(displayRow[34]),
       remarks: cleanAcademicText(displayRow[35]),
       averageNumberMark: calculateAcademicAverage(subjects),
-      sourceRow: selectedIndex + 1
+      sourceRow: selectedIndex + 1,
+      nenseiSource: nensei ? 'SHEET_LABEL' : 'UNRESOLVED',
+      _academicContext: {
+        rawRow,
+        displayRow,
+        display,
+        selectedIndex,
+        dormCode
+      }
     };
   }
 
@@ -770,14 +791,13 @@ const GakuseiDataService = (() => {
        * sheet palsu seperti "40 A.R." tidak dipakai kembali.
        */
       const storageKey =
-        `mahoutokoro-ar-sheets-v4-${CONFIG.ACADEMIC_SPREADSHEET_ID}`;
+        `mahoutokoro-ar-sheets-v6-${CONFIG.ACADEMIC_SPREADSHEET_ID}`;
 
       const configured = CONFIG.ACADEMIC_SHEET_NAMES
         .map(name => String(name || '').trim())
         .filter(Boolean);
 
       const invalidFingerprint = await getInvalidAcademicProbeFingerprint();
-      const acceptedFingerprints = new Set();
       const valid = [];
 
       let storedNames = [];
@@ -805,14 +825,12 @@ const GakuseiDataService = (() => {
       for (const sheetName of storedNames.sort(compareAcademicSheetNames)) {
         const probe = await probeAcademicSheet(
           sheetName,
-          invalidFingerprint,
-          acceptedFingerprints
+          invalidFingerprint
         );
 
         if (!probe) continue;
 
         valid.push(probe.name);
-        acceptedFingerprints.add(probe.fingerprint);
       }
 
       let startNumber = CONFIG.ACADEMIC_PROBE_START;
@@ -840,8 +858,7 @@ const GakuseiDataService = (() => {
         for (const candidate of buildAcademicSheetNameCandidates(number)) {
           const probe = await probeAcademicSheet(
             candidate,
-            invalidFingerprint,
-            acceptedFingerprints
+            invalidFingerprint
           );
 
           if (probe) {
@@ -852,7 +869,6 @@ const GakuseiDataService = (() => {
 
         if (found) {
           valid.push(found.name);
-          acceptedFingerprints.add(found.fingerprint);
           foundAny = true;
           consecutiveMisses = 0;
         } else {
@@ -897,15 +913,7 @@ const GakuseiDataService = (() => {
   }
 
   function buildAcademicSheetNameCandidates(number) {
-    const roman = numberToRoman(number);
-
-    return Array.from(new Set([
-      `${number} A.R.`,
-      `A.R. ${number}`,
-      `${number} AR`,
-      `PERIODE ${number} A.R.`,
-      roman ? `PERIODE ${roman} A.R.` : ''
-    ].filter(Boolean)));
+    return [`${number} A.R.`];
   }
 
   async function getInvalidAcademicProbeFingerprint() {
@@ -913,7 +921,7 @@ const GakuseiDataService = (() => {
       const table = await fetchTable({
         spreadsheetId: CONFIG.ACADEMIC_SPREADSHEET_ID,
         sheet: '__MAHOUTOKORO_AR_SHEET_MUST_NOT_EXIST__',
-        range: 'A1:AJ160',
+        range: 'A1:AJ260',
         bypassCache: true
       });
 
@@ -927,14 +935,13 @@ const GakuseiDataService = (() => {
 
   async function probeAcademicSheet(
     sheetName,
-    invalidFingerprint = '',
-    acceptedFingerprints = new Set()
+    invalidFingerprint = ''
   ) {
     try {
       const table = await fetchTable({
         spreadsheetId: CONFIG.ACADEMIC_SPREADSHEET_ID,
         sheet: sheetName,
-        range: 'A1:AJ160',
+        range: 'A1:AJ260',
         bypassCache: true
       });
 
@@ -944,12 +951,12 @@ const GakuseiDataService = (() => {
 
       /*
        * Beberapa respons GViz dapat jatuh kembali ke tab pertama ketika nama
-       * sheet tidak valid. Sidik data kontrol dan duplikat ditolak agar nomor
-       * yang belum memiliki sheet tidak dianggap sebagai semester nyata.
+       * sheet tidak valid. Hanya fingerprint kontrol sheet yang tidak ada
+       * yang ditolak. Fingerprint antarsheet tidak dideduplikasi karena dua
+       * semester nyata boleh saja memiliki template atau isi yang identik.
        */
       if (!fingerprint) return null;
       if (invalidFingerprint && fingerprint === invalidFingerprint) return null;
-      if (acceptedFingerprints.has(fingerprint)) return null;
 
       return {
         name: sheetName,
@@ -982,6 +989,9 @@ const GakuseiDataService = (() => {
       'ART OF INCANTATIONS',
       'QUIDDITCH',
       'SHIKEN',
+      'CLASS (60%)',
+      'RAW EXAM MARK',
+      'EXAM MARK (40%)',
       'GRADE STATUS',
       'RANKING'
     ].some(marker => headerText.includes(marker));
@@ -994,20 +1004,18 @@ const GakuseiDataService = (() => {
      */
     return hasAcademicHeader || (
       hasStudentId &&
-      /(?:NAK|KANJI|NUMBER MARK|TOTAL GP|TOTAL FHP)/.test(headerText)
+      /(?:NAK|CLASS \(60%\)|RAW EXAM MARK|EXAM MARK \(40%\)|KANJI|NUMBER MARK|TOTAL GP|TOTAL FHP)/.test(headerText)
     );
   }
 
   function buildAcademicTableFingerprint(table) {
-    if (table && table.gvizSig) {
-      return `sig:${table.gvizSig}`;
-    }
-
     const source = JSON.stringify(
       (table && Array.isArray(table.display) ? table.display : [])
-        .slice(0, 160)
+        .slice(0, 260)
         .map(row => padRow(row, 36).map(value => String(value || '').trim()))
     );
+
+    if (!source || source === '[]') return '';
 
     let hash = 2166136261;
 
@@ -1035,31 +1043,246 @@ const GakuseiDataService = (() => {
     return sortAcademicOldest(b, a);
   }
 
-  function findNenseiForStudentRow(display, studentRowIndex) {
-    const firstRow = Math.max(0, studentRowIndex - 80);
-    for (let rowIndex = studentRowIndex; rowIndex >= firstRow; rowIndex--) {
-      const rowText = (display[rowIndex] || [])
-        .map(value => String(value || '').trim())
-        .filter(Boolean)
-        .join(' ');
-      const level = extractNenseiFromText(rowText);
-      if (level) return level;
+  function resolveMissingAcademicNensei(records, dormCode) {
+    const chronological = (records || [])
+      .filter(Boolean)
+      .slice()
+      .sort(sortAcademicOldest);
+
+    if (!chronological.length) return;
+
+    const validLevel = value => {
+      const level = Number(value);
+      return Number.isInteger(level) && level >= 1 && level <= 6;
+    };
+
+    const statusTransition = value => {
+      const text = String(value || '')
+        .normalize('NFKC')
+        .toUpperCase()
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (/\bPROMOTED\b|\bNAIK\b|LULUS KE TINGKAT/i.test(text)) return 1;
+      if (/\bRETAINED\b|TIDAK NAIK|TINGGAL KELAS/i.test(text)) return 0;
+      return null;
+    };
+
+    const applyLevel = (record, level, source) => {
+      if (!record || !validLevel(level)) return false;
+
+      record.nensei = level;
+      record.nenseiLabel = `${level} NENSEI`;
+      record.nenseiSource = source || 'TIMELINE_INFERENCE';
+
+      const context = record._academicContext;
+      if (context) {
+        record.participation = {
+          quidditch: buildParticipation(context.rawRow, context.displayRow, 10, false),
+          combat: buildParticipation(context.rawRow, context.displayRow, 11, level === 1),
+          quest: buildParticipation(context.rawRow, context.displayRow, 12, false),
+          shiken: buildParticipation(context.rawRow, context.displayRow, 13, false)
+        };
+
+        record.subjects = getAcademicSubjects(
+          level,
+          context.dormCode || dormCode || '',
+          context.displayRow,
+          context.display,
+          context.selectedIndex
+        );
+        record.averageNumberMark = calculateAcademicAverage(record.subjects);
+      }
+
+      return true;
+    };
+
+    /*
+     * Lakukan beberapa lintasan karena satu Nensei yang berhasil dipulihkan
+     * dapat menjadi acuan untuk semester kosong lain di sebelahnya.
+     */
+    for (let pass = 0; pass < chronological.length + 2; pass++) {
+      let changed = false;
+
+      for (let index = 0; index < chronological.length; index++) {
+        const record = chronological[index];
+        if (validLevel(record.nensei)) continue;
+
+        const candidates = [];
+
+        /* Inferensi maju dari semester lama yang sudah diketahui. */
+        for (let previousIndex = index - 1; previousIndex >= 0; previousIndex--) {
+          const previous = chronological[previousIndex];
+          if (!validLevel(previous.nensei)) continue;
+
+          let level = Number(previous.nensei);
+          let strong = true;
+
+          for (let step = previousIndex; step < index; step++) {
+            const transition = statusTransition(chronological[step].gradeStatus);
+            if (transition === null) {
+              strong = false;
+              break;
+            }
+            level += transition;
+          }
+
+          if (strong && validLevel(level)) {
+            candidates.push({ level, source: 'TIMELINE_FROM_PREVIOUS' });
+          }
+          break;
+        }
+
+        /*
+         * Inferensi mundur dari semester baru yang sudah diketahui. Status
+         * semester yang sedang dicari menentukan apakah grade berikutnya naik.
+         */
+        for (let nextIndex = index + 1; nextIndex < chronological.length; nextIndex++) {
+          const next = chronological[nextIndex];
+          if (!validLevel(next.nensei)) continue;
+
+          let level = Number(next.nensei);
+          let strong = true;
+
+          for (let step = nextIndex - 1; step >= index; step--) {
+            const transition = statusTransition(chronological[step].gradeStatus);
+            if (transition === null) {
+              strong = false;
+              break;
+            }
+            level -= transition;
+          }
+
+          if (strong && validLevel(level)) {
+            candidates.push({ level, source: 'TIMELINE_FROM_NEXT' });
+          }
+          break;
+        }
+
+        if (!candidates.length) continue;
+
+        const uniqueLevels = Array.from(new Set(candidates.map(item => item.level)));
+        if (uniqueLevels.length !== 1) continue;
+
+        const source = candidates.length > 1
+          ? 'TIMELINE_CONFIRMED_BOTH_DIRECTIONS'
+          : candidates[0].source;
+
+        if (applyLevel(record, uniqueLevels[0], source)) changed = true;
+      }
+
+      if (!changed) break;
     }
-    return 0;
   }
 
-  function buildNenseiByRow(display) {
-    const result = [];
-    let currentLevel = 0;
-    display.forEach((row, index) => {
-      const rowText = (row || [])
-        .map(value => String(value || '').trim())
+  function findNenseiForStudentRow(display, raw, studentRowIndex) {
+    /*
+     * Sebagian template semester menyimpan label Nensei sebagai teks format,
+     * hasil formula, tulisan Jepang, atau pada merged cell. Karena itu deteksi
+     * membaca nilai display + raw dan tidak bergantung pada satu pola saja.
+     */
+    const rowCount = Math.max(
+      Array.isArray(display) ? display.length : 0,
+      Array.isArray(raw) ? raw.length : 0
+    );
+
+    const detectedRows = [];
+
+    for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+      const displayText = (display[rowIndex] || [])
+        .map(value => String(value == null ? '' : value).trim())
         .filter(Boolean)
         .join(' ');
+
+      const rawText = (raw && raw[rowIndex] ? raw[rowIndex] : [])
+        .map(value => String(value == null ? '' : value).trim())
+        .filter(Boolean)
+        .join(' ');
+
+      const level = extractNenseiFromText(`${displayText} ${rawText}`);
+      if (level) detectedRows.push({ rowIndex, level });
+    }
+
+    if (!detectedRows.length) {
+      /*
+       * Beberapa desain memisahkan angka dan kata NENSEI pada dua baris
+       * berbeda. Gabungkan jendela tiga baris agar format tersebut terbaca.
+       */
+      for (let rowIndex = 0; rowIndex < rowCount; rowIndex++) {
+        const windowValues = [];
+        for (
+          let nearby = Math.max(0, rowIndex - 1);
+          nearby <= Math.min(rowCount - 1, rowIndex + 1);
+          nearby++
+        ) {
+          windowValues.push(...(display[nearby] || []));
+          windowValues.push(...(raw && raw[nearby] ? raw[nearby] : []));
+        }
+
+        const windowText = windowValues
+          .map(value => String(value == null ? '' : value).trim())
+          .filter(Boolean)
+          .join(' ');
+
+        if (!/(?:NENSEI|NEN\s*SEI|GRADE|YEAR|LEVEL|TINGKAT|KELAS|年|学年)/i.test(windowText)) {
+          continue;
+        }
+
+        const level = extractNenseiFromText(windowText);
+        if (level) detectedRows.push({ rowIndex, level });
+      }
+    }
+
+    if (!detectedRows.length) return 0;
+
+    /*
+     * Prioritaskan label terakhir yang berada di atas baris siswa. Ini sesuai
+     * struktur blok A.R. dan mencegah label blok Nensei berikutnya terbaca.
+     */
+    const above = detectedRows
+      .filter(item => item.rowIndex <= studentRowIndex)
+      .sort((a, b) => b.rowIndex - a.rowIndex);
+
+    if (above.length) return above[0].level;
+
+    /*
+     * Fallback untuk template yang menaruh judul blok pada merged cell tepat
+     * setelah baris pertama. Hanya izinkan jarak dekat agar tidak mengambil
+     * Nensei milik blok berikutnya.
+     */
+    const below = detectedRows
+      .filter(item => item.rowIndex > studentRowIndex)
+      .sort((a, b) => a.rowIndex - b.rowIndex);
+
+    if (below.length && below[0].rowIndex - studentRowIndex <= 8) {
+      return below[0].level;
+    }
+
+    return detectedRows.length === 1 ? detectedRows[0].level : 0;
+  }
+
+  function buildNenseiByRow(display, raw = []) {
+    const result = [];
+    let currentLevel = 0;
+    const rowCount = Math.max(
+      Array.isArray(display) ? display.length : 0,
+      Array.isArray(raw) ? raw.length : 0
+    );
+
+    for (let index = 0; index < rowCount; index++) {
+      const rowText = [
+        ...(display[index] || []),
+        ...(raw[index] || [])
+      ]
+        .map(value => String(value == null ? '' : value).trim())
+        .filter(Boolean)
+        .join(' ');
+
       const detected = extractNenseiFromText(rowText);
       if (detected) currentLevel = detected;
       result[index] = currentLevel;
-    });
+    }
+
     return result;
   }
 
@@ -1067,16 +1290,72 @@ const GakuseiDataService = (() => {
     const text = String(value || '')
       .normalize('NFKC')
       .toUpperCase()
-      .replace(/[–—−]/g, '-')
+      .replace(/[\u200B-\u200D\uFEFF]/g, '')
+      .replace(/[＿_／/\\|()[\]{}]/g, ' ')
+      .replace(/[.:：;；,，・•·–—−-]+/g, ' ')
+      .replace(/NEN\s*SEI/g, 'NENSEI')
       .replace(/\s+/g, ' ')
       .trim();
 
-    const arabic = text.match(/(?:^|\s|[^0-9])([1-6])\s*(?:ST|ND|RD|TH)?\s*NENSEI(?:\s|$|[^A-Z])/i);
-    if (arabic) return Number(arabic[1]);
+    if (!text) return 0;
+
+    const arabicPatterns = [
+      /(?:^|[^0-9])([1-6])\s*(?:ST|ND|RD|TH)?\s*NENSEI(?:$|[^A-Z])/i,
+      /NENSEI\s*([1-6])\s*(?:ST|ND|RD|TH)?(?:$|[^0-9])/i,
+      /(?:^|[^0-9])([1-6])\s*(?:ST|ND|RD|TH)?\s*(?:GRADE|YEAR|LEVEL|TINGKAT|KELAS)(?:$|[^A-Z])/i,
+      /(?:GRADE|YEAR|LEVEL|TINGKAT|KELAS)\s*([1-6])\s*(?:ST|ND|RD|TH)?(?:$|[^0-9])/i,
+      /(?:^|[^0-9])([1-6])\s*(?:年\s*生?|学年)(?:$|[^0-9])/i,
+      /第\s*([1-6])\s*(?:年\s*生?|学年)/i
+    ];
+
+    for (const pattern of arabicPatterns) {
+      const match = text.match(pattern);
+      if (match) return Number(match[1]);
+    }
 
     const romanMap = { I: 1, II: 2, III: 3, IV: 4, V: 5, VI: 6 };
-    const roman = text.match(/(?:^|\s|[^A-Z])(VI|IV|V|III|II|I)\s*NENSEI(?:\s|$|[^A-Z])/i);
-    return roman ? (romanMap[roman[1].toUpperCase()] || 0) : 0;
+    const romanPatterns = [
+      /(?:^|[^A-Z])(VI|IV|V|III|II|I)\s*NENSEI(?:$|[^A-Z])/i,
+      /NENSEI\s*(VI|IV|V|III|II|I)(?:$|[^A-Z])/i,
+      /(?:^|[^A-Z])(VI|IV|V|III|II|I)\s*(?:GRADE|YEAR|LEVEL)(?:$|[^A-Z])/i,
+      /(?:GRADE|YEAR|LEVEL)\s*(VI|IV|V|III|II|I)(?:$|[^A-Z])/i
+    ];
+
+    for (const pattern of romanPatterns) {
+      const match = text.match(pattern);
+      if (match) return romanMap[match[1].toUpperCase()] || 0;
+    }
+
+    const wordMap = {
+      FIRST: 1,
+      SECOND: 2,
+      THIRD: 3,
+      FOURTH: 4,
+      FIFTH: 5,
+      SIXTH: 6,
+      ICHI: 1,
+      NI: 2,
+      SAN: 3,
+      YON: 4,
+      SHI: 4,
+      GO: 5,
+      ROKU: 6
+    };
+
+    const wordPattern = Object.keys(wordMap).join('|');
+    const wordMatch = text.match(
+      new RegExp(`(?:^|[^A-Z])(${wordPattern})\\s*NENSEI(?:$|[^A-Z])`, 'i')
+    ) || text.match(
+      new RegExp(`NENSEI\\s*(${wordPattern})(?:$|[^A-Z])`, 'i')
+    );
+
+    if (wordMatch) return wordMap[wordMatch[1].toUpperCase()] || 0;
+
+    const kanjiMap = { 一: 1, 二: 2, 三: 3, 四: 4, 五: 5, 六: 6 };
+    const kanjiMatch = text.match(/([一二三四五六])\s*年\s*生?/);
+    if (kanjiMatch) return kanjiMap[kanjiMatch[1]] || 0;
+
+    return 0;
   }
 
   function buildParticipation(rawRow, displayRow, column, notEligible) {
@@ -1796,7 +2075,7 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
         )return;
 
         if(!response||!response.success){
-          showAcademicError(response&&response.message?response.message:'Academic Semester Records could not be loaded.');
+          showAcademicError(response&&response.message?response.message:'Academic Records could not be loaded.');
           return;
         }
 
@@ -1818,8 +2097,8 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
         '<div class="academicLoading" role="status" aria-live="polite">'+
           '<div class="academicLoadingOrb" aria-hidden="true"></div>'+
           '<div class="academicLoadingContent">'+
-            '<div class="academicLoadingTitle">Loading Academic Semester Records</div>'+
-            '<div class="academicLoadingText">Synchronizing all available A.R. semester sheets. Main student data remains available while this section loads.</div>'+
+            '<div class="academicLoadingTitle">Loading Academic Records</div>'+
+            '<div class="academicLoadingText">Synchronizing all academic records</div>'+
             '<div class="academicLoadingBars" aria-hidden="true"><span></span><span></span><span></span></div>'+
           '</div>'+
         '</div>';
@@ -1836,7 +2115,7 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
       text('academicCount','UNAVAILABLE');
       $('ledgerButton').disabled=true;
       $('ledgerButton').textContent='VIEW COMPLETE LEDGER';
-      $('academicRecords').innerHTML='<div class="empty">'+escapeHtml(message||'Academic Semester Records could not be loaded.')+'</div>';
+      $('academicRecords').innerHTML='<div class="empty">'+escapeHtml(message||'Academic Records could not be loaded.')+'</div>';
       setStatus('Academic record error: '+(message||'Unable to load.'));
     }
 
@@ -2032,7 +2311,8 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
           title:'NENSEI PROMOTION RECAP',
           subtitle:'Latest semester: '+(promotionData.semesterTitle||'-')+' • '+pages.length+' page'+(pages.length===1?'':'s'),
           fileName:'MAHOUTOKORO_NENSEI_PROMOTION_RECAP_'+safeName(promotionData.semesterTitle)+'.pdf',
-          pages
+          pages,
+          documentData:{kind:'promotion',data:promotionData}
         });
         setStatus('Nensei Promotion Recap is ready in the review window.');
       }catch(error){
@@ -2270,7 +2550,8 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
           ? availableRecords.length+' recorded semester'+(availableRecords.length===1?'':'s')
           : (availableRecords[0].semesterTitle||'Academic semester record'),
         fileName:copy.fileName||'MAHOUTOKORO_ACADEMIC_RECORD.pdf',
-        pages
+        pages,
+        documentData:{kind:'academic',payload:copy}
       });
 
       return 'reviewed';
@@ -2346,7 +2627,7 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
 
       const titleWrap=document.createElement('div');
       titleWrap.innerHTML=
-        '<div class="reportInstitution">MAHOUTOKORO</div>'+ 
+        '<div class="reportInstitution"><span class="reportInstitutionJp jp">魔 法 所</span> - MAHOUTOKORO INSTITUTE OF SPIRIT AND MAGIC.</div>'+ 
         '<div class="reportTitle">'+escapeHtml(title)+'</div>'+ 
         '<div class="reportSub">'+escapeHtml(subtitle)+'</div>';
       head.appendChild(titleWrap);
@@ -2452,9 +2733,9 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
       table.innerHTML=
         '<thead><tr>'+ 
           '<th>SUBJECT</th>'+ 
-          '<th>NAK<br>60%</th>'+ 
-          '<th>RAW<br>EXAM</th>'+ 
-          '<th>SHIKEN / EXAM<br>40%</th>'+ 
+          '<th>CLASS<br>(60%)</th>'+ 
+          '<th>RAW EXAM<br>MARK</th>'+ 
+          '<th>EXAM MARK<br>(40%)</th>'+ 
           '<th>MARK<br>NUMBER</th>'+ 
           '<th>MARK<br>KANJI</th>'+ 
         '</tr></thead>';
@@ -2608,22 +2889,35 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
         title:settings.title||'DOCUMENT REVIEW',
         subtitle:settings.subtitle||'',
         fileName:settings.fileName||'MAHOUTOKORO_DOCUMENT.pdf',
-        pages
+        pages,
+        documentData:settings.documentData||null
       };
 
       text('documentReviewTitle',currentDocumentReview.title);
       text('documentReviewSubtitle',currentDocumentReview.subtitle);
-      const downloadButton=$('documentDownloadButton');
-      downloadButton.disabled=true;
-      downloadButton.textContent='LOADING ASSETS...';
+
+      const pdfButton=$('documentDownloadButton');
+      const pngButton=$('documentPngButton');
+      [pdfButton,pngButton].forEach(button=>{
+        if(button)button.disabled=true;
+      });
+      if(pdfButton)pdfButton.textContent='LOADING ASSETS...';
+      if(pngButton)pngButton.textContent='LOADING ASSETS...';
 
       $('documentReviewModal').classList.remove('hidden');
       document.body.classList.add('document-review-open');
       $('documentReviewViewport').scrollTop=0;
 
       await waitReviewImages(pagesBox,12000);
-      downloadButton.disabled=false;
-      downloadButton.textContent='DOWNLOAD AS PDF';
+
+      if(pdfButton){
+        pdfButton.disabled=false;
+        pdfButton.textContent='DOWNLOAD AS PDF';
+      }
+      if(pngButton){
+        pngButton.disabled=false;
+        pngButton.textContent='DOWNLOAD AS PNG';
+      }
     }
 
     function closeDocumentReview(){
@@ -2638,35 +2932,100 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
       if(!currentDocumentReview||pdfBusy)return;
 
       pdfBusy=true;
-      const button=$('documentDownloadButton');
-      const oldText=button.textContent;
-      button.disabled=true;
-      button.textContent='PREPARING PDF...';
-      showPdf('Preparing PDF assets...');
+      const pdfButton=$('documentDownloadButton');
+      const pngButton=$('documentPngButton');
+      const oldPdfText=pdfButton?pdfButton.textContent:'';
+      if(pdfButton){
+        pdfButton.disabled=true;
+        pdfButton.textContent='PREPARING PDF...';
+      }
+      if(pngButton)pngButton.disabled=true;
+      showPdf('Building selectable-text PDF...');
 
       try{
         await ensurePdfLibraries();
         await waitReviewImages($('documentReviewPages'),15000);
 
-        const pages=Array.from($('documentReviewPages').querySelectorAll('.pdfPage'));
-        if(!pages.length)throw new Error('No document page is available to download.');
-
         const JsPdf=window.jspdf&&window.jspdf.jsPDF;
         if(!JsPdf)throw new Error('jsPDF library is unavailable.');
 
+        const documentData=currentDocumentReview.documentData;
+        if(!documentData||!documentData.kind){
+          throw new Error('Document data is unavailable for vector PDF export.');
+        }
+
         const pdf=new JsPdf({
           orientation:'portrait',
-          unit:'px',
-          format:[816,1344],
+          unit:'pt',
+          format:'a4',
           compress:true,
-          hotfixes:['px_scaling']
+          putOnlyUsedFonts:true
         });
 
-        for(let index=0;index<pages.length;index++){
-          showPdf('Rendering PDF page '+(index+1)+' of '+pages.length+'...');
+        if(documentData.kind==='academic'){
+          await buildSelectableAcademicPdf(
+            pdf,
+            documentData.payload,
+            Array.from($('documentReviewPages').querySelectorAll('.pdfPage'))
+          );
+        }else if(documentData.kind==='promotion'){
+          await buildSelectablePromotionPdf(pdf,documentData.data);
+        }else{
+          throw new Error('Unsupported document type.');
+        }
 
-          const canvas=await window.html2canvas(pages[index],{
-            scale:1.6,
+        const fileName=sanitizeDownloadName(
+          currentDocumentReview.fileName||'MAHOUTOKORO_DOCUMENT.pdf',
+          '.pdf'
+        );
+
+        showPdf('Downloading '+fileName+'...');
+        pdf.save(fileName);
+        setStatus('Selectable-text PDF downloaded successfully.');
+      }catch(error){
+        console.error(error);
+        setStatus('PDF error: '+(error.message||error));
+      }finally{
+        if(pdfButton){
+          pdfButton.disabled=false;
+          pdfButton.textContent=oldPdfText||'DOWNLOAD AS PDF';
+        }
+        if(pngButton)pngButton.disabled=false;
+        pdfBusy=false;
+        hidePdf();
+      }
+    }
+
+    async function downloadReviewedDocumentAsPng(){
+      if(!currentDocumentReview||pdfBusy)return;
+
+      pdfBusy=true;
+      const pngButton=$('documentPngButton');
+      const pdfButton=$('documentDownloadButton');
+      const oldPngText=pngButton?pngButton.textContent:'';
+      if(pngButton){
+        pngButton.disabled=true;
+        pngButton.textContent='PREPARING PNG...';
+      }
+      if(pdfButton)pdfButton.disabled=true;
+      showPdf('Preparing HD PNG...');
+
+      try{
+        await ensurePngLibrary();
+        await waitReviewImages($('documentReviewPages'),15000);
+
+        const pages=Array.from($('documentReviewPages').querySelectorAll('.pdfPage'));
+        if(!pages.length)throw new Error('No document page is available to download.');
+
+        const baseName=sanitizeDownloadName(
+          currentDocumentReview.fileName||'MAHOUTOKORO_DOCUMENT.pdf',
+          ''
+        ).replace(/\.pdf$/i,'');
+
+        if(pages.length===1){
+          showPdf('Rendering HD PNG...');
+          const canvas=await window.html2canvas(pages[0],{
+            scale:3,
             useCORS:true,
             allowTaint:false,
             backgroundColor:'#fbf7ef',
@@ -2678,47 +3037,786 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
             scrollY:0
           });
 
-          const imageData=canvas.toDataURL('image/jpeg',0.95);
-          if(index>0)pdf.addPage([816,1344],'portrait');
-          pdf.addImage(imageData,'JPEG',0,0,816,1344,undefined,'FAST');
-
-          /* Kurangi tekanan memori setelah setiap halaman selesai. */
+          const blob=await canvasToBlob(canvas,'image/png');
+          triggerBlobDownload(blob,baseName+'.png');
           canvas.width=1;
           canvas.height=1;
+          setStatus('HD PNG downloaded successfully.');
+        }else{
+          await ensureZipLibrary();
+          const zip=new window.JSZip();
+
+          for(let index=0;index<pages.length;index++){
+            showPdf('Rendering HD PNG page '+(index+1)+' of '+pages.length+'...');
+            const canvas=await window.html2canvas(pages[index],{
+              scale:3,
+              useCORS:true,
+              allowTaint:false,
+              backgroundColor:'#fbf7ef',
+              logging:false,
+              imageTimeout:15000,
+              windowWidth:816,
+              windowHeight:1344,
+              scrollX:0,
+              scrollY:0
+            });
+
+            const blob=await canvasToBlob(canvas,'image/png');
+            const fileName=baseName+'_PAGE_'+String(index+1).padStart(2,'0')+'.png';
+            zip.file(fileName,blob);
+
+            canvas.width=1;
+            canvas.height=1;
+            if(index<pages.length-1)await delay(150);
+          }
+
+          showPdf('Packaging PNG ZIP...');
+          const zipBlob=await zip.generateAsync({
+            type:'blob',
+            compression:'DEFLATE',
+            compressionOptions:{level:6}
+          });
+          triggerBlobDownload(zipBlob,baseName+'.zip');
+          setStatus(pages.length+' HD PNG pages downloaded as ZIP successfully.');
         }
-
-        const fileName=String(
-          currentDocumentReview.fileName||'MAHOUTOKORO_DOCUMENT.pdf'
-        ).replace(/[^A-Za-z0-9._-]+/g,'_');
-
-        showPdf('Downloading '+fileName+'...');
-        pdf.save(fileName);
-        setStatus('PDF downloaded successfully.');
       }catch(error){
         console.error(error);
-        setStatus('PDF error: '+(error.message||error));
+        setStatus('PNG error: '+(error.message||error));
       }finally{
-        button.disabled=false;
-        button.textContent=oldText;
+        if(pngButton){
+          pngButton.disabled=false;
+          pngButton.textContent=oldPngText||'DOWNLOAD AS PNG';
+        }
+        if(pdfButton)pdfButton.disabled=false;
         pdfBusy=false;
         hidePdf();
       }
     }
 
-    async function ensurePdfLibraries(){
-      if(!window.html2canvas){
-        await loadExternalScript(
-          'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
-          'html2canvas'
-        );
+    async function buildSelectableAcademicPdf(pdf,payload,domPages){
+      if(!payload||!payload.success)throw new Error('Invalid academic document payload.');
+
+      const records=(payload.records||[]).filter(record=>record&&record.sourceAvailable!==false);
+      if(!records.length)throw new Error('No academic records are available.');
+
+      const firstDomPage=domPages&&domPages[0]?domPages[0]:null;
+      const sharedAssets=await collectAcademicVectorAssets(firstDomPage);
+      const isLedger=String(payload.mode||'').toLowerCase()==='ledger';
+
+      for(let index=0;index<records.length;index++){
+        if(index>0)pdf.addPage('a4','portrait');
+        showPdf('Building selectable PDF page '+(index+1)+' of '+records.length+'...');
+        await drawAcademicVectorPage(pdf,payload,records[index],{
+          isLedger,
+          pageNumber:index+1,
+          totalPages:records.length,
+          assets:sharedAssets
+        });
+      }
+    }
+
+    async function collectAcademicVectorAssets(pageElement){
+      if(!pageElement)return {};
+      const stamps=Array.from(pageElement.querySelectorAll('.stamp'));
+      return {
+        logo:await imageElementToDataUrl(pageElement.querySelector('.reportLogo'),{
+          width:180,
+          height:180,
+          fit:'contain'
+        }),
+        photo:await imageElementToDataUrl(pageElement.querySelector('.pdfPhotoImage'),{
+          width:320,
+          height:380,
+          fit:'cover',
+          zoom:1.17,
+          positionY:.17
+        }),
+        house:await imageElementToDataUrl(pageElement.querySelector('.pdfHouseLogoImage'),{
+          width:160,
+          height:160,
+          fit:'contain'
+        }),
+        headmasterStamp:await imageElementToDataUrl(stamps[0],{
+          width:190,
+          height:190,
+          fit:'contain'
+        }),
+        administrationStamp:await imageElementToDataUrl(stamps[1],{
+          width:190,
+          height:190,
+          fit:'contain'
+        })
+      };
+    }
+
+    async function drawAcademicVectorPage(pdf,payload,record,settings){
+      const pageWidth=pdf.internal.pageSize.getWidth();
+      const pageHeight=pdf.internal.pageSize.getHeight();
+      const student=payload.student||{};
+      const assets=settings.assets||{};
+      const margin=34;
+      const contentWidth=pageWidth-(margin*2);
+      const red=[142,17,24];
+      const dark=[37,30,25];
+      const gold=[201,168,119];
+      const paper=[255,250,242];
+      const muted=[112,91,72];
+
+      pdf.setFillColor(...red);
+      pdf.rect(0,0,pageWidth,8,'F');
+
+      drawPdfImageOrPlaceholder(pdf,assets.logo,margin,18,52,52,'LOGO');
+
+      const jpHeader=canvasTextData('魔 法 所',{
+        fontSize:25,
+        fontWeight:800,
+        color:'#8e1118',
+        padding:4
+      });
+      if(jpHeader)pdf.addImage(jpHeader,'PNG',96,18,47,15);
+
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(7.7);
+      pdf.setTextColor(...red);
+      pdf.text('- MAHOUTOKORO INSTITUTE OF SPIRIT AND MAGIC.',146,29);
+
+      pdf.setFontSize(17.5);
+      pdf.setTextColor(...dark);
+      pdf.text(
+        settings.isLedger?'ACADEMIC LEDGER':'STUDENT ACADEMIC RECORD',
+        96,
+        52
+      );
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(7.6);
+      pdf.setTextColor(...muted);
+      pdf.text(
+        settings.isLedger
+          ? 'Complete Recorded Semester - Page '+settings.pageNumber+' of '+settings.totalPages
+          : 'Official Semester Study Result',
+        96,
+        66
+      );
+
+      pdf.setFillColor(...dark);
+      pdf.roundedRect(pageWidth-145,19,111,50,7,7,'F');
+      pdf.setTextColor(255,246,232);
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(11.5);
+      pdf.text(pdfAscii(record.semesterTitle||'-'),pageWidth-89.5,40,{align:'center'});
+      pdf.setFontSize(7.5);
+      pdf.text(pdfAscii(record.nenseiLabel||'-'),pageWidth-89.5,55,{align:'center'});
+
+      pdf.setDrawColor(...gold);
+      pdf.setLineWidth(1.2);
+      pdf.line(margin,82,pageWidth-margin,82);
+
+      const identityY=94;
+      pdf.setFillColor(255,255,255);
+      pdf.setDrawColor(...gold);
+      pdf.roundedRect(margin,identityY,contentWidth,108,8,8,'FD');
+
+      drawPdfImageOrPlaceholder(pdf,assets.photo,margin+8,identityY+7,80,94,'PHOTO');
+
+      const detailX=margin+100;
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(15.5);
+      pdf.setTextColor(...red);
+      pdf.text(pdfAscii(student.namaLatin||'-'),detailX,identityY+27,{maxWidth:270});
+
+      const kanjiName=canvasTextData(student.namaKanji||'-',{
+        fontSize:23,
+        fontWeight:700,
+        color:'#7a654f',
+        padding:4
+      });
+      if(kanjiName)pdf.addImage(kanjiName,'PNG',detailX,identityY+33,170,16);
+
+      const houseY=identityY+57;
+      pdf.setFillColor(...paper);
+      pdf.setDrawColor(209,177,132);
+      pdf.roundedRect(detailX,houseY,contentWidth-108,39,6,6,'FD');
+      drawPdfImageOrPlaceholder(pdf,assets.house,detailX+6,houseY+4,31,31,'HOUSE');
+
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(...red);
+      pdf.text('HOUSE',detailX+44,houseY+13);
+      pdf.setFontSize(10.8);
+      pdf.setTextColor(...dark);
+      pdf.text(pdfAscii(student.asrama&&student.asrama.name||'-'),detailX+44,houseY+28);
+
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(...red);
+      pdf.text('SHOWN GRADE',pageWidth-margin-10,houseY+13,{align:'right'});
+      pdf.setFontSize(10.8);
+      pdf.setTextColor(...dark);
+      pdf.text(pdfAscii(record.nenseiLabel||'-'),pageWidth-margin-10,houseY+28,{align:'right'});
+
+      let y=214;
+      const scoreCards=[
+        ['TOTAL GP',appendUnit(record.totalGp,'GP')],
+        ['TOTAL FHP',appendUnit(record.totalFhp,'FHP')],
+        ['AVERAGE NUMBER MARK',record.averageNumberMark||'-']
+      ];
+      const scoreGap=8;
+      const scoreWidth=(contentWidth-(scoreGap*2))/3;
+      scoreCards.forEach((item,index)=>{
+        const x=margin+(index*(scoreWidth+scoreGap));
+        pdf.setFillColor(...paper);
+        pdf.setDrawColor(...gold);
+        pdf.roundedRect(x,y,scoreWidth,42,6,6,'FD');
+        pdf.setFont('helvetica','bold');
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(...muted);
+        pdf.text(item[0],x+(scoreWidth/2),y+13,{align:'center'});
+        pdf.setFontSize(14);
+        pdf.setTextColor(...red);
+        pdf.text(pdfAscii(item[1]),x+(scoreWidth/2),y+31,{align:'center'});
+      });
+
+      y=267;
+      y=drawPdfSectionBar(pdf,'ACTIVITY PARTICIPATION',y,margin,contentWidth);
+      const participation=record.participation||{};
+      const participationItems=[
+        ['QUIDDITCH',participation.quidditch],
+        ['COMBAT',participation.combat],
+        ['QUEST',participation.quest],
+        ['SHIKEN',participation.shiken]
+      ];
+      const partGap=7;
+      const partWidth=(contentWidth-(partGap*3))/4;
+      participationItems.forEach((item,index)=>{
+        const x=margin+(index*(partWidth+partGap));
+        const state=item[1]||{code:'NO_SOURCE',label:'NO SOURCE DATA'};
+        pdf.setFillColor(...paper);
+        pdf.setDrawColor(216,188,148);
+        pdf.roundedRect(x,y,partWidth,39,6,6,'FD');
+        pdf.setFont('helvetica','normal');
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(...muted);
+        pdf.text(item[0],x+(partWidth/2),y+12,{align:'center'});
+        pdf.setFont('helvetica','bold');
+        pdf.setFontSize(7.2);
+        const stateColor=state.code==='PARTICIPATED'
+          ? [24,121,78]
+          : state.code==='NOT_ELIGIBLE'
+            ? [112,91,72]
+            : [180,35,52];
+        pdf.setTextColor(...stateColor);
+        const stateLines=pdf.splitTextToSize(pdfAscii(state.label||'-'),partWidth-8);
+        pdf.text(stateLines,x+(partWidth/2),y+26,{align:'center'});
+      });
+
+      y+=50;
+      y=drawPdfSectionBar(pdf,'COMPLETE SUBJECT RESULTS',y,margin,contentWidth);
+
+      const subjects=Array.isArray(record.subjects)?record.subjects:[];
+      const kanjiImages=subjects.map(subject=>canvasTextData(subject.kanjiMark||'-',{
+        fontSize:22,
+        fontWeight:800,
+        color:'#2a211a',
+        padding:4
+      }));
+
+      if(typeof pdf.autoTable!=='function'){
+        throw new Error('jsPDF AutoTable plugin is unavailable.');
       }
 
+      pdf.autoTable({
+        startY:y,
+        margin:{left:margin,right:margin},
+        tableWidth:contentWidth,
+        head:[[
+          'SUBJECT',
+          'CLASS\n(60%)',
+          'RAW EXAM\nMARK',
+          'EXAM MARK\n(40%)',
+          'MARK\nNUMBER',
+          'MARK\nKANJI'
+        ]],
+        body:subjects.map(subject=>[
+          pdfAscii(subject.name||'-'),
+          pdfAscii(subject.nak||'-'),
+          pdfAscii(subject.rawExam||'-'),
+          pdfAscii(subject.shiken||'-'),
+          pdfAscii(subject.numberMark||'-'),
+          ''
+        ]),
+        theme:'grid',
+        styles:{
+          font:'helvetica',
+          fontSize:7.2,
+          cellPadding:4,
+          textColor:dark,
+          lineColor:gold,
+          lineWidth:.45,
+          fillColor:paper,
+          valign:'middle',
+          halign:'center',
+          minCellHeight:29
+        },
+        headStyles:{
+          fillColor:dark,
+          textColor:[255,241,218],
+          fontStyle:'bold',
+          fontSize:6.2,
+          minCellHeight:25
+        },
+        columnStyles:{
+          0:{cellWidth:160,halign:'left',fontStyle:'bold'},
+          1:{cellWidth:55},
+          2:{cellWidth:68},
+          3:{cellWidth:72},
+          4:{cellWidth:67,fontStyle:'bold',textColor:red},
+          5:{cellWidth:101}
+        },
+        didDrawCell:data=>{
+          if(data.section==='body'&&data.column.index===5){
+            const image=kanjiImages[data.row.index];
+            if(image){
+              const maxW=Math.max(12,data.cell.width-8);
+              const maxH=Math.max(10,data.cell.height-8);
+              pdf.addImage(image,'PNG',data.cell.x+4,data.cell.y+4,maxW,maxH);
+            }
+          }
+        }
+      });
+
+      y=(pdf.lastAutoTable&&pdf.lastAutoTable.finalY||y)+10;
+      y=drawPdfSectionBar(pdf,'SEMESTER OUTCOME',y,margin,contentWidth);
+
+      const outcomeItems=[
+        ['GRADE STATUS',record.gradeStatus||'-',gradePdfColor(record.gradeStatus)],
+        ['RANKING RESULT',record.rankingResult||'-',rankPdfColor(record.rankingResult)],
+        ['AVERAGE NUMBER MARK',record.averageNumberMark||'-',dark]
+      ];
+      outcomeItems.forEach((item,index)=>{
+        const x=margin+(index*(scoreWidth+scoreGap));
+        pdf.setFillColor(...paper);
+        pdf.setDrawColor(...gold);
+        pdf.roundedRect(x,y,scoreWidth,42,6,6,'FD');
+        pdf.setFont('helvetica','normal');
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(...muted);
+        pdf.text(item[0],x+(scoreWidth/2),y+13,{align:'center'});
+        pdf.setFont('helvetica','bold');
+        pdf.setFontSize(9.2);
+        pdf.setTextColor(...item[2]);
+        const lines=pdf.splitTextToSize(pdfAscii(item[1]),scoreWidth-10);
+        pdf.text(lines,x+(scoreWidth/2),y+29,{align:'center'});
+      });
+
+      y+=51;
+      const remarksText=pdfAscii(record.remarks||'-');
+      const remarksLines=pdf.splitTextToSize(remarksText,contentWidth-20);
+      const remarksHeight=Math.max(42,22+(remarksLines.length*8));
+      pdf.setFillColor(...paper);
+      pdf.setDrawColor(...gold);
+      pdf.roundedRect(margin,y,contentWidth,remarksHeight,6,6,'FD');
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(...red);
+      pdf.text('REMARKS / EXAMINATION ELIGIBILITY',margin+10,y+13);
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(...dark);
+      pdf.text(remarksLines,margin+10,y+27);
+
+      y+=remarksHeight+24;
+      const signatureCenters=[margin+(contentWidth*.25),margin+(contentWidth*.75)];
+      const signatureData=[
+        {
+          role:'Mahoutokoro Headmaster',
+          image:assets.headmasterStamp,
+          name:'Ryoumen Sho'
+        },
+        {
+          role:'MJP Report Administration',
+          image:assets.administrationStamp,
+          name:'Student Affairs Office'
+        }
+      ];
+
+      signatureData.forEach((item,index)=>{
+        const center=signatureCenters[index];
+        pdf.setFont('helvetica','bold');
+        pdf.setFontSize(7.2);
+        pdf.setTextColor(...dark);
+        pdf.text(item.role,center,y,{align:'center'});
+        drawPdfImageOrPlaceholder(pdf,item.image,center-25,y+6,50,50,'HANKO');
+        pdf.setFontSize(7);
+        pdf.text(item.name,center,y+65,{align:'center'});
+      });
+
+      pdf.setDrawColor(...gold);
+      pdf.line(margin,pageHeight-29,pageWidth-margin,pageHeight-29);
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(6.5);
+      pdf.setTextColor(...muted);
+      let footer='MAHOUTOKORO - '+pdfAscii(payload.generatedDateLatin||'');
+      if(settings.isLedger){
+        footer+=' - LEDGER PAGE '+settings.pageNumber+' / '+settings.totalPages;
+      }
+      pdf.text(footer,pageWidth/2,pageHeight-17,{align:'center'});
+    }
+
+    async function buildSelectablePromotionPdf(pdf,data){
+      const rows=Array.isArray(data&&data.rows)?data.rows:[];
+      const groups=[
+        {
+          title:'PROMOTED STUDENTS',
+          color:[47,138,95],
+          rows:rows.filter(row=>normalizePromotionStatus(row.gradeStatus).includes('PROMOTED'))
+        },
+        {
+          title:'RETAINED STUDENTS',
+          color:[180,35,52],
+          rows:rows.filter(row=>normalizePromotionStatus(row.gradeStatus).includes('RETAINED'))
+        }
+      ];
+
+      if(typeof pdf.autoTable!=='function'){
+        throw new Error('jsPDF AutoTable plugin is unavailable.');
+      }
+
+      let firstGroup=true;
+      for(const group of groups){
+        if(!firstGroup)pdf.addPage('a4','portrait');
+        firstGroup=false;
+
+        if(!group.rows.length){
+          drawPromotionVectorHeader(pdf,data,group);
+          pdf.setFont('helvetica','bold');
+          pdf.setFontSize(10);
+          pdf.setTextColor(112,91,72);
+          pdf.text('No students were recorded in this status.',pdf.internal.pageSize.getWidth()/2,190,{align:'center'});
+          continue;
+        }
+
+        pdf.autoTable({
+          startY:147,
+          margin:{top:147,left:28,right:28,bottom:38},
+          showHead:'everyPage',
+          head:[['NO.','GAKUSEI ID','STUDENT','HOUSE','NENSEI','RANKING','REMARKS']],
+          body:group.rows.map((row,index)=>[
+            String(index+1),
+            pdfAscii(row.nomorId||'-'),
+            pdfAscii(row.namaLatin||'-'),
+            pdfAscii(row.asrama||'-'),
+            pdfAscii(row.nenseiLabel||'-'),
+            pdfAscii(row.rankingResult||'-'),
+            pdfAscii(row.remarks||'-')
+          ]),
+          theme:'grid',
+          styles:{
+            font:'helvetica',
+            fontSize:6.8,
+            cellPadding:4,
+            lineColor:[201,168,119],
+            lineWidth:.4,
+            fillColor:[255,250,242],
+            textColor:[42,33,26],
+            valign:'middle',
+            overflow:'linebreak'
+          },
+          headStyles:{
+            fillColor:[37,30,25],
+            textColor:[255,241,218],
+            fontStyle:'bold',
+            fontSize:6.3,
+            halign:'center'
+          },
+          columnStyles:{
+            0:{cellWidth:25,halign:'center'},
+            1:{cellWidth:70,halign:'center'},
+            2:{cellWidth:105},
+            3:{cellWidth:55,halign:'center'},
+            4:{cellWidth:55,halign:'center'},
+            5:{cellWidth:62,halign:'center'},
+            6:{cellWidth:167}
+          },
+          willDrawPage:()=>drawPromotionVectorHeader(pdf,data,group)
+        });
+      }
+
+      const totalPages=pdf.getNumberOfPages();
+      for(let pageNumber=1;pageNumber<=totalPages;pageNumber++){
+        pdf.setPage(pageNumber);
+        const pageWidth=pdf.internal.pageSize.getWidth();
+        const pageHeight=pdf.internal.pageSize.getHeight();
+        pdf.setDrawColor(217,185,138);
+        pdf.line(36,pageHeight-29,pageWidth-36,pageHeight-29);
+        pdf.setFont('helvetica','normal');
+        pdf.setFontSize(6.5);
+        pdf.setTextColor(109,89,72);
+        pdf.text(
+          'MAHOUTOKORO - '+pdfAscii(data.generatedAt||'')+' - PAGE '+pageNumber+' / '+totalPages,
+          pageWidth/2,
+          pageHeight-17,
+          {align:'center'}
+        );
+      }
+    }
+
+    function drawPromotionVectorHeader(pdf,data,group){
+      const pageWidth=pdf.internal.pageSize.getWidth();
+      pdf.setFillColor(142,17,24);
+      pdf.rect(0,0,pageWidth,8,'F');
+      drawPdfImageOrPlaceholder(pdf,PROMOTION_LOGO_DATA_URL,34,20,54,54,'LOGO');
+
+      const jpHeader=canvasTextData('進級結果一覧',{
+        fontSize:24,
+        fontWeight:800,
+        color:'#8e1118',
+        padding:4
+      });
+      if(jpHeader)pdf.addImage(jpHeader,'PNG',99,20,83,15);
+
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(18);
+      pdf.setTextColor(37,30,25);
+      pdf.text('NENSEI PROMOTION RECAP',99,54);
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(128,108,89);
+      pdf.text('Mahoutokoro Official Grade Advancement Record',99,68);
+      pdf.setDrawColor(217,185,138);
+      pdf.setLineWidth(1.1);
+      pdf.line(34,82,pageWidth-34,82);
+
+      pdf.setFillColor(37,30,25);
+      pdf.roundedRect(34,94,pageWidth-68,34,6,6,'F');
+      pdf.setFillColor(...group.color);
+      pdf.rect(34,94,7,34,'F');
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(11);
+      pdf.setTextColor(255,246,232);
+      pdf.text(group.title,49,109);
+      pdf.setFontSize(6.8);
+      pdf.text(
+        'SEMESTER '+pdfAscii(data.semesterTitle||'-')+' - '+group.rows.length+' STUDENT'+(group.rows.length===1?'':'S'),
+        49,
+        121
+      );
+
+      pdf.setFont('helvetica','normal');
+      pdf.setFontSize(6.8);
+      pdf.setTextColor(95,77,62);
+      const summary=data.summary||{};
+      pdf.text(
+        'TOTAL '+Number(summary.total||0)+' - PROMOTED '+Number(summary.promoted||0)+' - RETAINED '+Number(summary.retained||0)+' - UNSPECIFIED '+Number(summary.unspecified||0),
+        34,
+        140
+      );
+    }
+
+    function drawPdfSectionBar(pdf,label,y,x,width){
+      pdf.setFillColor(142,17,24);
+      pdf.rect(x,y,width,19,'F');
+      pdf.setFillColor(214,173,114);
+      pdf.rect(x,y,5,19,'F');
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(7.5);
+      pdf.setTextColor(255,242,220);
+      pdf.text(label,x+12,y+13);
+      return y+27;
+    }
+
+    function drawPdfImageOrPlaceholder(pdf,imageData,x,y,width,height,label){
+      if(imageData){
+        try{
+          const format=/^data:image\/jpe?g/i.test(imageData)?'JPEG':'PNG';
+          pdf.addImage(imageData,format,x,y,width,height,undefined,'FAST');
+          return;
+        }catch(error){
+          console.warn('PDF image skipped:',error);
+        }
+      }
+      pdf.setDrawColor(201,168,119);
+      pdf.setFillColor(239,230,216);
+      pdf.rect(x,y,width,height,'FD');
+      pdf.setFont('helvetica','bold');
+      pdf.setFontSize(6);
+      pdf.setTextColor(123,106,91);
+      pdf.text(label||'IMAGE',x+(width/2),y+(height/2),{align:'center'});
+    }
+
+    function appendUnit(value,unit){
+      const text=String(value==null||value===''?'-':value).trim();
+      if(text==='-')return '-';
+      return new RegExp(unit+'$','i').test(text)?text:text+' '+unit;
+    }
+
+    function gradePdfColor(value){
+      const textValue=String(value||'').toUpperCase();
+      if(textValue.includes('PROMOTED'))return [24,121,78];
+      if(textValue.includes('RETAINED'))return [180,35,52];
+      return [37,30,25];
+    }
+
+    function rankPdfColor(value){
+      const textValue=String(value||'').toUpperCase();
+      if(textValue.includes('1ST'))return [166,108,0];
+      if(textValue.includes('2ND'))return [150,61,105];
+      return [37,30,25];
+    }
+
+    function pdfAscii(value){
+      return String(value==null?'':value)
+        .normalize('NFKD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .replace(/[–—−]/g,'-')
+        .replace(/[“”]/g,'"')
+        .replace(/[‘’]/g,"'")
+        .replace(/[^\x20-\x7E]/g,'')
+        .replace(/\s+/g,' ')
+        .trim()||'-';
+    }
+
+    function canvasTextData(value,options){
+      const settings=options||{};
+      const textValue=String(value==null?'':value).trim();
+      if(!textValue)return '';
+
+      const fontSize=Math.max(10,Number(settings.fontSize)||22);
+      const padding=Math.max(2,Number(settings.padding)||4);
+      const scale=2;
+      const canvas=document.createElement('canvas');
+      const context=canvas.getContext('2d');
+      if(!context)return '';
+
+      context.font=(settings.fontWeight||700)+' '+(fontSize*scale)+'px "Noto Sans JP", sans-serif';
+      const measured=Math.ceil(context.measureText(textValue).width);
+      canvas.width=Math.max(16,measured+(padding*scale*2));
+      canvas.height=Math.ceil((fontSize*1.45*scale)+(padding*scale*2));
+
+      const ctx=canvas.getContext('2d');
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.font=(settings.fontWeight||700)+' '+(fontSize*scale)+'px "Noto Sans JP", sans-serif';
+      ctx.textBaseline='middle';
+      ctx.fillStyle=settings.color||'#2a211a';
+      ctx.fillText(textValue,padding*scale,canvas.height/2);
+      return canvas.toDataURL('image/png');
+    }
+
+    async function imageElementToDataUrl(image,options){
+      if(!image||!image.complete||!image.naturalWidth||!image.naturalHeight)return '';
+      const settings=options||{};
+      const width=Math.max(16,Math.round(Number(settings.width)||image.naturalWidth));
+      const height=Math.max(16,Math.round(Number(settings.height)||image.naturalHeight));
+      const scale=2;
+      const canvas=document.createElement('canvas');
+      canvas.width=width*scale;
+      canvas.height=height*scale;
+      const context=canvas.getContext('2d');
+      if(!context)return '';
+      context.imageSmoothingEnabled=true;
+      context.imageSmoothingQuality='high';
+
+      const sourceWidth=image.naturalWidth;
+      const sourceHeight=image.naturalHeight;
+      const targetWidth=canvas.width;
+      const targetHeight=canvas.height;
+      const fit=settings.fit||'contain';
+      const zoom=Math.max(.1,Number(settings.zoom)||1);
+      const positionY=Math.min(1,Math.max(0,Number(settings.positionY)||.5));
+
+      let drawScale=fit==='cover'
+        ? Math.max(targetWidth/sourceWidth,targetHeight/sourceHeight)
+        : Math.min(targetWidth/sourceWidth,targetHeight/sourceHeight);
+      drawScale*=zoom;
+
+      const drawWidth=sourceWidth*drawScale;
+      const drawHeight=sourceHeight*drawScale;
+      const drawX=(targetWidth-drawWidth)/2;
+      const drawY=(targetHeight-drawHeight)*positionY;
+
+      try{
+        context.drawImage(image,drawX,drawY,drawWidth,drawHeight);
+        return canvas.toDataURL('image/png');
+      }catch(error){
+        console.warn('Unable to convert image for PDF:',error);
+        return '';
+      }
+    }
+
+    function sanitizeDownloadName(value,extension){
+      let name=String(value||'MAHOUTOKORO_DOCUMENT')
+        .replace(/[^A-Za-z0-9._-]+/g,'_')
+        .replace(/_+/g,'_');
+      if(extension&& !name.toLowerCase().endsWith(extension.toLowerCase())){
+        name=name.replace(/\.[A-Za-z0-9]+$/,'')+extension;
+      }
+      return name;
+    }
+
+    function canvasToBlob(canvas,type){
+      return new Promise((resolve,reject)=>{
+        canvas.toBlob(blob=>{
+          if(blob)resolve(blob);
+          else reject(new Error('Unable to create image file.'));
+        },type||'image/png');
+      });
+    }
+
+    function triggerBlobDownload(blob,fileName){
+      const url=URL.createObjectURL(blob);
+      const anchor=document.createElement('a');
+      anchor.href=url;
+      anchor.download=fileName;
+      anchor.style.display='none';
+      document.body.appendChild(anchor);
+      anchor.click();
+      anchor.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),3000);
+    }
+
+    function delay(milliseconds){
+      return new Promise(resolve=>setTimeout(resolve,milliseconds));
+    }
+
+    async function ensurePdfLibraries(){
       if(!(window.jspdf&&window.jspdf.jsPDF)){
         await loadExternalScript(
           'https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js',
           'jspdf'
         );
       }
+
+      const JsPdf=window.jspdf&&window.jspdf.jsPDF;
+      if(!JsPdf)throw new Error('jsPDF library is unavailable.');
+
+      if(typeof JsPdf.API.autoTable!=='function'){
+        await loadExternalScript(
+          'https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js',
+          'jspdf-autotable'
+        );
+      }
+
+      if(typeof JsPdf.API.autoTable!=='function'){
+        throw new Error('jsPDF AutoTable plugin is unavailable.');
+      }
+    }
+
+    async function ensurePngLibrary(){
+      if(!window.html2canvas){
+        await loadExternalScript(
+          'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js',
+          'html2canvas'
+        );
+      }
+      if(!window.html2canvas)throw new Error('html2canvas library is unavailable.');
+    }
+
+    async function ensureZipLibrary(){
+      if(!window.JSZip){
+        await loadExternalScript(
+          'https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js',
+          'jszip'
+        );
+      }
+      if(!window.JSZip)throw new Error('JSZip library is unavailable.');
     }
 
     function loadExternalScript(src,key){
@@ -2830,5 +3928,47 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,pdfBusy=fa
       }
     }
     function scrollSvg(i){return'<svg viewBox="0 0 120 86"><defs><linearGradient id="s'+i+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0d0"/><stop offset=".5" stop-color="#e2c18b"/><stop offset="1" stop-color="#aa7544"/></linearGradient></defs><path d="M17 14C8 14 5 25 12 31L22 32H98C111 34 116 16 102 14Z" fill="#1c1b1c" stroke="#d9b277" stroke-width="2"/><path d="M17 54C8 54 5 65 12 71L22 72H98C111 74 116 56 102 54Z" fill="#171617" stroke="#b77d4a" stroke-width="2"/><path d="M18 23C29 18 91 18 102 23V64C91 69 29 69 18 64Z" fill="url(#s'+i+')" stroke="#7c4d2f"/><circle cx="60" cy="44" r="8" fill="#8c0d15" stroke="#f0d09c"/><text x="60" y="48" text-anchor="middle" font-size="10" fill="#f8e5c4">魔</text></svg>'}
-    function flowerSvg(theme,i){if(theme==='kosei'){let petals='';for(let x=0;x<18;x++)petals+='<ellipse cx="32" cy="11" rx="4.7" ry="13.5" fill="url(#p'+i+')" stroke="#bd6b00" stroke-width=".6" transform="rotate('+(x*20)+' 32 32)"/>';return'<svg viewBox="0 0 64 64"><defs><linearGradient id="p'+i+'" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff6a3"/><stop offset=".35" stop-color="#ffe15a"/><stop offset=".72" stop-color="#f4ad13"/><stop offset="1" stop-color="#c96a00"/></linearGradient></defs>'+petals+'<circle cx="32" cy="32" r="14" fill="#5b3218" stroke="#c97805"/></svg>'}if(theme==='yamiyo')return'<svg viewBox="0 0 64 64"><defs><radialGradient id="r'+i+'"><stop stop-color="#ead7f6"/><stop offset=".4" stop-color="#b47bce"/><stop offset="1" stop-color="#17101c"/></radialGradient></defs><path d="M32 4C22 4 16 10 15 17C7 17 2 24 5 32C0 39 4 49 13 51C16 60 26 63 33 58C42 63 52 57 53 49C62 46 64 36 58 29C61 21 54 13 46 14C43 7 36 4 32 4Z" fill="url(#r'+i+')"/><path d="M32 14C24 14 18 21 21 28C15 33 18 42 25 44C27 52 37 53 43 46C51 45 52 35 46 30C48 22 40 16 34 19Z" fill="#744087"/><path d="M31 24C37 21 43 26 40 32C38 37 31 38 29 33C26 29 28 25 31 24Z" fill="#241329"/></svg>';let petals='';[0,72,144,216,288].forEach(a=>petals+='<path d="M0-6C-8-9-14-17-9-25C-5-32 3-33 8-27C14-20 8-11 0-6Z" fill="url(#k'+i+')" transform="rotate('+a+')"/>');return'<svg viewBox="0 0 64 64"><defs><radialGradient id="k'+i+'"><stop stop-color="#fff"/><stop offset=".48" stop-color="#ffe9f2"/><stop offset="1" stop-color="#dc84a8"/></radialGradient></defs><g transform="translate(32 32)">'+petals+'<circle r="6.6" fill="#fff3cf"/></g></svg>'}
+    function flowerSvg(theme,i){
+      if(theme==='kosei'){
+        let petals='';
+        for(let x=0;x<18;x++){
+          petals+='<ellipse cx="32" cy="11" rx="4.7" ry="13.5" fill="url(#p'+i+')" stroke="#bd6b00" stroke-width=".6" transform="rotate('+(x*20)+' 32 32)"/>';
+        }
+        return '<svg viewBox="0 0 64 64"><defs><linearGradient id="p'+i+'" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff6a3"/><stop offset=".35" stop-color="#ffe15a"/><stop offset=".72" stop-color="#f4ad13"/><stop offset="1" stop-color="#c96a00"/></linearGradient></defs>'+petals+'<circle cx="32" cy="32" r="14" fill="#5b3218" stroke="#c97805"/></svg>';
+      }
+
+      if(theme==='yamiyo'){
+        let outer='';
+        let middle='';
+        [0,45,90,135,180,225,270,315].forEach(angle=>{
+          outer+='<path d="M0-38C-14-41-27-31-25-17C-23-6-13-1 0-8C13-1 23-6 25-17C27-31 14-41 0-38Z" fill="url(#yo'+i+')" stroke="#32153f" stroke-width="1.15" transform="rotate('+angle+')"/>';
+        });
+        [22,82,142,202,262,322].forEach(angle=>{
+          middle+='<path d="M0-29C-11-33-21-24-19-13C-17-4-9 1 0-5C9 1 17-4 19-13C21-24 11-33 0-29Z" fill="url(#ym'+i+')" stroke="#4b205d" stroke-width="1" transform="rotate('+angle+')"/>';
+        });
+        return '<svg viewBox="0 0 96 96" xmlns="http://www.w3.org/2000/svg">'+
+          '<defs>'+
+            '<radialGradient id="yo'+i+'" cx="38%" cy="30%" r="78%"><stop offset="0" stop-color="#d9a7ea"/><stop offset=".33" stop-color="#8f4ca8"/><stop offset=".72" stop-color="#4a225b"/><stop offset="1" stop-color="#190d20"/></radialGradient>'+
+            '<radialGradient id="ym'+i+'" cx="42%" cy="28%" r="72%"><stop offset="0" stop-color="#f0ccfa"/><stop offset=".26" stop-color="#b76bd0"/><stop offset=".68" stop-color="#672c7a"/><stop offset="1" stop-color="#26102f"/></radialGradient>'+
+            '<linearGradient id="yl'+i+'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#5d3970"/><stop offset=".55" stop-color="#27162f"/><stop offset="1" stop-color="#0b080d"/></linearGradient>'+
+            '<filter id="ys'+i+'" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity=".58"/></filter>'+
+          '</defs>'+
+          '<g transform="translate(48 48)" filter="url(#ys'+i+')">'+
+            '<path d="M-27 12C-45 6-57 18-57 34C-43 37-29 30-21 19C-31 22-39 26-47 30C-39 20-32 16-27 12Z" fill="url(#yl'+i+')" stroke="#705087" stroke-width="1"/>'+
+            '<path d="M27 12C45 6 57 18 57 34C43 37 29 30 21 19C31 22 39 26 47 30C39 20 32 16 27 12Z" fill="url(#yl'+i+')" stroke="#705087" stroke-width="1"/>'+
+            outer+middle+
+            '<path d="M0-21C-9-24-16-17-14-8C-13-1-6 3 0-1C6 3 13-1 14-8C16-17 9-24 0-21Z" fill="#6f3185" stroke="#b56dca" stroke-width="1.1" transform="rotate(8)"/>'+
+            '<path d="M-11-8C-3-16 10-14 14-5C17 3 10 12 1 11C-7 10-12 4-9-2C-6-8 1-10 6-6C10-3 8 3 3 5C-2 7-6 3-4 0" fill="none" stroke="#e4b7ef" stroke-width="3.1" stroke-linecap="round"/>'+
+            '<path d="M-23-25C-16-30-8-31-2-28" fill="none" stroke="#f6dcfb" stroke-width="1.8" stroke-linecap="round" opacity=".72"/>'+
+            '<path d="M18-24C23-20 26-14 25-9" fill="none" stroke="#dca4e9" stroke-width="1.5" stroke-linecap="round" opacity=".62"/>'+
+          '</g>'+
+        '</svg>';
+      }
+
+      let petals='';
+      [0,72,144,216,288].forEach(angle=>{
+        petals+='<path d="M0-6C-8-9-14-17-9-25C-5-32 3-33 8-27C14-20 8-11 0-6Z" fill="url(#k'+i+')" transform="rotate('+angle+')"/>';
+      });
+      return '<svg viewBox="0 0 64 64"><defs><radialGradient id="k'+i+'"><stop stop-color="#fff"/><stop offset=".48" stop-color="#ffe9f2"/><stop offset="1" stop-color="#dc84a8"/></radialGradient></defs><g transform="translate(32 32)">'+petals+'<circle r="6.6" fill="#fff3cf"/></g></svg>';
+    }
     function random(a,b){return Math.random()*(b-a)+a}function cache(url){const value=String(url||'');if(/^data:|^blob:/i.test(value))return value;return value+(value.includes('?')?'&':'?')+'v='+Date.now()}function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)},AUTO_REFRESH_MS)}function escapeHtml(value){return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out}function safeName(value){return String(value||'REPORT').replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_')}
