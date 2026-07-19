@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css">
+    <link rel="stylesheet" href="./style.css?v=20260719-v43-graduated-jmc-withdrawal-wording">
 
 </head>
 <body class="front-mode">
@@ -16,10 +16,23 @@
   <main class="shell">
     <section class="hero">
       <div id="heroBackdrop" class="heroBackdrop" aria-hidden="true"></div>
-      <button class="recapButton recapButtonCorner" type="button" onclick="openPromotionRecap()">
-        <span>NENSEI PROMOTION RECAP</span>
-        <span class="recapArrow" aria-hidden="true">↗</span>
-      </button>
+      <button id="homeButton" class="recapButton recapButtonCorner homeButtonCorner" type="button" onclick="goHome()">HOME</button>
+      <div id="generalMenu" class="generalMenu">
+        <button id="generalMenuButton" class="recapButton recapButtonCorner generalMenuButton" type="button" onclick="toggleGeneralMenu(event)" aria-haspopup="true" aria-expanded="false">
+          <span>GENERAL</span>
+          <span class="generalMenuChevron" aria-hidden="true">⌄</span>
+        </button>
+        <div id="generalMenuPanel" class="generalMenuPanel hidden" role="menu">
+          <button type="button" role="menuitem" onclick="openNenseiRecapFromMenu()">
+            <span class="generalMenuItemTitle">NENSEI RECAP</span>
+            <span class="generalMenuItemText">Current students grouped by Nensei and House</span>
+          </button>
+          <button type="button" role="menuitem" onclick="openPromotionRecapFromMenu()">
+            <span class="generalMenuItemTitle">NENSEI PROMOTION RECAP</span>
+            <span class="generalMenuItemText">Latest promotion and retention results</span>
+          </button>
+        </div>
+      </div>
       <div class="heroContent">
         <div class="logo"><img src="https://drive.google.com/thumbnail?id=1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK&sz=w700" alt="Mahoutokoro"></div>
         <div class="heroCore">
@@ -35,9 +48,26 @@
       </div>
     </section>
 
+    <section id="gpRankingSection" class="gpRankingSection">
+      <div class="gpRankingHeader">
+        <div>
+          <div class="gpRankingEyebrow">CURRENT SEMESTER LIVE STANDINGS</div>
+          <h2 class="gpRankingTitle">STUDENT GP RANKING</h2>
+          <p class="gpRankingDisclaimer">This ranking is determined entirely by accumulated GP and does not necessarily determine the final Best Student of the Semester result.</p>
+        </div>
+        <div class="gpRankingMeta">
+          <div id="gpRankingSemester" class="gpRankingSemester">CURRENT SEMESTER</div>
+          <div id="gpRankingUpdated" class="gpRankingUpdated">Synchronizing point data...</div>
+        </div>
+      </div>
+      <div id="gpRankingContent" class="gpRankingContent">
+        <div class="gpRankingLoading"><span></span><span></span><span></span> Loading current GP ranking...</div>
+      </div>
+    </section>
+
     <section id="resultSection" class="hidden">
-      <div class="resultGrid">
-        <article class="panel"><div class="panelInner">
+      <div id="resultGrid" class="resultGrid">
+        <article id="studentProfilePanel" class="panel"><div class="panelInner">
           <div class="profileHeader">
             <div id="profileAvatar" class="avatar"><div class="empty">NO PHOTO</div></div>
             <div class="identity">
@@ -47,17 +77,17 @@
             <div id="dormCrest" class="crest"><div class="empty">DORM</div></div>
           </div>
 
-          <div class="infoGrid">
+          <div id="studentInfoGrid" class="infoGrid">
             <div class="infoCard compact"><div class="label">Gakusei ID Number</div><div id="studentId" class="value">-</div></div>
             <div class="infoCard compact"><div class="label">X Username</div><div id="xUsername" class="value">-</div></div>
             <div class="infoCard compact"><div class="label">Current Grade</div><div id="currentGrade" class="value">-</div></div>
             <div class="infoCard compact"><div class="label">Date of Birth</div><div id="birthDate" class="value">-</div></div>
             <div class="infoCard wide finance"><div class="label">Finance Balance</div><div id="financeBalance" class="financeValue">-</div></div>
-            <div class="infoCard wide"><div class="label">Side Occupations</div><div id="occupationList" class="occupationList"><div class="empty">No occupation data.</div></div></div>
-            <div class="infoCard wide academicCard">
+            <div id="occupationCard" class="infoCard wide"><div id="occupationSectionTitle" class="sectionTitle largeCardLabel">Side Occupations</div><div id="occupationList" class="occupationList"><div class="empty">No occupation data.</div></div></div>
+            <div id="academicCardPanel" class="infoCard wide academicCard">
               <div class="academicTop">
-                <div><div class="label">Academic Records</div><div class="academicIntro">From the first recorded semester through the latest semester.</div></div>
-                <div class="academicActions"><div id="academicCount" class="count">0 / 0 RECORDED</div><button id="ledgerButton" class="ledgerButton" type="button" onclick="downloadLedger(this)">VIEW COMPLETE LEDGER</button></div>
+                <div><div class="sectionTitle largeCardLabel">Academic Records</div><div class="academicIntro">From the first recorded semester through the latest semester.</div></div>
+                <div class="academicActions"><div id="academicCount" class="count">0 / 0 RECORDED</div><button id="transcriptButton" class="transcriptButton" type="button" onclick="downloadTranscript(this)">VIEW ACADEMIC TRANSCRIPT</button></div>
               </div>
               <div id="academicRecords" class="academicRecords"><div class="empty">No academic record loaded.</div></div>
             </div>
@@ -66,10 +96,10 @@
 
         <div class="rightColumn">
           <aside class="panel">
-            <div class="sectionHeader single"><h3 class="sectionTitle">Gakusei ID Card / Nametag</h3></div>
+            <div class="sectionHeader single"><h3 id="studentMediaTitle" class="sectionTitle">Gakusei ID Card / Nametag</h3></div>
             <div class="mediaStack"><div class="mediaCard"><div id="idCardPreview" class="mediaPreview"><div class="empty">ID CARD UNAVAILABLE</div></div><div id="idCardAction" class="mediaAction hidden"></div></div></div>
           </aside>
-          <section class="panel">
+          <section id="studentPointPanel" class="panel">
             <div class="sectionHeader"><h3 class="sectionTitle">Student Point Log</h3><div id="semesterBadge" class="semesterBadge">CURRENT SEMESTER</div></div>
             <div class="semesterNote">Only point logs from the current semester are displayed.</div>
             <div class="totals">
@@ -81,10 +111,18 @@
             <div id="pointLogs" class="pointLogs"><div class="empty">No point log loaded.</div></div>
           </section>
         </div>
+        <div id="graduatedWideSections" class="graduatedWideSections hidden" aria-live="polite"></div>
       </div>
     </section>
     <footer class="footer">Developed by <span class="footerBrand">Ryoumen Shō</span></footer>
   </main>
+
+  <div id="nenseiModal" class="modal hidden">
+    <div class="modalCard nenseiModalCard">
+      <div class="modalHeader"><div><h2 class="modalTitle">NENSEI RECAP</h2><div id="nenseiModalSub" class="modalSubtitle"></div></div><div class="modalButtons"><button class="download" type="button" onclick="openNenseiDocumentReview()">VIEW FULL DETAIL</button><button type="button" onclick="closeNenseiRecap()">CLOSE</button></div></div>
+      <div id="nenseiContent"><div class="empty">Loading...</div></div>
+    </div>
+  </div>
 
   <div id="promotionModal" class="modal hidden">
     <div class="modalCard">
@@ -112,9 +150,23 @@
     </div>
   </div>
 
+  <div id="devotedFileModal" class="devotedFileModal hidden" role="dialog" aria-modal="true" aria-labelledby="devotedFileModalTitle">
+    <div class="devotedFileCard">
+      <div class="devotedFileHeader">
+        <div>
+          <div class="devotedFileEyebrow">7 NENSEI • GRADUATED RECORD</div>
+          <h2 id="devotedFileModalTitle" class="devotedFileTitle">DEVOTED STUDENT KŌRON</h2>
+          <div class="devotedFileNotice">Kōron preview only. This page does not provide a download action.</div>
+        </div>
+        <button class="devotedFileClose" type="button" onclick="closeDevotedStudentFile()">CLOSE</button>
+      </div>
+      <div id="devotedFileViewer" class="devotedFileViewer"></div>
+    </div>
+  </div>
+
   <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING DOCUMENT</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
 
-    <script src="./script.js?v=20260715-nensei-timeline-pngzip" defer></script>
+    <script src="./script.js?v=20260719-v43-graduated-jmc-withdrawal-wording" defer></script>
 
 </body>
 </html>
