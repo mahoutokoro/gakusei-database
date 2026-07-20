@@ -348,18 +348,6 @@ body.document-review-open{overflow:hidden}
 /* Loading overlay stays above the document review. */
 .pdfOverlay{z-index:16000}
 
-@media print{
-  @page{size:8.5in 14in;margin:0}
-  html,body{min-width:0!important;width:auto!important;height:auto!important;margin:0!important;padding:0!important;background:#fff!important;overflow:visible!important}
-  body.printing-document-review>*:not(#documentReviewModal){display:none!important}
-  body.printing-document-review #documentReviewModal{position:static!important;inset:auto!important;display:block!important;width:auto!important;height:auto!important;padding:0!important;background:#fff!important;backdrop-filter:none!important}
-  body.printing-document-review .documentReviewCard{display:block!important;width:auto!important;height:auto!important;max-height:none!important;overflow:visible!important;border:0!important;border-radius:0!important;background:#fff!important;box-shadow:none!important}
-  body.printing-document-review .documentReviewHeader{display:none!important}
-  body.printing-document-review .documentReviewViewport{overflow:visible!important;padding:0!important;background:#fff!important}
-  body.printing-document-review .documentReviewPages{display:block!important;min-width:0!important}
-  body.printing-document-review .pdfPage{width:8.5in!important;height:14in!important;margin:0!important;box-shadow:none!important;break-after:page;page-break-after:always}
-  body.printing-document-review .pdfPage:last-child{break-after:auto;page-break-after:auto}
-}
 
 /* =====================================================
    REVISION 2026-07-15 — VECTOR PDF + HD PNG
@@ -368,6 +356,7 @@ body.document-review-open{overflow:hidden}
   color:var(--strong);
   background:linear-gradient(135deg,rgba(255,255,255,.08),color-mix(in srgb,var(--accent) 18%,rgba(0,0,0,.72)));
 }
+
 
 .reportInstitution{
   color:#8e1118;
@@ -2073,3 +2062,3115 @@ body.devoted-file-open{overflow:hidden}
 .browserNativeCapturePages{position:absolute!important;inset:0!important;display:block!important;width:100vw!important;height:100vh!important;min-width:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
 .browserNativeCaptureStage{position:absolute!important;left:0;top:0;width:816px;height:1344px;margin:0!important;padding:0!important;transform-origin:0 0;will-change:left,top,transform}
 .browserNativeCaptureStage>.pdfPage{width:816px!important;height:1344px!important;min-width:816px!important;max-width:816px!important;min-height:1344px!important;max-height:1344px!important;margin:0!important;box-shadow:none!important}
+
+
+/* =====================================================
+   V44 — PREVIEW-LOCKED DOM EXPORT HARDENING
+   Keeps PDF/PNG capture in the same 816 x 1344 layout as Document Review.
+   The live preview is never moved or transformed during export.
+   ===================================================== */
+.exactDocumentCaptureHost{
+  position:fixed!important;
+  left:-20000px!important;
+  top:0!important;
+  z-index:-2147483640!important;
+  display:block!important;
+  width:816px!important;
+  min-width:816px!important;
+  max-width:816px!important;
+  height:1344px!important;
+  min-height:1344px!important;
+  max-height:1344px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  pointer-events:none!important;
+  background:#fbf7ef!important;
+}
+.exactDocumentCaptureHost>.pdfPage{
+  position:relative!important;
+  left:0!important;
+  top:0!important;
+  width:816px!important;
+  min-width:816px!important;
+  max-width:816px!important;
+  height:1344px!important;
+  min-height:1344px!important;
+  max-height:1344px!important;
+  margin:0!important;
+  transform:none!important;
+  transform-origin:0 0!important;
+  box-shadow:none!important;
+  overflow:hidden!important;
+}
+.exactDocumentCaptureHost,
+.exactDocumentCaptureHost *,
+.exactDocumentCaptureHost *::before,
+.exactDocumentCaptureHost *::after{
+  animation:none!important;
+  transition:none!important;
+  caret-color:transparent!important;
+}
+
+
+/* v45: automatic live-preview export captures the original .pdfPage DOM; no screen/tab permission flow. */
+
+
+/* V46 export engine: browser-native SVG foreignObject snapshot. No layout CSS changes required. */
+
+/* V47: PDF/PNG are automatic capture downloads; print fallback removed. */
+.documentReviewActions{flex-wrap:wrap;justify-content:flex-end}
+
+
+/* =====================================================
+   V48 — CINEMATIC WEBSITE ARTWORK + STRONGER TYPOGRAPHY
+   Pure presentation layer. Data, academic logic, and V47 PDF/PNG auto-capture
+   remain untouched.
+   ===================================================== */
+
+/* Wider desktop canvas gives the larger typography room without adding rows. */
+:root{--w:1320px}
+html,body{min-width:1380px}
+
+/*
+ * Global website artwork. The image is deliberately placed under the existing
+ * magical falling ornaments, panels, glows and theme gradients. The vertical
+ * gradient makes the artwork strongest near the top and elegantly dissolves
+ * into the darker database area below.
+ */
+body{
+  background-image:
+    linear-gradient(180deg,rgba(0,0,0,.18) 0%,rgba(0,0,0,.36) 28%,rgba(3,3,5,.76) 64%,var(--bg1) 100%),
+    radial-gradient(circle at 6% 0%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 31%),
+    radial-gradient(circle at 94% 15%,color-mix(in srgb,var(--accent2) 20%,transparent),transparent 29%),
+    url("https://drive.google.com/thumbnail?id=18fTv3YxLCCGOQtjWDNyVTXWb0jHvhlc1&sz=w2400"),
+    linear-gradient(145deg,var(--bg1),#050505 55%,var(--bg2));
+  background-size:100% 100%,auto,auto,cover,100% 100%;
+  background-position:center top,6% 0,94% 15%,center top,center;
+  background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,no-repeat;
+  background-attachment:fixed,fixed,fixed,fixed,fixed;
+}
+
+/* Keep every existing animated ornament visible above the global artwork. */
+.backdrop{z-index:0}
+.shell{z-index:2}
+
+/* Header feature artwork: one slot, automatically swapped by the existing
+   body theme classes when a KSI / TSY / YMY student database is opened. */
+.heroFeatureArt{
+  position:absolute;
+  inset:0;
+  z-index:0;
+  overflow:hidden;
+  pointer-events:none;
+  border-radius:inherit;
+  opacity:.72;
+  background-image:
+    linear-gradient(90deg,rgba(0,0,0,.90) 0%,rgba(0,0,0,.40) 26%,rgba(0,0,0,.18) 52%,rgba(0,0,0,.54) 78%,rgba(0,0,0,.88) 100%),
+    linear-gradient(180deg,rgba(0,0,0,.10),rgba(0,0,0,.48)),
+    url("https://drive.google.com/thumbnail?id=1IuFDUcGJBLbRMFCWwH9a5gfnkhZM1mti&sz=w2400");
+  background-size:cover,cover,cover;
+  background-position:center,center,center;
+  background-repeat:no-repeat;
+  filter:saturate(1.06) contrast(1.05);
+  transform:scale(1.015);
+}
+body.dorm-kosei .heroFeatureArt{
+  background-image:
+    linear-gradient(90deg,rgba(3,6,3,.91) 0%,rgba(5,8,4,.42) 28%,rgba(5,8,4,.16) 55%,rgba(5,8,4,.50) 80%,rgba(3,5,3,.91) 100%),
+    linear-gradient(180deg,rgba(4,7,3,.08),rgba(4,6,3,.52)),
+    url("https://drive.google.com/thumbnail?id=1KJiRkV957u2OvAXbXWc1MDGXLKhDhcEv&sz=w2400");
+}
+body.dorm-tsukiyomi .heroFeatureArt{
+  background-image:
+    linear-gradient(90deg,rgba(2,4,10,.92) 0%,rgba(4,7,17,.43) 28%,rgba(7,7,20,.16) 55%,rgba(13,5,16,.49) 80%,rgba(4,2,9,.92) 100%),
+    linear-gradient(180deg,rgba(3,5,12,.08),rgba(9,4,13,.52)),
+    url("https://drive.google.com/thumbnail?id=1AXd7izgJikFHpDOTgLtK3HWfFPhRqrkC&sz=w2400");
+}
+body.dorm-yamiyo .heroFeatureArt{
+  background-image:
+    linear-gradient(90deg,rgba(3,1,5,.93) 0%,rgba(8,3,12,.44) 28%,rgba(12,5,18,.16) 55%,rgba(9,3,14,.50) 80%,rgba(2,1,4,.93) 100%),
+    linear-gradient(180deg,rgba(8,3,13,.08),rgba(5,2,8,.54)),
+    url("https://drive.google.com/thumbnail?id=1wRFGvZGcA05iAMgq5h0gvQcMmudWkk7_&sz=w2400");
+}
+
+/* Existing hero layers stay on top, so no logo, ornament, button or content
+   is removed. The artwork remains atmospheric rather than obstructive. */
+.hero{min-height:470px}
+.heroBackdrop{z-index:1}
+.heroContent{z-index:3;width:790px}
+.heroCore{width:650px}
+
+/* LIFE AFTER GRADUATION — artwork revealed toward the right edge. */
+.lifeAfterGraduationCard,
+.graduatedWideSections .lifeAfterGraduationCard{
+  background-image:
+    linear-gradient(90deg,rgba(5,5,8,.97) 0%,rgba(5,5,8,.92) 30%,rgba(5,5,8,.72) 57%,rgba(5,5,8,.28) 82%,rgba(5,5,8,.14) 100%),
+    radial-gradient(circle at 0 0,color-mix(in srgb,var(--accent) 21%,transparent),transparent 45%),
+    url("https://drive.google.com/thumbnail?id=1hbt9ake1iC7p6C9iOGpX8A16HpfBGHfN&sz=w2200");
+  background-size:cover,cover,cover;
+  background-position:center,right center,right center;
+  background-repeat:no-repeat;
+  box-shadow:inset 3px 0 0 var(--accent),inset 0 0 34px color-mix(in srgb,var(--accent) 10%,transparent),0 16px 38px rgba(0,0,0,.28);
+}
+.lifeAfterGraduationCard::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 6%,transparent),transparent 45%,color-mix(in srgb,var(--accent2) 7%,transparent));
+}
+
+/* DEVOTED STUDENT — ceremonial artwork across the whole section while every
+   existing field remains readable above translucent surfaces. */
+.devotedStudentSemesterCard{
+  background-image:
+    linear-gradient(108deg,rgba(7,6,9,.98) 0%,rgba(7,6,9,.91) 34%,rgba(7,6,9,.68) 63%,rgba(7,6,9,.34) 100%),
+    radial-gradient(circle at 12% 0,color-mix(in srgb,var(--accent) 18%,transparent),transparent 40%),
+    url("https://drive.google.com/thumbnail?id=1K-2TytITfiC3OysGOO_1L5yn4iRGiAsT&sz=w2200");
+  background-size:cover,cover,cover;
+  background-position:center,center,center;
+  background-repeat:no-repeat;
+  box-shadow:inset 3px 0 0 var(--accent),0 16px 42px rgba(0,0,0,.34),0 0 34px color-mix(in srgb,var(--accent) 12%,transparent);
+}
+.devotedStudentSemesterCard .semesterHead{
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 16%,rgba(4,4,7,.86)),rgba(4,4,7,.50) 72%,rgba(4,4,7,.22));
+  backdrop-filter:blur(3px);
+}
+.devotedStudentHero{
+  background:linear-gradient(110deg,rgba(7,7,10,.78),rgba(7,7,10,.46) 58%,rgba(7,7,10,.26));
+  backdrop-filter:blur(2px);
+}
+.devotedStudentField{
+  background:radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 13%,transparent),transparent 52%),rgba(8,8,11,.70);
+  backdrop-filter:blur(3px);
+}
+
+/* =====================================================
+   V48 — TYPOGRAPHY SCALE-UP
+   Larger but still single-line friendly. The main grid is widened instead of
+   forcing cards onto additional rows.
+   ===================================================== */
+.resultGrid{grid-template-columns:760px 540px;gap:20px}
+
+.eyebrow{font-size:19px}
+.mainTitle{font-size:64px;letter-spacing:2.4px}
+.heroNote{font-size:14.5px}
+.statusLine{font-size:13px}
+.searchBar{grid-template-columns:1fr 172px}
+.searchBar input{font-size:16px}
+.searchBar button{font-size:13px}
+.recapButton{font-size:11px}
+
+.sectionTitle,.largeCardLabel.sectionTitle{font-size:15.5px}
+.profileHeader{grid-template-columns:124px minmax(0,1fr) 106px;gap:24px}
+.avatar{width:124px;height:124px}
+.crest{width:106px;height:124px}
+.crest img{width:78px;height:78px}
+.crestName{font-size:10.5px}
+.studentName{font-size:31px}
+.studentKanji{font-size:19px}
+.badge{font-size:10.5px;min-height:30px;padding:6px 11px}
+.label{font-size:11.5px}
+.value{font-size:18px}
+.financeValue{font-size:35px}
+.workplace{font-size:13.5px}
+.position{font-size:18px}
+.empty{font-size:14px}
+
+.academicIntro{font-size:12.5px}
+.count,.transcriptButton{font-size:9.5px;padding:8px 12px}
+.semesterTitle{font-size:18px}
+.nensei{font-size:10.5px}
+.miniTitle{font-size:10px}
+.partName{font-size:9px}
+.partState{font-size:9px}
+.subjectHeader{font-size:9px}
+.subjectRow{grid-template-columns:minmax(0,1fr) 96px 128px}
+.subjectName{font-size:12.5px}
+.mark{font-size:13.5px}
+.mark.numberMark{font-size:14.5px}
+.mark.kanjiMark{font-size:13.5px}
+.outcomeLabel{font-size:9px}
+.outcomeValue{font-size:12.5px}
+.reportButton{font-size:10px}
+
+.semesterBadge{font-size:10.5px;max-width:220px}
+.semesterNote{font-size:13.5px}
+.totalLabel{font-size:10.5px}
+.totalValue{font-size:39px}
+.logBar{font-size:12px}
+.logItem{grid-template-columns:140px minmax(0,1fr)}
+.logDate{font-size:12px}
+.logDesc{font-size:15.5px}
+.chip{font-size:12px}
+.footer{font-size:13px}
+
+/* Graduated typography */
+.graduatedWideSections .lifeAfterGraduationEyebrow{font-size:10px}
+.graduatedWideSections .lifeAfterGraduationNarrative{max-width:1120px;font-size:16px;line-height:1.7}
+.devotedStudentHeroEyebrow{font-size:8.5px}
+.devotedStudentHeroTitle{font-size:21px}
+.devotedStudentHeroSub{font-size:11px}
+.devotedStudentFieldLabel{font-size:9px}
+.devotedStudentFieldValue{font-size:13.5px}
+.devotedStudentScorePanel .devotedStudentFieldLabel{font-size:8.5px}
+.devotedStudentScorePanel .devotedStudentScoreValue{font-size:34px}
+.devotedStudentScoreCaption{font-size:7.5px}
+.devotedStudentFileButton{font-size:9.5px;min-width:170px}
+.devotedStudentFileUnavailable{font-size:9.5px}
+
+/* GP ranking readability */
+.gpRankingEyebrow{font-size:11px}
+.gpRankingTitle{font-size:28px}
+.gpRankingDisclaimer{font-size:12.5px;max-width:830px}
+.gpRankingSemester{font-size:10.5px}
+.gpRankingUpdated{font-size:10.5px}
+.gpRankingLoading{font-size:12.5px}
+.gpRankTopline{font-size:10px}
+.gpRankName{font-size:24px}
+.gpRankKanji{font-size:16.5px}
+.gpRankUsername{font-size:12.5px}
+.gpRankScoreLabel{font-size:10px}
+.gpRankScoreValue{font-size:33px}
+
+/* Modal / recap readability */
+.modalTitle{font-size:22px}
+.modalSubtitle{font-size:12.5px}
+.modalButtons button{font-size:12px}
+.summaryLabel{font-size:10.5px}
+.summaryValue{font-size:26px}
+.recapTable{font-size:12.5px}
+.recapTable th{font-size:10.5px}
+
+/* Preserve compactness on the already dense right column. */
+.rightColumn .sectionHeader{grid-template-columns:max-content 220px}
+
+
+/* V48 readability polish for the existing GENERAL dropdown. */
+.generalMenuChevron{font-size:14px}
+.generalMenuItemTitle{font-size:12.5px}
+.generalMenuItemText{font-size:10.5px;line-height:1.45}
+
+
+/* =====================================================
+   V49 — CROSS-BROWSER TYPOGRAPHY LOCK
+   Prevents browser text autosizing / synthetic font changes while preserving
+   the V48 layout, artwork, animations, and V47 automatic PDF/PNG capture.
+   ===================================================== */
+html{
+  font-size:16px;
+  -webkit-text-size-adjust:100%;
+  -moz-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+body{
+  font-size:16px;
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  font-optical-sizing:none;
+  font-kerning:normal;
+  font-synthesis:none;
+  text-rendering:geometricPrecision;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+*,*::before,*::after{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+  font-synthesis:none;
+}
+button,input,textarea,select,a{
+  font-family:inherit;
+  font-optical-sizing:none;
+  font-synthesis:none;
+}
+.jp,
+.studentKanji,
+.mark.kanjiMark,
+.devotedStudentFieldIcon{
+  font-family:"Noto Sans JP",Arial,sans-serif;
+  font-optical-sizing:none;
+  font-synthesis:none;
+}
+.mainTitle,
+.devotedStudentHeroTitle,
+.devotedStudentTitleValue,
+.documentReviewTitle{
+  font-optical-sizing:none;
+  font-synthesis:none;
+}
+
+/* Keep the dense desktop composition deterministic across Chromium, Firefox,
+   Safari and Edge. All dimensions remain explicit pixels and the browser is
+   prevented from enlarging text independently of its containers. */
+.shell,.hero,.resultGrid,.rightColumn,.panel,.infoGrid,.academicRecords,
+.gpRankingSection,.graduatedWideSections,.lifeAfterGraduationCard,
+.devotedStudentSemesterCard{
+  -webkit-text-size-adjust:100%;
+  text-size-adjust:100%;
+}
+
+/* =====================================================
+   V50 — VISUAL REFINEMENT / TRUE FONT SCALE-UP
+   2026-07-20
+   - Global artwork is now fully revealed toward the BOTTOM.
+   - Dorm pages receive a color-only tint; the artwork itself stays sharp.
+   - Header artwork is lowered while the interface content is lifted slightly,
+     keeping portrait faces away from the central title/search composition.
+   - LIFE AFTER GRADUATION (Life Path) and DEVOTED STUDENT are redesigned.
+   - Website typography is visibly larger and locked against browser autosizing.
+   - No data, academic, graduated, PDF or PNG logic is changed.
+   ===================================================== */
+
+:root{
+  --w:1380px;
+  --pageDormTint:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0));
+}
+
+body.front-mode{
+  --pageDormTint:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0));
+}
+body.dorm-kosei{
+  --pageDormTint:linear-gradient(180deg,rgba(116,127,62,.025) 0%,rgba(116,127,62,.075) 42%,rgba(116,127,62,.13) 72%,rgba(217,191,135,.15) 100%);
+}
+body.dorm-tsukiyomi{
+  --pageDormTint:linear-gradient(180deg,rgba(97,139,216,.025) 0%,rgba(97,139,216,.07) 42%,rgba(97,139,216,.12) 72%,rgba(224,146,188,.14) 100%);
+}
+body.dorm-yamiyo{
+  --pageDormTint:linear-gradient(180deg,rgba(116,64,135,.025) 0%,rgba(116,64,135,.075) 42%,rgba(116,64,135,.13) 72%,rgba(173,120,199,.14) 100%);
+}
+
+/* The previous V49 gradient made the artwork clearest at the top and darkest
+   at the bottom. V50 deliberately reverses that relationship: the top remains
+   atmospheric/dark, while the complete artwork is increasingly visible below. */
+body{
+  background-image:
+    linear-gradient(180deg,rgba(2,2,4,.96) 0%,rgba(3,3,5,.82) 22%,rgba(3,3,5,.55) 46%,rgba(3,3,5,.24) 70%,rgba(3,3,5,.055) 100%),
+    var(--pageDormTint),
+    radial-gradient(circle at 6% 0%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 31%),
+    radial-gradient(circle at 94% 15%,color-mix(in srgb,var(--accent2) 16%,transparent),transparent 29%),
+    url("https://drive.google.com/thumbnail?id=18fTv3YxLCCGOQtjWDNyVTXWb0jHvhlc1&sz=w2400"),
+    linear-gradient(145deg,var(--bg1),#050505 55%,var(--bg2));
+  background-size:100% 100%,100% 100%,auto,auto,cover,100% 100%;
+  background-position:center,center,6% 0,94% 15%,center bottom,center;
+  background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,no-repeat;
+  background-attachment:fixed,fixed,fixed,fixed,fixed,fixed;
+}
+
+/* =====================================================
+   HEADER ARTWORK — FACE-SAFE COMPOSITION
+   ===================================================== */
+.hero{
+  min-height:510px;
+}
+.heroFeatureArt{
+  opacity:.86;
+  background-position:center,center,center 24%;
+  filter:saturate(1.1) contrast(1.045) brightness(.96);
+  transform:scale(1.01);
+}
+body.dorm-kosei .heroFeatureArt{background-position:center,center,center 23%}
+body.dorm-tsukiyomi .heroFeatureArt{background-position:center,center,center 25%}
+body.dorm-yamiyo .heroFeatureArt{background-position:center,center,center 23%}
+
+/* A restrained reading veil only around the upper-center interface area.
+   The artwork remains visible and sharp; no blur is applied to the image. */
+.heroFeatureArt::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(ellipse at 50% 22%,rgba(0,0,0,.56) 0%,rgba(0,0,0,.31) 26%,rgba(0,0,0,.08) 49%,transparent 68%),
+    linear-gradient(180deg,rgba(0,0,0,.08),transparent 38%,rgba(0,0,0,.08));
+}
+.heroContent{
+  width:900px;
+  transform:translateY(-19px);
+}
+.heroCore{width:750px}
+.logo{margin:-4px auto 1px}
+
+/* Make 魔法所's read as an intentional emblem above the main title. */
+.eyebrow{
+  width:max-content;
+  max-width:100%;
+  min-height:44px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin:0 auto 18px;
+  padding:7px 19px 8px;
+  border:1px solid color-mix(in srgb,var(--accent) 72%,rgba(255,255,255,.20));
+  border-radius:999px;
+  color:var(--strong);
+  background:
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 20%,rgba(0,0,0,.72)),rgba(0,0,0,.52)),
+    rgba(0,0,0,.42);
+  box-shadow:
+    0 8px 30px rgba(0,0,0,.34),
+    0 0 24px color-mix(in srgb,var(--accent) 34%,transparent),
+    inset 0 0 18px color-mix(in srgb,var(--accent) 10%,transparent);
+  font-size:25px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:.18em;
+  text-shadow:
+    0 2px 3px rgba(0,0,0,.95),
+    0 0 9px var(--glow),
+    0 0 20px color-mix(in srgb,var(--accent) 45%,transparent);
+}
+.mainTitle{
+  font-size:69px;
+  letter-spacing:2.6px;
+  text-shadow:0 5px 26px rgba(0,0,0,.48);
+}
+.searchBar{grid-template-columns:1fr 190px;gap:12px}
+.searchBar input{height:58px;font-size:18px}
+.searchBar button{font-size:14.5px}
+.heroNote{font-size:16px}
+.statusLine{font-size:14.5px}
+.recapButton{font-size:12.5px}
+
+/* =====================================================
+   TRUE WEBSITE FONT SCALE-UP
+   The layout is widened at the same time so text can stay horizontal.
+   PDF/document typography remains untouched because these selectors are
+   limited to the live website UI classes below.
+   ===================================================== */
+.resultGrid{grid-template-columns:800px 560px;gap:20px}
+.panelInner{padding:31px}
+.sectionHeader{min-height:62px;padding:17px 26px}
+.sectionTitle,.largeCardLabel.sectionTitle{font-size:18px}
+
+.profileHeader{grid-template-columns:132px minmax(0,1fr) 112px;gap:26px;padding-bottom:27px}
+.avatar{width:132px;height:132px}
+.crest{width:112px;height:132px}
+.crest img{width:82px;height:82px}
+.crestName{font-size:12px}
+.studentName{font-size:36px}
+.studentKanji{font-size:22px}
+.badge{min-height:32px;padding:6px 12px;font-size:11.5px}
+.label{font-size:13px}
+.value{font-size:20px}
+.financeValue{font-size:40px}
+.workplace{font-size:15px}
+.position{font-size:20px}
+.empty{font-size:15.5px}
+
+.academicIntro{font-size:14px;line-height:1.45}
+.count,.transcriptButton{padding:9px 13px;font-size:11px}
+.semesterTitle{font-size:20.5px}
+.nensei{padding:7px 11px;font-size:12px}
+.miniTitle{font-size:11.5px}
+.partName,.partState{font-size:10.5px}
+.subjectHeader{font-size:10.5px}
+.subjectHeader,.subjectRow{grid-template-columns:minmax(0,1fr) 112px 145px;gap:9px}
+.subjectName{font-size:14px}
+.mark{min-height:34px;font-size:15px}
+.mark.numberMark{font-size:16px}
+.mark.kanjiMark{font-size:15px}
+.outcomeLabel{font-size:10.5px}
+.outcomeValue{font-size:14px}
+.reportButton{font-size:11.5px}
+
+.semesterBadge{max-width:235px;font-size:12px}
+.semesterNote{font-size:15px}
+.totalLabel{font-size:12px}
+.totalValue{font-size:43px}
+.logBar{font-size:13.5px}
+.logItem{grid-template-columns:150px minmax(0,1fr)}
+.logDate{font-size:13.5px}
+.logDesc{font-size:17px}
+.chip{font-size:13.5px}
+.footer{font-size:14.5px}
+
+/* GP ranking */
+.gpRankingEyebrow{font-size:12.5px}
+.gpRankingTitle{font-size:31px}
+.gpRankingDisclaimer{max-width:900px;font-size:14px}
+.gpRankingSemester,.gpRankingUpdated{font-size:12px}
+.gpRankingLoading{font-size:14px}
+.gpRankTopline{font-size:11.5px}
+.gpRankName{font-size:27px}
+.gpRankKanji{font-size:18px}
+.gpRankUsername{font-size:14px}
+.gpRankScoreLabel{font-size:11.5px}
+.gpRankScoreValue{font-size:37px}
+
+/* GENERAL + recap/modal */
+.generalMenuChevron{font-size:16px}
+.generalMenuItemTitle{font-size:14px}
+.generalMenuItemText{font-size:12px;line-height:1.45}
+.modalTitle{font-size:24px}
+.modalSubtitle{font-size:14px}
+.modalButtons button{font-size:13px}
+.summaryLabel{font-size:12px}
+.summaryValue{font-size:29px}
+.recapTable{font-size:14px}
+.recapTable th{font-size:12px}
+.rightColumn .sectionHeader{grid-template-columns:max-content 235px}
+
+/* =====================================================
+   GRADUATED — LIFE PATH / LIFE AFTER GRADUATION
+   ===================================================== */
+.graduatedWideSections #occupationCard{
+  padding:22px 24px 24px;
+  border-color:color-mix(in srgb,var(--accent) 46%,transparent);
+  background:
+    radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 14%,transparent),transparent 38%),
+    linear-gradient(145deg,rgba(16,15,18,.92),rgba(5,5,8,.95));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb,var(--accent) 5%,transparent),
+    0 22px 65px rgba(0,0,0,.32);
+}
+.graduatedWideSections #occupationSectionTitle{
+  margin:1px 2px 17px;
+  font-size:20px;
+  letter-spacing:.12em;
+}
+.graduatedWideSections .lifeAfterGraduationCard{
+  grid-template-columns:94px minmax(0,780px) minmax(240px,1fr);
+  gap:22px;
+  min-height:182px;
+  padding:27px 31px;
+  border:1px solid color-mix(in srgb,var(--accent) 55%,transparent);
+  border-radius:24px;
+  background-image:
+    linear-gradient(90deg,rgba(5,5,8,.98) 0%,rgba(5,5,8,.95) 31%,rgba(5,5,8,.78) 51%,rgba(5,5,8,.42) 68%,rgba(5,5,8,.11) 86%,rgba(5,5,8,.025) 100%),
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,transparent),transparent 52%,color-mix(in srgb,var(--accent2) 10%,transparent)),
+    url("https://drive.google.com/thumbnail?id=1hbt9ake1iC7p6C9iOGpX8A16HpfBGHfN&sz=w2200");
+  background-size:cover,cover,cover;
+  background-position:center,center,right 36%;
+  background-repeat:no-repeat;
+  box-shadow:
+    inset 5px 0 0 var(--accent),
+    inset 0 0 46px color-mix(in srgb,var(--accent) 8%,transparent),
+    0 18px 46px rgba(0,0,0,.32);
+}
+.graduatedWideSections .lifeAfterGraduationCard::before{
+  content:"";
+  position:absolute;
+  left:128px;
+  top:26px;
+  bottom:26px;
+  width:1px;
+  background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--accent) 52%,transparent),transparent);
+  pointer-events:none;
+}
+.graduatedWideSections .lifeAfterGraduationCard::after{
+  content:"LIFE PATH";
+  position:absolute;
+  right:28px;
+  bottom:17px;
+  width:auto;
+  height:auto;
+  border:0;
+  border-radius:0;
+  color:color-mix(in srgb,var(--strong) 17%,transparent);
+  background:none;
+  box-shadow:none;
+  font-family:"Cinzel",Georgia,serif;
+  font-size:34px;
+  font-weight:900;
+  letter-spacing:.12em;
+  line-height:1;
+  pointer-events:none;
+}
+.graduatedWideSections .lifeAfterGraduationSigil{
+  width:78px;
+  height:78px;
+  border-radius:50%;
+  color:#17110c;
+  font-size:17px;
+  box-shadow:
+    0 11px 28px rgba(0,0,0,.38),
+    0 0 28px color-mix(in srgb,var(--accent) 30%,transparent),
+    inset 0 0 0 5px rgba(255,255,255,.08);
+}
+.graduatedWideSections .lifeAfterGraduationContent{
+  min-width:0;
+  padding:18px 21px;
+  border:1px solid color-mix(in srgb,var(--accent) 22%,transparent);
+  border-radius:18px;
+  background:linear-gradient(135deg,rgba(5,5,8,.64),rgba(5,5,8,.34));
+  box-shadow:inset 0 0 24px rgba(0,0,0,.18);
+}
+.graduatedWideSections .lifeAfterGraduationEyebrow{
+  font-size:12.5px;
+  letter-spacing:.16em;
+  text-shadow:0 0 14px color-mix(in srgb,var(--accent) 38%,transparent);
+}
+.graduatedWideSections .lifeAfterGraduationNarrative{
+  max-width:none;
+  margin-top:9px;
+  font-family:"League Spartan",Arial,sans-serif;
+  font-size:18.5px;
+  font-weight:650;
+  line-height:1.65;
+  text-shadow:0 2px 8px rgba(0,0,0,.58);
+}
+
+/* =====================================================
+   GRADUATED — DEVOTED STUDENT CEREMONIAL REFINEMENT
+   ===================================================== */
+.devotedStudentSemesterCard{
+  border:1px solid color-mix(in srgb,var(--accent) 56%,transparent);
+  border-radius:23px;
+  background-image:
+    linear-gradient(90deg,rgba(6,5,8,.98) 0%,rgba(6,5,8,.94) 28%,rgba(6,5,8,.75) 52%,rgba(6,5,8,.39) 72%,rgba(6,5,8,.10) 90%,rgba(6,5,8,.025) 100%),
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 10%,transparent),transparent 52%,color-mix(in srgb,var(--accent2) 10%,transparent)),
+    url("https://drive.google.com/thumbnail?id=1K-2TytITfiC3OysGOO_1L5yn4iRGiAsT&sz=w2200");
+  background-size:cover,cover,cover;
+  background-position:center,center,right center;
+  background-repeat:no-repeat;
+  box-shadow:
+    inset 5px 0 0 var(--accent),
+    0 20px 52px rgba(0,0,0,.36),
+    0 0 38px color-mix(in srgb,var(--accent) 13%,transparent);
+}
+.devotedStudentSemesterCard::before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  z-index:0;
+  border:1px solid color-mix(in srgb,var(--accent) 12%,transparent);
+  border-radius:17px;
+  pointer-events:none;
+}
+.devotedStudentSemesterCard>.semesterHead,
+.devotedStudentSemesterCard>.devotedStudentDetails{
+  position:relative;
+  z-index:1;
+}
+.devotedStudentSemesterCard .semesterHead{
+  min-height:66px;
+  padding:18px 22px;
+  background:linear-gradient(90deg,rgba(5,5,8,.91),rgba(5,5,8,.60) 62%,rgba(5,5,8,.24));
+  border-bottom:1px solid color-mix(in srgb,var(--accent) 34%,transparent);
+  backdrop-filter:none;
+}
+.devotedStudentSemesterCard .semesterTitle{font-size:22px;letter-spacing:.055em}
+.devotedStudentSemesterCard .nensei{font-size:12.5px}
+.devotedStudentDetails{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+  gap:14px;
+  padding:22px;
+}
+.devotedStudentHero{
+  grid-template-columns:74px minmax(0,1fr) 220px;
+  gap:18px;
+  min-height:142px;
+  padding:20px 22px;
+  border:1px solid color-mix(in srgb,var(--accent) 48%,transparent);
+  border-radius:21px;
+  background:linear-gradient(110deg,rgba(6,6,9,.88),rgba(6,6,9,.63) 58%,rgba(6,6,9,.30));
+  box-shadow:inset 0 0 32px color-mix(in srgb,var(--accent) 6%,transparent),0 13px 34px rgba(0,0,0,.24);
+  backdrop-filter:none;
+}
+.devotedStudentHero::after{
+  right:226px;
+  top:-40px;
+  color:color-mix(in srgb,var(--accent) 10%,transparent);
+  font-size:144px;
+}
+.devotedStudentSeal{
+  width:68px;
+  height:68px;
+  box-shadow:0 0 30px color-mix(in srgb,var(--accent) 34%,transparent),inset 0 0 0 5px rgba(255,255,255,.08);
+}
+.devotedStudentSeal span{font-size:27px}
+.devotedStudentHeroEyebrow{font-size:11px;letter-spacing:.19em}
+.devotedStudentHeroTitle{margin-top:7px;font-size:27px;letter-spacing:.045em;text-shadow:0 3px 16px rgba(0,0,0,.5)}
+.devotedStudentHeroSub{margin-top:7px;font-size:14px;line-height:1.5}
+.devotedStudentScorePanel{
+  margin-left:0;
+  padding:14px 12px 14px 20px;
+  border-left:1px solid color-mix(in srgb,var(--accent) 42%,transparent);
+}
+.devotedStudentScorePanel .devotedStudentFieldLabel{font-size:11px;letter-spacing:.06em}
+.devotedStudentScorePanel .devotedStudentScoreValue{margin-top:8px;font-size:43px}
+.devotedStudentScoreCaption{margin-top:7px;font-size:9.5px;letter-spacing:.12em}
+.devotedStudentField{
+  min-height:108px;
+  grid-template-columns:43px minmax(0,1fr);
+  gap:14px;
+  padding:16px 18px;
+  border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);
+  border-radius:17px;
+  background:linear-gradient(135deg,rgba(7,7,10,.84),rgba(7,7,10,.62));
+  box-shadow:inset 0 0 22px rgba(0,0,0,.14);
+  backdrop-filter:none;
+}
+.devotedStudentFieldIcon{
+  width:39px;
+  height:39px;
+  border-radius:12px;
+  font-size:17px;
+  box-shadow:0 0 16px color-mix(in srgb,var(--accent) 12%,transparent);
+}
+.devotedStudentFieldLabel{font-size:11px;letter-spacing:.10em}
+.devotedStudentFieldValue{margin-top:7px;font-size:16px;line-height:1.5}
+.devotedStudentTitleValue{font-size:16.5px;font-weight:750}
+.devotedStudentKoronField{
+  min-height:82px;
+  padding:15px 18px;
+  gap:16px;
+}
+.devotedStudentKoronField::before{
+  width:39px;
+  height:39px;
+  flex-basis:39px;
+  border-radius:12px;
+  font-size:17px;
+}
+.devotedStudentFileButton{
+  min-width:190px;
+  min-height:42px;
+  padding:0 17px;
+  font-size:11px;
+  border-radius:12px;
+}
+.devotedStudentFileUnavailable{font-size:11px}
+
+/* =====================================================
+   HARD CROSS-BROWSER TEXT LOCK
+   ===================================================== */
+html,body,*,*::before,*::after{
+  -webkit-text-size-adjust:none !important;
+  -moz-text-size-adjust:none !important;
+  text-size-adjust:none !important;
+}
+html,body{font-size:16px}
+body{
+  font-optical-sizing:none;
+  font-synthesis:none;
+  text-rendering:geometricPrecision;
+}
+
+
+/* =====================================================
+   V51 — VISUAL CLARITY / HEADER + ACADEMIC + POINT LOG
+   2026-07-20
+   - Global background artwork replaced with the new Drive artwork.
+   - Dorm color overlay moved to the TOP of the background stack so it is visible.
+   - Header UI receives a stronger premium glass hierarchy without hiding artwork.
+   - Academic Records are visually separated into clear reading groups.
+   - DEVOTED STUDENT score panel gains dedicated contrast and glow.
+   - Student Point Log receives a top artwork treatment.
+   - No data, academic engine, graduated logic, PDF or PNG logic is changed.
+   ===================================================== */
+
+/* =====================================================
+   GLOBAL BACKGROUND — NEW ARTWORK + VISIBLE DORM TINT
+   ===================================================== */
+body.front-mode{
+  --pageDormTint:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,0));
+}
+body.dorm-kosei{
+  --pageDormTint:linear-gradient(180deg,rgba(116,127,62,.13) 0%,rgba(116,127,62,.17) 42%,rgba(217,191,135,.13) 100%);
+}
+body.dorm-tsukiyomi{
+  --pageDormTint:linear-gradient(180deg,rgba(97,139,216,.13) 0%,rgba(97,139,216,.17) 45%,rgba(224,146,188,.12) 100%);
+}
+body.dorm-yamiyo{
+  --pageDormTint:linear-gradient(180deg,rgba(116,64,135,.14) 0%,rgba(116,64,135,.18) 45%,rgba(173,120,199,.13) 100%);
+}
+body{
+  background-image:
+    var(--pageDormTint),
+    linear-gradient(180deg,rgba(2,2,4,.94) 0%,rgba(3,3,5,.77) 23%,rgba(3,3,5,.48) 48%,rgba(3,3,5,.20) 72%,rgba(3,3,5,.045) 100%),
+    radial-gradient(circle at 6% 0%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 31%),
+    radial-gradient(circle at 94% 15%,color-mix(in srgb,var(--accent2) 16%,transparent),transparent 29%),
+    url("https://drive.google.com/thumbnail?id=18fTv3YxLCCGOQtjWDNyVTXWb0jHvhlc1&sz=w2400"),
+    linear-gradient(145deg,var(--bg1),#050505 55%,var(--bg2));
+  background-size:100% 100%,100% 100%,auto,auto,cover,100% 100%;
+  background-position:center,center,6% 0,94% 15%,center bottom,center;
+  background-repeat:no-repeat,no-repeat,no-repeat,no-repeat,no-repeat,no-repeat;
+  background-attachment:fixed,fixed,fixed,fixed,fixed,fixed;
+}
+
+/* =====================================================
+   HEADER — STRONGER UI WITHOUT DEFEATING THE ARTWORK
+   ===================================================== */
+.hero{
+  min-height:530px;
+  border-color:color-mix(in srgb,var(--accent) 42%,rgba(255,255,255,.08));
+  box-shadow:
+    0 30px 90px rgba(0,0,0,.58),
+    0 0 0 1px rgba(255,255,255,.025),
+    inset 0 0 90px color-mix(in srgb,var(--accent) 10%,transparent);
+}
+.heroFeatureArt{
+  opacity:.90;
+  filter:saturate(1.12) contrast(1.05) brightness(.98);
+}
+.heroContent{
+  width:930px;
+  transform:translateY(-15px);
+}
+.heroCore{
+  position:relative;
+  width:790px;
+  padding:20px 26px 22px;
+  border:1px solid color-mix(in srgb,var(--accent) 34%,rgba(255,255,255,.10));
+  border-radius:27px;
+  background:
+    linear-gradient(135deg,rgba(5,5,8,.66),rgba(5,5,8,.38) 58%,rgba(5,5,8,.23));
+  box-shadow:
+    0 24px 62px rgba(0,0,0,.34),
+    inset 0 0 32px color-mix(in srgb,var(--accent) 6%,transparent),
+    0 0 32px color-mix(in srgb,var(--accent) 9%,transparent);
+  backdrop-filter:blur(2px);
+}
+.heroCore::before{
+  content:"";
+  position:absolute;
+  inset:8px;
+  z-index:-1;
+  border:1px solid color-mix(in srgb,var(--accent) 10%,transparent);
+  border-radius:20px;
+  pointer-events:none;
+}
+.logo{
+  width:140px;
+  height:140px;
+  margin:-7px auto 11px;
+  padding:9px;
+  border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(0,0,0,.60),rgba(0,0,0,.18) 72%,transparent 73%);
+  box-shadow:0 0 34px color-mix(in srgb,var(--accent) 18%,transparent);
+}
+.logo img{filter:drop-shadow(0 0 20px var(--glow))}
+.eyebrow{
+  min-height:46px;
+  margin-bottom:14px;
+  border-color:color-mix(in srgb,var(--accent) 84%,rgba(255,255,255,.22));
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 27%,rgba(0,0,0,.76)),rgba(0,0,0,.62));
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.38),
+    0 0 30px color-mix(in srgb,var(--accent) 42%,transparent),
+    inset 0 0 20px color-mix(in srgb,var(--accent) 13%,transparent);
+}
+.mainTitle{
+  margin-bottom:20px;
+  font-size:71px;
+  filter:drop-shadow(0 4px 13px rgba(0,0,0,.78));
+}
+.searchBar{
+  padding:7px;
+  border:1px solid color-mix(in srgb,var(--accent) 28%,transparent);
+  border-radius:21px;
+  background:rgba(0,0,0,.34);
+  box-shadow:inset 0 0 20px rgba(0,0,0,.28),0 10px 26px rgba(0,0,0,.22);
+}
+.searchBar input{
+  border-color:color-mix(in srgb,var(--accent) 42%,transparent);
+  background:rgba(0,0,0,.79);
+}
+.searchBar button{
+  box-shadow:0 10px 28px rgba(0,0,0,.42),0 0 26px color-mix(in srgb,var(--accent) 22%,transparent);
+}
+.heroNote{
+  margin:16px 8px 0;
+  color:color-mix(in srgb,var(--text) 80%,var(--muted));
+  text-shadow:0 2px 9px rgba(0,0,0,.86);
+}
+.recapButtonCorner{
+  border-color:color-mix(in srgb,var(--accent) 60%,transparent);
+  background:linear-gradient(135deg,rgba(4,4,7,.88),color-mix(in srgb,var(--accent) 12%,rgba(4,4,7,.82)));
+  box-shadow:0 10px 26px rgba(0,0,0,.30),inset 0 0 20px color-mix(in srgb,var(--accent) 8%,transparent);
+}
+
+/* =====================================================
+   ACADEMIC RECORDS — CLEARER READING HIERARCHY
+   ===================================================== */
+#academicCardPanel{
+  padding:20px;
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 11%,transparent),transparent 38%),
+    linear-gradient(145deg,rgba(18,18,22,.92),rgba(5,5,8,.95));
+}
+#academicCardPanel .academicTop{
+  min-height:76px;
+  padding:5px 4px 18px;
+  border-bottom:1px solid color-mix(in srgb,var(--accent) 30%,transparent);
+}
+#academicCardPanel .academicIntro{
+  max-width:470px;
+  margin-top:5px;
+  color:color-mix(in srgb,var(--text) 72%,var(--muted));
+}
+#academicCardPanel .academicActions{
+  gap:10px;
+}
+.academicRecords{
+  gap:18px;
+  max-height:1080px;
+  margin-top:18px;
+  padding:2px 8px 2px 2px;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard){
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);
+  border-radius:22px;
+  background:
+    radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 9%,transparent),transparent 36%),
+    linear-gradient(145deg,rgba(9,9,13,.96),rgba(4,4,7,.92));
+  box-shadow:
+    inset 4px 0 0 var(--accent),
+    0 14px 34px rgba(0,0,0,.28);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterHead{
+  min-height:66px;
+  padding:16px 19px;
+  border-bottom:1px solid color-mix(in srgb,var(--accent) 34%,transparent);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 12%,rgba(255,255,255,.025)),rgba(0,0,0,.08));
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterTitle{
+  font-size:22px;
+  letter-spacing:.045em;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .nensei{
+  min-width:96px;
+  text-align:center;
+  background:color-mix(in srgb,var(--accent) 12%,rgba(0,0,0,.48));
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .miniTitle{
+  width:calc(100% - 34px);
+  margin:18px 17px 11px;
+  padding:9px 12px;
+  border-left:4px solid var(--accent);
+  border-radius:9px;
+  color:var(--strong);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 14%,rgba(255,255,255,.025)),transparent);
+  font-size:12px;
+  letter-spacing:.11em;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .participation{
+  gap:10px;
+  padding:0 17px 4px;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part{
+  min-height:68px;
+  padding:10px 8px;
+  border-color:color-mix(in srgb,var(--accent) 20%,transparent);
+  border-radius:14px;
+  background:rgba(255,255,255,.022);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .partName{
+  margin-bottom:3px;
+  color:color-mix(in srgb,var(--text) 72%,var(--muted));
+  font-size:11px;
+  font-weight:750;
+  letter-spacing:.045em;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .partState{
+  font-size:11px;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjects{
+  gap:8px;
+  margin:0 17px;
+  padding:12px;
+  border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);
+  border-radius:16px;
+  background:rgba(0,0,0,.22);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectHeader{
+  min-height:28px;
+  padding:0 12px 5px;
+  color:color-mix(in srgb,var(--text) 66%,var(--muted));
+  font-size:10.5px;
+  font-weight:850;
+  letter-spacing:.055em;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectHeader,
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectRow{
+  grid-template-columns:minmax(0,1fr) 128px 150px;
+  gap:11px;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectRow{
+  min-height:52px;
+  padding:9px 11px;
+  border-color:color-mix(in srgb,var(--accent) 18%,transparent);
+  border-radius:13px;
+  background:linear-gradient(90deg,rgba(255,255,255,.027),rgba(255,255,255,.012));
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectRow:nth-child(even){
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 5%,rgba(255,255,255,.02)),rgba(255,255,255,.01));
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectName{
+  padding-left:3px;
+  font-size:14.5px;
+  font-weight:750;
+  line-height:1.35;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .mark{
+  min-height:36px;
+  border-color:color-mix(in srgb,var(--accent) 24%,transparent);
+  background:color-mix(in srgb,var(--accent) 8%,rgba(0,0,0,.32));
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterFoot{
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr) 170px;
+  gap:10px;
+  margin-top:16px;
+  padding:15px 17px 17px;
+  border-top:1px solid color-mix(in srgb,var(--accent) 20%,transparent);
+  background:linear-gradient(180deg,rgba(255,255,255,.012),rgba(0,0,0,.20));
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .outcome{
+  min-height:60px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:10px 12px;
+  border-color:color-mix(in srgb,var(--accent) 22%,transparent);
+  background:rgba(0,0,0,.20);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .outcomeLabel{
+  margin-bottom:3px;
+  font-size:10.5px;
+  letter-spacing:.06em;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .outcomeValue{
+  margin-top:3px;
+  font-size:14px;
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .reportButton{
+  min-height:60px;
+  border:1px solid rgba(255,255,255,.10);
+  box-shadow:0 9px 22px rgba(0,0,0,.28),0 0 18px color-mix(in srgb,var(--accent) 12%,transparent);
+}
+
+/* =====================================================
+   DEVOTED STUDENT — SCORE MUST WIN AGAINST BACKGROUND
+   ===================================================== */
+.devotedStudentScorePanel{
+  position:relative;
+  overflow:hidden;
+  min-height:112px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:16px 18px!important;
+  border:1px solid color-mix(in srgb,var(--accent) 72%,rgba(255,255,255,.14));
+  border-left:5px solid var(--accent)!important;
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 52%),
+    linear-gradient(145deg,rgba(2,2,4,.96),rgba(8,7,10,.89));
+  box-shadow:
+    0 12px 30px rgba(0,0,0,.42),
+    0 0 27px color-mix(in srgb,var(--accent) 26%,transparent),
+    inset 0 0 24px color-mix(in srgb,var(--accent) 9%,transparent);
+}
+.devotedStudentScorePanel::before{
+  content:"SCORE";
+  position:absolute;
+  right:10px;
+  top:8px;
+  color:color-mix(in srgb,var(--accent) 11%,transparent);
+  font-family:"Cinzel",Georgia,serif;
+  font-size:32px;
+  font-weight:900;
+  letter-spacing:.08em;
+  pointer-events:none;
+}
+.devotedStudentScorePanel .devotedStudentFieldLabel{
+  position:relative;
+  z-index:1;
+  color:var(--accent);
+  font-size:11.5px;
+  text-shadow:0 2px 6px rgba(0,0,0,.88);
+}
+.devotedStudentScorePanel .devotedStudentScoreValue{
+  position:relative;
+  z-index:1;
+  margin-top:8px;
+  color:var(--strong);
+  font-size:50px;
+  font-weight:950;
+  line-height:.95;
+  text-shadow:
+    0 3px 7px rgba(0,0,0,.98),
+    0 0 17px color-mix(in srgb,var(--accent) 56%,transparent),
+    0 0 32px color-mix(in srgb,var(--accent) 26%,transparent);
+}
+.devotedStudentScoreCaption{
+  position:relative;
+  z-index:1;
+  color:color-mix(in srgb,var(--text) 75%,var(--muted));
+  font-size:10px;
+}
+
+/* =====================================================
+   STUDENT POINT LOG — TOP ARTWORK
+   ===================================================== */
+#studentPointPanel{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 42%),
+    linear-gradient(145deg,var(--panel),var(--panel2));
+}
+#studentPointPanel::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  left:0;
+  right:0;
+  top:0;
+  height:285px;
+  pointer-events:none;
+  background-image:url("https://drive.google.com/thumbnail?id=1Zjh2vTq4QhYOOv3LvWkz7T3JeAfrI7-q&sz=w1800");
+  background-size:cover;
+  background-position:center top;
+  background-repeat:no-repeat;
+  opacity:.48;
+  filter:saturate(1.08) contrast(1.04);
+}
+#studentPointPanel::after{
+  content:"";
+  position:absolute;
+  z-index:1;
+  left:0;
+  right:0;
+  top:0;
+  height:310px;
+  pointer-events:none;
+  background:
+    linear-gradient(180deg,rgba(4,4,7,.27) 0%,rgba(4,4,7,.43) 52%,rgba(4,4,7,.88) 88%,rgba(4,4,7,.98) 100%),
+    linear-gradient(90deg,color-mix(in srgb,var(--accent) 12%,transparent),transparent 58%);
+}
+#studentPointPanel>.sectionHeader,
+#studentPointPanel>.semesterNote,
+#studentPointPanel>.totals,
+#studentPointPanel>.logBar,
+#studentPointPanel>.pointLogs{
+  position:relative;
+  z-index:2;
+}
+#studentPointPanel>.sectionHeader{
+  background:linear-gradient(90deg,rgba(4,4,7,.70),rgba(4,4,7,.36));
+  backdrop-filter:blur(1px);
+}
+#studentPointPanel>.semesterNote{
+  margin-top:14px;
+  padding:9px 14px;
+  border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);
+  border-radius:12px;
+  background:rgba(0,0,0,.34);
+  text-shadow:0 2px 7px rgba(0,0,0,.88);
+}
+#studentPointPanel>.totals{
+  padding-top:16px;
+}
+#studentPointPanel .total{
+  border-color:color-mix(in srgb,var(--accent) 26%,transparent);
+  background:linear-gradient(145deg,rgba(5,5,8,.78),rgba(5,5,8,.58));
+  box-shadow:inset 4px 0 0 currentColor,0 10px 24px rgba(0,0,0,.20);
+  backdrop-filter:blur(2px);
+}
+#studentPointPanel>.logBar{
+  margin-top:3px;
+  padding-top:12px;
+  background:linear-gradient(180deg,rgba(4,4,7,.14),rgba(4,4,7,.72));
+}
+
+/* Preserve point-type accent rails after the V51 artwork treatment. */
+#studentPointPanel .total.gp{box-shadow:inset 4px 0 0 var(--gp),0 10px 24px rgba(0,0,0,.20)}
+#studentPointPanel .total.rp{box-shadow:inset 4px 0 0 var(--rp),0 10px 24px rgba(0,0,0,.20)}
+#studentPointPanel .total.fhp{box-shadow:inset 4px 0 0 var(--fhp),0 10px 24px rgba(0,0,0,.20)}
+
+
+/* =====================================================
+   V52 — VERTICAL HEADER BALANCE / GLASS RECORDS / GRADUATED ARCHIVE
+   2026-07-20
+   - Header content is vertically re-centered without changing its structure.
+   - Header logo loses the circular backing and gains a stronger free glow.
+   - NENSEI badges receive stronger visual priority.
+   - Academic Records and Student Point Log use lighter translucent glass.
+   - GRADUATED profile sections are visually unified as one ceremonial archive.
+   - No data, academic, graduated, PDF or PNG logic is changed.
+   ===================================================== */
+
+/* 1) HEADER CONTENT — TRUE VERTICAL CENTERING */
+.hero{
+  align-items:center;
+}
+.heroContent{
+  transform:translateY(10px);
+}
+
+/* 2) HEADER LOGO — NO CIRCULAR BACKPLATE, STRONGER GLOW */
+.logo{
+  width:148px;
+  height:148px;
+  margin:-2px auto 8px;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:none;
+  box-shadow:none;
+}
+.logo img{
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  filter:
+    drop-shadow(0 0 10px color-mix(in srgb,var(--strong) 44%,transparent))
+    drop-shadow(0 0 24px var(--glow))
+    drop-shadow(0 0 42px color-mix(in srgb,var(--accent) 48%,transparent));
+}
+
+/* 3) NENSEI — MORE PROMINENT, STILL COMPACT */
+.nensei,
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .nensei,
+.devotedStudentSemesterCard .nensei{
+  min-width:108px;
+  padding:8px 14px;
+  border:1px solid color-mix(in srgb,var(--accent) 72%,rgba(255,255,255,.16));
+  border-radius:999px;
+  color:var(--strong);
+  background:
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 24%,rgba(2,2,4,.82)),rgba(2,2,4,.72));
+  box-shadow:
+    0 0 0 1px color-mix(in srgb,var(--accent) 8%,transparent),
+    0 0 18px color-mix(in srgb,var(--accent) 34%,transparent),
+    inset 0 0 16px color-mix(in srgb,var(--accent) 12%,transparent);
+  font-weight:900;
+  letter-spacing:.08em;
+  text-align:center;
+  text-shadow:
+    0 2px 6px rgba(0,0,0,.94),
+    0 0 11px color-mix(in srgb,var(--accent) 48%,transparent);
+}
+
+/* 4) ACADEMIC RECORDS — LIGHTER TRANSLUCENT GLASS */
+#academicCardPanel{
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 40%),
+    linear-gradient(145deg,rgba(18,18,22,.64),rgba(5,5,8,.72));
+  box-shadow:
+    inset 4px 0 0 var(--accent),
+    inset 0 0 0 1px color-mix(in srgb,var(--accent) 6%,transparent),
+    0 20px 55px rgba(0,0,0,.30);
+  backdrop-filter:blur(8px) saturate(1.08);
+}
+#academicCardPanel .academicTop{
+  background:linear-gradient(90deg,rgba(0,0,0,.16),transparent);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard){
+  background:
+    radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 10%,transparent),transparent 38%),
+    linear-gradient(145deg,rgba(9,9,13,.71),rgba(4,4,7,.62));
+  backdrop-filter:blur(6px) saturate(1.06);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterHead{
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 13%,rgba(3,3,6,.56)),rgba(3,3,6,.24));
+  backdrop-filter:blur(4px);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjects{
+  background:rgba(0,0,0,.15);
+  backdrop-filter:blur(3px);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectRow{
+  background:linear-gradient(90deg,rgba(255,255,255,.035),rgba(255,255,255,.014));
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .outcome{
+  background:rgba(0,0,0,.14);
+}
+
+/* 4) STUDENT POINT LOG — LIGHTER GLASS, ARTWORK STAYS VISIBLE */
+#studentPointPanel{
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 43%),
+    linear-gradient(145deg,rgba(15,15,18,.62),rgba(4,4,7,.70));
+  backdrop-filter:blur(8px) saturate(1.08);
+}
+#studentPointPanel::before{
+  opacity:.58;
+}
+#studentPointPanel::after{
+  background:
+    linear-gradient(180deg,rgba(4,4,7,.17) 0%,rgba(4,4,7,.28) 50%,rgba(4,4,7,.63) 86%,rgba(4,4,7,.79) 100%),
+    linear-gradient(90deg,color-mix(in srgb,var(--accent) 14%,transparent),transparent 62%);
+}
+#studentPointPanel>.sectionHeader{
+  background:linear-gradient(90deg,rgba(4,4,7,.48),rgba(4,4,7,.20));
+  backdrop-filter:blur(4px);
+}
+#studentPointPanel>.semesterNote{
+  background:rgba(0,0,0,.25);
+  backdrop-filter:blur(4px);
+}
+#studentPointPanel .total{
+  background:linear-gradient(145deg,rgba(5,5,8,.58),rgba(5,5,8,.39));
+  backdrop-filter:blur(5px);
+}
+#studentPointPanel>.logBar{
+  background:linear-gradient(180deg,rgba(4,4,7,.08),rgba(4,4,7,.46));
+}
+#studentPointPanel .logItem{
+  background:linear-gradient(90deg,rgba(5,5,8,.42),rgba(5,5,8,.24));
+  backdrop-filter:blur(4px);
+}
+
+/* 5) GRADUATED — UNIFIED CEREMONIAL ARCHIVE UI */
+.resultGrid.graduatedLayout{
+  position:relative;
+}
+.resultGrid.graduatedLayout::before{
+  content:"GRADUATED ARCHIVE";
+  position:absolute;
+  z-index:0;
+  left:26px;
+  top:18px;
+  color:color-mix(in srgb,var(--accent) 7%,transparent);
+  font-family:"Cinzel",Georgia,serif;
+  font-size:64px;
+  font-weight:900;
+  letter-spacing:.14em;
+  line-height:1;
+  pointer-events:none;
+}
+.resultGrid.graduatedLayout>#studentProfilePanel,
+.resultGrid.graduatedLayout>.rightColumn,
+.resultGrid.graduatedLayout>.graduatedWideSections{
+  position:relative;
+  z-index:1;
+}
+.resultGrid.graduatedLayout #studentProfilePanel{
+  border-color:color-mix(in srgb,var(--accent) 48%,transparent);
+  background:
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 6%,rgba(11,11,15,.72)),rgba(4,4,7,.70));
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb,var(--accent) 5%,transparent),
+    0 24px 68px rgba(0,0,0,.36),
+    0 0 30px color-mix(in srgb,var(--accent) 8%,transparent);
+  backdrop-filter:blur(9px) saturate(1.08);
+}
+.resultGrid.graduatedLayout #studentProfilePanel .profileHeader{
+  margin:-4px -4px 0;
+  padding:5px 4px 26px;
+  border-bottom:1px solid color-mix(in srgb,var(--accent) 34%,transparent);
+}
+.resultGrid.graduatedLayout #studentProfilePanel .studentName{
+  text-shadow:0 3px 16px rgba(0,0,0,.62),0 0 18px color-mix(in srgb,var(--accent) 16%,transparent);
+}
+.resultGrid.graduatedLayout #studentProfilePanel .badge{
+  border-color:color-mix(in srgb,var(--accent) 42%,transparent);
+  box-shadow:0 0 16px color-mix(in srgb,var(--accent) 13%,transparent);
+}
+.resultGrid.graduatedLayout .rightColumn>aside.panel{
+  border-color:color-mix(in srgb,var(--accent) 46%,transparent);
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 42%),
+    linear-gradient(145deg,rgba(14,14,18,.68),rgba(4,4,7,.74));
+  box-shadow:0 24px 68px rgba(0,0,0,.34);
+  backdrop-filter:blur(9px) saturate(1.06);
+}
+.resultGrid.graduatedLayout .rightColumn>aside.panel .sectionHeader{
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 10%,rgba(0,0,0,.34)),transparent);
+}
+.resultGrid.graduatedLayout .mediaCard{
+  border-color:color-mix(in srgb,var(--accent) 34%,transparent);
+  background:rgba(0,0,0,.22);
+  box-shadow:inset 0 0 25px rgba(0,0,0,.24);
+}
+.graduatedWideSections{
+  gap:18px;
+  margin-top:2px;
+}
+.graduatedWideSections>#occupationCard,
+.graduatedWideSections>#academicCardPanel{
+  border-color:color-mix(in srgb,var(--accent) 48%,transparent);
+  border-radius:24px;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb,var(--accent) 5%,transparent),
+    0 24px 66px rgba(0,0,0,.34);
+}
+.graduatedWideSections #occupationCard{
+  padding:24px 26px 27px;
+  background:
+    radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 15%,transparent),transparent 42%),
+    linear-gradient(145deg,rgba(15,14,18,.68),rgba(5,5,8,.72));
+  backdrop-filter:blur(8px) saturate(1.08);
+}
+.graduatedWideSections #occupationSectionTitle{
+  display:flex;
+  align-items:center;
+  gap:13px;
+  margin:0 2px 18px;
+  color:var(--strong);
+  text-shadow:0 0 16px color-mix(in srgb,var(--accent) 28%,transparent);
+}
+.graduatedWideSections #occupationSectionTitle::before{
+  content:"✦";
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  flex:0 0 32px;
+  border:1px solid color-mix(in srgb,var(--accent) 52%,transparent);
+  border-radius:50%;
+  color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 9%,rgba(0,0,0,.38));
+  box-shadow:0 0 18px color-mix(in srgb,var(--accent) 18%,transparent);
+  font-size:13px;
+}
+.graduatedWideSections .lifeAfterGraduationCard{
+  grid-template-columns:104px minmax(0,780px) minmax(250px,1fr);
+  min-height:196px;
+  gap:24px;
+  padding:29px 34px;
+  border-color:color-mix(in srgb,var(--accent) 62%,transparent);
+  background-image:
+    linear-gradient(90deg,rgba(4,4,7,.94) 0%,rgba(4,4,7,.86) 31%,rgba(4,4,7,.62) 53%,rgba(4,4,7,.28) 73%,rgba(4,4,7,.07) 100%),
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,transparent),transparent 55%,color-mix(in srgb,var(--accent2) 9%,transparent)),
+    url("https://drive.google.com/thumbnail?id=1hbt9ake1iC7p6C9iOGpX8A16HpfBGHfN&sz=w2200");
+  background-position:center,center,right 36%;
+  box-shadow:
+    inset 5px 0 0 var(--accent),
+    inset 0 0 48px color-mix(in srgb,var(--accent) 7%,transparent),
+    0 18px 48px rgba(0,0,0,.30);
+}
+.graduatedWideSections .lifeAfterGraduationCard::before{
+  left:142px;
+  top:28px;
+  bottom:28px;
+}
+.graduatedWideSections .lifeAfterGraduationCard::after{
+  right:30px;
+  bottom:18px;
+  color:color-mix(in srgb,var(--strong) 20%,transparent);
+  font-size:38px;
+  letter-spacing:.15em;
+}
+.graduatedWideSections .lifeAfterGraduationSigil{
+  width:86px;
+  height:86px;
+  border:1px solid color-mix(in srgb,var(--strong) 52%,transparent);
+  box-shadow:
+    0 14px 32px rgba(0,0,0,.42),
+    0 0 34px color-mix(in srgb,var(--accent) 38%,transparent),
+    inset 0 0 0 5px rgba(255,255,255,.09);
+}
+.graduatedWideSections .lifeAfterGraduationContent{
+  padding:20px 23px;
+  border-color:color-mix(in srgb,var(--accent) 30%,transparent);
+  background:linear-gradient(135deg,rgba(5,5,8,.58),rgba(5,5,8,.27));
+  backdrop-filter:blur(5px);
+}
+.graduatedWideSections .lifeAfterGraduationEyebrow{
+  color:var(--accent);
+  font-size:13px;
+  text-shadow:0 0 16px color-mix(in srgb,var(--accent) 48%,transparent);
+}
+.graduatedWideSections .lifeAfterGraduationNarrative{
+  color:var(--strong);
+  font-size:19px;
+  line-height:1.68;
+  text-shadow:0 2px 10px rgba(0,0,0,.72);
+}
+
+/* GRADUATED academic archive heading feels distinct from active-student records. */
+.graduatedWideSections>#academicCardPanel{
+  position:relative;
+  overflow:hidden;
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 42%),
+    linear-gradient(145deg,rgba(15,15,20,.59),rgba(4,4,7,.69));
+}
+.graduatedWideSections>#academicCardPanel::before{
+  content:"ACADEMIC LEGACY";
+  position:absolute;
+  right:24px;
+  top:18px;
+  color:color-mix(in srgb,var(--accent) 8%,transparent);
+  font-family:"Cinzel",Georgia,serif;
+  font-size:38px;
+  font-weight:900;
+  letter-spacing:.12em;
+  pointer-events:none;
+}
+.graduatedWideSections>#academicCardPanel>*{
+  position:relative;
+  z-index:1;
+}
+
+/* DEVOTED STUDENT — cohesive ceremonial panel inside the graduated archive. */
+.graduatedWideSections .devotedStudentSemesterCard{
+  border-color:color-mix(in srgb,var(--accent) 66%,transparent);
+  background-image:
+    linear-gradient(90deg,rgba(4,4,7,.92) 0%,rgba(4,4,7,.82) 29%,rgba(4,4,7,.56) 52%,rgba(4,4,7,.24) 74%,rgba(4,4,7,.055) 100%),
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 13%,transparent),transparent 54%,color-mix(in srgb,var(--accent2) 10%,transparent)),
+    url("https://drive.google.com/thumbnail?id=1K-2TytITfiC3OysGOO_1L5yn4iRGiAsT&sz=w2200");
+  box-shadow:
+    inset 5px 0 0 var(--accent),
+    0 22px 58px rgba(0,0,0,.36),
+    0 0 42px color-mix(in srgb,var(--accent) 15%,transparent);
+}
+.graduatedWideSections .devotedStudentSemesterCard .semesterHead{
+  background:linear-gradient(90deg,rgba(4,4,7,.72),rgba(4,4,7,.31) 68%,rgba(4,4,7,.10));
+  backdrop-filter:blur(4px);
+}
+.graduatedWideSections .devotedStudentHero{
+  border-color:color-mix(in srgb,var(--accent) 56%,transparent);
+  background:linear-gradient(110deg,rgba(5,5,8,.72),rgba(5,5,8,.45) 60%,rgba(5,5,8,.20));
+  backdrop-filter:blur(5px);
+}
+.graduatedWideSections .devotedStudentField{
+  border-color:color-mix(in srgb,var(--accent) 34%,transparent);
+  background:linear-gradient(135deg,rgba(6,6,9,.65),rgba(6,6,9,.39));
+  backdrop-filter:blur(5px);
+}
+.graduatedWideSections .devotedStudentScorePanel{
+  border-color:color-mix(in srgb,var(--accent) 82%,rgba(255,255,255,.18));
+  background:
+    radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--accent) 24%,transparent),transparent 54%),
+    linear-gradient(145deg,rgba(1,1,3,.92),rgba(6,5,8,.78));
+  box-shadow:
+    0 14px 34px rgba(0,0,0,.46),
+    0 0 33px color-mix(in srgb,var(--accent) 34%,transparent),
+    inset 0 0 28px color-mix(in srgb,var(--accent) 12%,transparent);
+}
+.graduatedWideSections .devotedStudentScorePanel .devotedStudentScoreValue{
+  font-size:52px;
+  text-shadow:
+    0 3px 8px rgba(0,0,0,.98),
+    0 0 19px color-mix(in srgb,var(--accent) 68%,transparent),
+    0 0 36px color-mix(in srgb,var(--accent) 30%,transparent);
+}
+/* =====================================================
+   V53 — TRUE CENTER / CLEAR GLASS / POINT HEADER CONTRAST / LIFE PATH FLIP
+   2026-07-20
+   - Header content is placed at the actual vertical midpoint between V51 and V52.
+   - Academic Records glass transparency is visibly increased.
+   - Student Point Log title and current-period badge win against the artwork.
+   - Life After Graduation artwork is horizontally mirrored without flipping content.
+   - No data, academic, graduated, PDF or PNG logic is changed.
+   ===================================================== */
+
+/* 1) HEADER CONTENT — ACTUAL VERTICAL CENTER */
+.hero{
+  align-items:center;
+  justify-items:center;
+}
+.heroContent{
+  transform:translateY(-2px);
+}
+
+/* 2) ACADEMIC RECORDS — VISIBLY TRANSPARENT GLASS */
+#academicCardPanel{
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 42%),
+    linear-gradient(145deg,rgba(18,18,22,.29),rgba(5,5,8,.36));
+  border-color:color-mix(in srgb,var(--accent) 34%,rgba(255,255,255,.05));
+  box-shadow:
+    inset 4px 0 0 color-mix(in srgb,var(--accent) 82%,transparent),
+    inset 0 0 0 1px rgba(255,255,255,.025),
+    0 18px 50px rgba(0,0,0,.22);
+  backdrop-filter:blur(7px) saturate(1.10);
+}
+#academicCardPanel .academicTop{
+  background:linear-gradient(90deg,rgba(0,0,0,.08),rgba(0,0,0,.015));
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard){
+  background:
+    radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 8%,transparent),transparent 40%),
+    linear-gradient(145deg,rgba(9,9,13,.39),rgba(4,4,7,.27));
+  border-color:color-mix(in srgb,var(--accent) 30%,rgba(255,255,255,.035));
+  box-shadow:
+    inset 4px 0 0 color-mix(in srgb,var(--accent) 78%,transparent),
+    0 12px 30px rgba(0,0,0,.18);
+  backdrop-filter:blur(7px) saturate(1.08);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterHead{
+  background:linear-gradient(
+    90deg,
+    color-mix(in srgb,var(--accent) 10%,rgba(3,3,6,.28)),
+    rgba(3,3,6,.10)
+  );
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjects{
+  background:rgba(0,0,0,.075);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectRow{
+  background:linear-gradient(90deg,rgba(255,255,255,.026),rgba(255,255,255,.008));
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .outcome{
+  background:rgba(0,0,0,.075);
+}
+.academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part{
+  background-color:color-mix(in srgb,currentColor 2%,transparent);
+}
+
+/* Keep the GRADUATED academic archive equally glass-like. */
+.graduatedWideSections>#academicCardPanel{
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 44%),
+    linear-gradient(145deg,rgba(15,15,20,.27),rgba(4,4,7,.35));
+}
+
+/* 3) STUDENT POINT LOG — TITLE + PERIOD MUST STAY LEGIBLE */
+#studentPointPanel>.sectionHeader{
+  min-height:70px;
+  background:
+    linear-gradient(90deg,rgba(2,2,5,.82),rgba(2,2,5,.60) 58%,rgba(2,2,5,.38));
+  border-bottom-color:color-mix(in srgb,var(--accent) 46%,transparent);
+  box-shadow:
+    inset 0 -1px 0 color-mix(in srgb,var(--accent) 16%,transparent),
+    0 10px 28px rgba(0,0,0,.16);
+  backdrop-filter:blur(5px);
+}
+#studentPointPanel>.sectionHeader .sectionTitle{
+  color:var(--strong);
+  font-size:20px;
+  font-weight:950;
+  letter-spacing:.105em;
+  text-shadow:
+    0 3px 9px rgba(0,0,0,.98),
+    0 0 16px color-mix(in srgb,var(--accent) 58%,transparent),
+    0 0 30px color-mix(in srgb,var(--accent) 24%,transparent);
+}
+#studentPointPanel .semesterBadge{
+  max-width:225px;
+  min-height:38px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:8px 14px;
+  border:1px solid color-mix(in srgb,var(--accent) 78%,rgba(255,255,255,.16));
+  color:var(--strong);
+  background:
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 24%,rgba(2,2,5,.90)),rgba(2,2,5,.84));
+  box-shadow:
+    0 0 20px color-mix(in srgb,var(--accent) 34%,transparent),
+    inset 0 0 15px color-mix(in srgb,var(--accent) 12%,transparent);
+  font-size:11.5px;
+  font-weight:950;
+  letter-spacing:.065em;
+  text-shadow:0 2px 7px rgba(0,0,0,.98),0 0 10px color-mix(in srgb,var(--accent) 46%,transparent);
+}
+
+/* 4) LIFE AFTER GRADUATION — HORIZONTAL MIRROR OF ARTWORK ONLY */
+.graduatedWideSections .lifeAfterGraduationCard{
+  isolation:isolate;
+  background-image:
+    linear-gradient(90deg,rgba(4,4,7,.94) 0%,rgba(4,4,7,.86) 31%,rgba(4,4,7,.62) 53%,rgba(4,4,7,.28) 73%,rgba(4,4,7,.07) 100%),
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 12%,transparent),transparent 55%,color-mix(in srgb,var(--accent2) 9%,transparent));
+  background-position:center,center;
+}
+.graduatedWideSections .lifeAfterGraduationCard::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  inset:0;
+  width:auto;
+  height:auto;
+  pointer-events:none;
+  background-image:url("https://drive.google.com/thumbnail?id=1hbt9ake1iC7p6C9iOGpX8A16HpfBGHfN&sz=w2200");
+  background-size:cover;
+  background-position:right 36%;
+  background-repeat:no-repeat;
+  transform:scaleX(-1);
+  transform-origin:center;
+  opacity:1;
+}
+.graduatedWideSections .lifeAfterGraduationSigil::after{
+  content:"";
+  position:absolute;
+  right:-22px;
+  top:-31px;
+  width:1px;
+  height:148px;
+  pointer-events:none;
+  background:linear-gradient(
+    180deg,
+    transparent,
+    color-mix(in srgb,var(--accent) 52%,transparent),
+    transparent
+  );
+}
+.graduatedWideSections .lifeAfterGraduationSigil,
+.graduatedWideSections .lifeAfterGraduationContent,
+.graduatedWideSections .lifeAfterGraduationCard::after{
+  position:relative;
+  z-index:1;
+}
+
+/* =====================================================
+   V54 — RESTORE LIFE PATH GRADIENT / REGULAR ACADEMIC GLASS
+   2026-07-20
+   - Life After Graduation keeps the exact V52 dark gradient appearance;
+     only the artwork layer is horizontally mirrored.
+   - Regular (non-GRADUATED) Academic Records receives a balanced glass look:
+     visibly translucent, but still dark enough for comfortable reading.
+   - No layout, data, academic, graduated, PDF or PNG logic is changed.
+   ===================================================== */
+
+/* 1) LIFE AFTER GRADUATION — V52 GRADIENT, ARTWORK FLIPPED ONLY
+   The whole composite lives on ::before. The two gradient directions are
+   pre-mirrored so after scaleX(-1) they visually return to the exact V52
+   directions, while the artwork itself remains horizontally flipped. */
+.graduatedWideSections .lifeAfterGraduationCard{
+  isolation:isolate;
+  background-color:transparent;
+  background-image:none;
+}
+.graduatedWideSections .lifeAfterGraduationCard::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:0;
+  width:auto;
+  height:auto;
+  pointer-events:none;
+  background-image:
+    linear-gradient(270deg,rgba(4,4,7,.94) 0%,rgba(4,4,7,.86) 31%,rgba(4,4,7,.62) 53%,rgba(4,4,7,.28) 73%,rgba(4,4,7,.07) 100%),
+    linear-gradient(225deg,color-mix(in srgb,var(--accent) 12%,transparent),transparent 55%,color-mix(in srgb,var(--accent2) 9%,transparent)),
+    url("https://drive.google.com/thumbnail?id=1hbt9ake1iC7p6C9iOGpX8A16HpfBGHfN&sz=w2200");
+  background-size:cover,cover,cover;
+  background-position:center,center,left 36%;
+  background-repeat:no-repeat,no-repeat,no-repeat;
+  transform:scaleX(-1);
+  transform-origin:center;
+  opacity:1;
+}
+.graduatedWideSections .lifeAfterGraduationSigil,
+.graduatedWideSections .lifeAfterGraduationContent,
+.graduatedWideSections .lifeAfterGraduationCard::after{
+  position:relative;
+  z-index:1;
+}
+
+/* 2) REGULAR STUDENT ACADEMIC RECORDS — BALANCED GLASSY LOOK
+   Scoped explicitly outside .graduatedLayout so the alumni archive styling
+   remains untouched. */
+.resultGrid:not(.graduatedLayout) #academicCardPanel{
+  position:relative;
+  overflow:hidden;
+  border-color:color-mix(in srgb,var(--accent) 42%,rgba(255,255,255,.08));
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.065),rgba(255,255,255,.018) 38%,transparent 68%),
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 43%),
+    linear-gradient(145deg,rgba(12,12,17,.53),rgba(3,3,7,.61));
+  box-shadow:
+    inset 4px 0 0 color-mix(in srgb,var(--accent) 88%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.11),
+    inset 0 0 34px color-mix(in srgb,var(--accent) 5%,transparent),
+    0 18px 48px rgba(0,0,0,.24);
+  backdrop-filter:blur(14px) saturate(1.18);
+  -webkit-backdrop-filter:blur(14px) saturate(1.18);
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(118deg,rgba(255,255,255,.075) 0%,transparent 21%,transparent 71%,color-mix(in srgb,var(--accent) 5%,transparent) 100%);
+  opacity:.72;
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel>*{
+  position:relative;
+  z-index:1;
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicTop{
+  background:linear-gradient(90deg,rgba(2,2,5,.26),rgba(2,2,5,.08) 65%,transparent);
+  border-bottom-color:color-mix(in srgb,var(--accent) 32%,transparent);
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard){
+  border-color:color-mix(in srgb,var(--accent) 38%,rgba(255,255,255,.06));
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.048),transparent 34%),
+    radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 9%,transparent),transparent 42%),
+    linear-gradient(145deg,rgba(8,8,13,.55),rgba(3,3,7,.46));
+  box-shadow:
+    inset 4px 0 0 color-mix(in srgb,var(--accent) 82%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 12px 28px rgba(0,0,0,.19);
+  backdrop-filter:blur(10px) saturate(1.12);
+  -webkit-backdrop-filter:blur(10px) saturate(1.12);
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterHead{
+  background:linear-gradient(
+    90deg,
+    color-mix(in srgb,var(--accent) 11%,rgba(3,3,7,.44)),
+    rgba(3,3,7,.20) 72%,
+    rgba(3,3,7,.10)
+  );
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjects{
+  background:rgba(0,0,0,.16);
+  border-color:color-mix(in srgb,var(--accent) 22%,transparent);
+  backdrop-filter:blur(5px);
+  -webkit-backdrop-filter:blur(5px);
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectRow{
+  background:linear-gradient(90deg,rgba(255,255,255,.045),rgba(255,255,255,.015));
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .outcome{
+  background:rgba(2,2,5,.24);
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part{
+  backdrop-filter:blur(4px);
+  -webkit-backdrop-filter:blur(4px);
+}
+
+/* =====================================================
+   V55 — ACADEMIC GLASS / HOUSE THEME CONSISTENCY / CLEAN GRADUATED DETAILS
+   2026-07-20
+   - Removes decorative right-side archive watermark on GRADUATED Academic Records.
+   - Removes the decorative top-right kanji and SCORE watermark from Devoted Student.
+   - Regular Academic Records now visually matches the translucent GRADUATED archive.
+   - Academic decorative surfaces are locked to the active House theme variables.
+   - Refines Academic Records hierarchy without changing DOM structure or data logic.
+   ===================================================== */
+
+/* 1) GRADUATED — REMOVE THE THREE DECORATIVE RIGHT-SIDE WATERMARKS ONLY */
+.graduatedWideSections>#academicCardPanel::before,
+.graduatedWideSections .devotedStudentHero::after,
+.graduatedWideSections .devotedStudentScorePanel::before{
+  content:none!important;
+  display:none!important;
+}
+
+/* 2) REGULAR ACADEMIC RECORDS — MATCH THE GRADUATED GLASS TRANSPARENCY.
+   The fixed artwork layer recreates the page backdrop inside the nested
+   profile panel, so the card reads as actual glass rather than a solid box. */
+.resultGrid:not(.graduatedLayout) #academicCardPanel{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border-color:color-mix(in srgb,var(--accent) 48%,rgba(255,255,255,.07));
+  background-image:
+    linear-gradient(145deg,rgba(15,15,20,.28),rgba(4,4,7,.36)),
+    var(--pageDormTint),
+    linear-gradient(180deg,rgba(2,2,4,.54),rgba(3,3,5,.25) 58%,rgba(3,3,5,.10)),
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 13%,transparent),transparent 43%),
+    url("https://drive.google.com/thumbnail?id=18fTv3YxLCCGOQtjWDNyVTXWb0jHvhlc1&sz=w2400");
+  background-size:100% 100%,100% 100%,100% 100%,auto,cover;
+  background-position:center,center,center,100% 0,center bottom;
+  background-repeat:no-repeat;
+  background-attachment:scroll,fixed,fixed,fixed,fixed;
+  box-shadow:
+    inset 4px 0 0 var(--accent),
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 0 42px color-mix(in srgb,var(--accent) 7%,transparent),
+    0 20px 52px rgba(0,0,0,.24),
+    0 0 28px color-mix(in srgb,var(--accent) 7%,transparent);
+  backdrop-filter:blur(12px) saturate(1.14);
+  -webkit-backdrop-filter:blur(12px) saturate(1.14);
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(118deg,rgba(255,255,255,.085) 0%,rgba(255,255,255,.018) 18%,transparent 35%,transparent 72%,color-mix(in srgb,var(--accent) 7%,transparent) 100%),
+    radial-gradient(circle at 18% -10%,rgba(255,255,255,.075),transparent 31%);
+  opacity:.82;
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel>*{
+  position:relative;
+  z-index:1;
+}
+
+/* Match regular semester cards to the glass density used by the graduated archive. */
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard){
+  border-color:color-mix(in srgb,var(--accent) 42%,rgba(255,255,255,.05));
+  background:
+    linear-gradient(135deg,rgba(255,255,255,.045),transparent 34%),
+    radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 9%,transparent),transparent 40%),
+    linear-gradient(145deg,rgba(9,9,13,.39),rgba(4,4,7,.27));
+  box-shadow:
+    inset 4px 0 0 var(--accent),
+    inset 0 1px 0 rgba(255,255,255,.075),
+    0 13px 30px rgba(0,0,0,.19),
+    0 0 20px color-mix(in srgb,var(--accent) 5%,transparent);
+  backdrop-filter:blur(8px) saturate(1.10);
+  -webkit-backdrop-filter:blur(8px) saturate(1.10);
+}
+
+/* 3) HOUSE-THEME CONSISTENCY — EVERY DECORATIVE ACADEMIC ACCENT FOLLOWS THE DORM. */
+#academicCardPanel .largeCardLabel,
+#academicCardPanel .semesterTitle,
+#academicCardPanel .miniTitle,
+#academicCardPanel .count,
+#academicCardPanel .nensei,
+#academicCardPanel .mark{
+  color:var(--strong);
+}
+#academicCardPanel .academicIntro,
+#academicCardPanel .subjectHeader,
+#academicCardPanel .outcomeLabel,
+#academicCardPanel .partName{
+  color:color-mix(in srgb,var(--text) 72%,var(--muted));
+}
+#academicCardPanel .academicTop,
+#academicCardPanel .semesterHead,
+#academicCardPanel .subjects,
+#academicCardPanel .subjectRow,
+#academicCardPanel .outcome,
+#academicCardPanel .part{
+  border-color:color-mix(in srgb,var(--accent) 28%,transparent);
+}
+#academicCardPanel .count,
+#academicCardPanel .nensei{
+  border-color:color-mix(in srgb,var(--accent) 54%,transparent);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 17%,rgba(0,0,0,.52)),color-mix(in srgb,var(--accent2) 7%,rgba(0,0,0,.42)));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.07),
+    0 0 16px color-mix(in srgb,var(--accent) 12%,transparent);
+}
+#academicCardPanel .mark{
+  border-color:color-mix(in srgb,var(--accent) 34%,transparent);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 11%,rgba(0,0,0,.26)),rgba(0,0,0,.17));
+  box-shadow:inset 0 0 13px color-mix(in srgb,var(--accent) 4%,transparent);
+}
+#academicCardPanel .transcriptButton,
+#academicCardPanel .reportButton{
+  border-color:color-mix(in srgb,var(--strong) 20%,transparent);
+  background:linear-gradient(135deg,var(--accent),var(--strong) 58%,var(--accent2));
+  box-shadow:
+    0 10px 24px rgba(0,0,0,.28),
+    0 0 20px color-mix(in srgb,var(--accent) 17%,transparent);
+}
+
+/* Participation keeps its semantic state text, but its frames and surface now
+   remain House-themed instead of introducing an unrelated decorative palette. */
+#academicCardPanel .part.yes,
+#academicCardPanel .part.no,
+#academicCardPanel .part.locked{
+  border-color:color-mix(in srgb,var(--accent) 30%,transparent);
+  background:
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 7%,rgba(255,255,255,.018)),rgba(0,0,0,.12));
+}
+
+/* 4) ACADEMIC RECORDS — REFINED VISUAL HIERARCHY */
+#academicCardPanel .academicTop{
+  position:relative;
+  min-height:82px;
+  padding:7px 5px 19px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 8%,rgba(2,2,5,.24)),rgba(2,2,5,.07) 68%,transparent);
+}
+#academicCardPanel .academicTop::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:-1px;
+  height:1px;
+  background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 24%,transparent) 46%,transparent 86%);
+  box-shadow:0 0 13px color-mix(in srgb,var(--accent) 24%,transparent);
+}
+#academicCardPanel .largeCardLabel{
+  font-size:16px;
+  letter-spacing:.105em;
+  text-shadow:0 0 17px color-mix(in srgb,var(--accent) 30%,transparent);
+}
+#academicCardPanel .academicIntro{
+  margin-top:7px;
+  font-size:11.5px;
+  line-height:1.5;
+}
+#academicCardPanel .academicRecords{
+  gap:20px;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard){
+  position:relative;
+  border-radius:23px;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard)::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  border-radius:inherit;
+  background:linear-gradient(115deg,rgba(255,255,255,.035),transparent 19%,transparent 78%,color-mix(in srgb,var(--accent) 4%,transparent));
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard)>*{
+  position:relative;
+  z-index:1;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterHead{
+  min-height:70px;
+  padding:17px 19px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 12%,rgba(3,3,7,.42)),rgba(3,3,7,.18) 72%,rgba(3,3,7,.07));
+  box-shadow:inset 0 -1px 0 color-mix(in srgb,var(--accent) 10%,transparent);
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterTitle{
+  display:flex;
+  align-items:center;
+  gap:11px;
+  font-size:22px;
+  letter-spacing:.055em;
+  text-shadow:0 2px 12px rgba(0,0,0,.48),0 0 16px color-mix(in srgb,var(--accent) 13%,transparent);
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterTitle::before{
+  content:"✦";
+  width:28px;
+  height:28px;
+  display:grid;
+  place-items:center;
+  flex:0 0 28px;
+  border:1px solid color-mix(in srgb,var(--accent) 56%,transparent);
+  border-radius:50%;
+  color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 9%,rgba(0,0,0,.32));
+  box-shadow:0 0 15px color-mix(in srgb,var(--accent) 16%,transparent);
+  font-size:10px;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .miniTitle{
+  border-left-color:var(--accent);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 14%,rgba(0,0,0,.16)),transparent);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjects{
+  background:linear-gradient(145deg,rgba(0,0,0,.20),rgba(0,0,0,.11));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectRow{
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 5%,rgba(255,255,255,.025)),rgba(255,255,255,.009));
+  transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectRow:hover{
+  border-color:color-mix(in srgb,var(--accent) 46%,transparent);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 9%,rgba(255,255,255,.03)),rgba(255,255,255,.012));
+  box-shadow:inset 3px 0 0 color-mix(in srgb,var(--accent) 66%,transparent);
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterFoot{
+  background:linear-gradient(180deg,rgba(255,255,255,.014),color-mix(in srgb,var(--accent) 3%,rgba(0,0,0,.18)));
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .outcome{
+  background:linear-gradient(145deg,rgba(0,0,0,.21),color-mix(in srgb,var(--accent) 4%,rgba(0,0,0,.13)));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+
+/* =====================================================
+   V56 — FROSTED ACADEMIC GLASS / CLEAN DECORATIVE TEXT / RED NOT PARTICIPATED
+   2026-07-20
+   - Removes all decorative right-side watermarks from GRADUATED Academic Records.
+   - Removes LIFE PATH watermark from Life After Graduation.
+   - Rebalances regular Academic Records into medium-opacity frosted glass with House gradients.
+   - NOT PARTICIPATED is rendered as semantic red, never pink.
+   - No DOM, data, academic loading, PDF or PNG logic is changed.
+   ===================================================== */
+
+/* 1) GRADUATED — FORCE-REMOVE DECORATIVE RIGHT-SIDE TEXT / KANJI / SCORE */
+.graduatedWideSections>#academicCardPanel::before,
+.graduatedWideSections>#academicCardPanel::after,
+.graduatedWideSections .devotedStudentHero::before,
+.graduatedWideSections .devotedStudentHero::after,
+.graduatedWideSections .devotedStudentScorePanel::before,
+.graduatedWideSections .devotedStudentScorePanel::after{
+  content:none!important;
+  display:none!important;
+}
+
+/* 2) LIFE AFTER GRADUATION — REMOVE LARGE LIFE PATH WATERMARK ONLY */
+.graduatedWideSections .lifeAfterGraduationCard::after{
+  content:none!important;
+  display:none!important;
+}
+
+/* Keep actual Life After Graduation content above its mirrored artwork layer. */
+.graduatedWideSections .lifeAfterGraduationSigil,
+.graduatedWideSections .lifeAfterGraduationContent{
+  position:relative;
+  z-index:2;
+}
+
+/* 3) REGULAR ACADEMIC RECORDS — MEDIUM-OPAQUE FROSTED GLASS.
+   No direct page-artwork recreation here: the surface remains translucent,
+   blurred and House-tinted without becoming excessively transparent. */
+.resultGrid:not(.graduatedLayout) #academicCardPanel{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border-color:color-mix(in srgb,var(--accent) 52%,rgba(255,255,255,.08));
+  background:
+    linear-gradient(118deg,
+      color-mix(in srgb,var(--accent) 19%,rgba(13,13,18,.79)) 0%,
+      rgba(10,10,15,.76) 34%,
+      color-mix(in srgb,var(--accent2) 10%,rgba(7,7,12,.78)) 68%,
+      rgba(5,5,10,.82) 100%),
+    radial-gradient(circle at 92% 2%,color-mix(in srgb,var(--accent) 25%,transparent),transparent 42%),
+    radial-gradient(circle at 4% 100%,color-mix(in srgb,var(--accent2) 12%,transparent),transparent 38%);
+  box-shadow:
+    inset 4px 0 0 var(--accent),
+    inset 0 1px 0 rgba(255,255,255,.14),
+    inset 0 0 48px color-mix(in srgb,var(--accent) 8%,transparent),
+    0 20px 54px rgba(0,0,0,.30),
+    0 0 30px color-mix(in srgb,var(--accent) 8%,transparent);
+  backdrop-filter:blur(20px) saturate(1.20);
+  -webkit-backdrop-filter:blur(20px) saturate(1.20);
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel::before{
+  content:"";
+  position:absolute;
+  z-index:0;
+  inset:0;
+  pointer-events:none;
+  background:
+    linear-gradient(125deg,rgba(255,255,255,.11) 0%,rgba(255,255,255,.028) 19%,transparent 38%,transparent 70%,color-mix(in srgb,var(--accent) 8%,transparent) 100%),
+    radial-gradient(circle at 20% -12%,rgba(255,255,255,.10),transparent 31%);
+  opacity:.80;
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel>*{
+  position:relative;
+  z-index:1;
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicTop{
+  background:
+    linear-gradient(90deg,
+      color-mix(in srgb,var(--accent) 11%,rgba(3,3,7,.54)),
+      rgba(3,3,7,.40) 62%,
+      color-mix(in srgb,var(--accent2) 5%,rgba(3,3,7,.30)));
+  backdrop-filter:blur(10px) saturate(1.10);
+  -webkit-backdrop-filter:blur(10px) saturate(1.10);
+}
+
+/* Semester cards: frosted, readable and House-tinted rather than see-through. */
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard){
+  border-color:color-mix(in srgb,var(--accent) 44%,rgba(255,255,255,.045));
+  background:
+    linear-gradient(128deg,
+      color-mix(in srgb,var(--accent) 12%,rgba(8,8,13,.70)),
+      rgba(5,5,10,.68) 58%,
+      color-mix(in srgb,var(--accent2) 6%,rgba(4,4,9,.72))),
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 42%);
+  box-shadow:
+    inset 4px 0 0 var(--accent),
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 14px 32px rgba(0,0,0,.23),
+    0 0 22px color-mix(in srgb,var(--accent) 6%,transparent);
+  backdrop-filter:blur(15px) saturate(1.12);
+  -webkit-backdrop-filter:blur(15px) saturate(1.12);
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterHead{
+  background:linear-gradient(90deg,
+    color-mix(in srgb,var(--accent) 14%,rgba(3,3,7,.58)),
+    rgba(3,3,7,.42) 70%,
+    rgba(3,3,7,.26));
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjects{
+  background:linear-gradient(145deg,rgba(0,0,0,.34),color-mix(in srgb,var(--accent) 4%,rgba(0,0,0,.24)));
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .subjectRow{
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 6%,rgba(255,255,255,.035)),rgba(0,0,0,.16));
+}
+.resultGrid:not(.graduatedLayout) #academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .outcome{
+  background:linear-gradient(145deg,rgba(0,0,0,.34),color-mix(in srgb,var(--accent) 5%,rgba(0,0,0,.22)));
+}
+
+/* 4) EXTRACURRICULAR / PARTICIPATION — NOT PARTICIPATED MUST BE RED, NOT PINK. */
+#academicCardPanel .part.no .partState{
+  color:#ff4b4b!important;
+  text-shadow:0 0 11px rgba(255,38,45,.34);
+}
+
+
+/* =====================================================
+   V57 — PREMIUM STUDENT EXPERIENCE UI
+   2026-07-20
+   VISUAL-ONLY EXPERIMENT:
+   - Premium student identity header without changing DOM order.
+   - Modernized basic information and Finance Balance surfaces.
+   - Official-media showcase treatment for ID Card / Completion Certificate.
+   - Student Point Log becomes a visual timeline while retaining the same data rows.
+   - GP Ranking top three become a premium podium; remaining students keep the list grid.
+   - Existing Academic Records / GRADUATED / Devoted / Life After / PDF / PNG logic untouched.
+   ===================================================== */
+
+/* -----------------------------------------------------
+   1) STUDENT PROFILE — PREMIUM IDENTITY HEADER
+   ----------------------------------------------------- */
+#studentProfilePanel .panelInner{
+  padding:22px;
+}
+#studentProfilePanel .profileHeader{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  min-height:178px;
+  grid-template-columns:138px minmax(0,1fr) 112px;
+  gap:24px;
+  align-items:center;
+  padding:21px 22px;
+  border:1px solid color-mix(in srgb,var(--accent) 44%,rgba(255,255,255,.06));
+  border-radius:24px;
+  background:
+    radial-gradient(circle at 0 0,color-mix(in srgb,var(--accent) 22%,transparent),transparent 38%),
+    radial-gradient(circle at 100% 100%,color-mix(in srgb,var(--accent2) 12%,transparent),transparent 38%),
+    linear-gradient(118deg,rgba(255,255,255,.045),rgba(5,5,9,.58) 42%,color-mix(in srgb,var(--accent) 7%,rgba(3,3,7,.72)));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.10),
+    inset 4px 0 0 var(--accent),
+    0 18px 38px rgba(0,0,0,.25),
+    0 0 24px color-mix(in srgb,var(--accent) 7%,transparent);
+  backdrop-filter:blur(13px) saturate(1.13);
+  -webkit-backdrop-filter:blur(13px) saturate(1.13);
+}
+#studentProfilePanel .profileHeader::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    linear-gradient(118deg,rgba(255,255,255,.075),transparent 22%,transparent 72%,color-mix(in srgb,var(--accent) 7%,transparent)),
+    radial-gradient(circle at 70% 10%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 30%);
+}
+#studentProfilePanel .profileHeader::after{
+  content:"";
+  position:absolute;
+  left:22px;
+  right:22px;
+  bottom:0;
+  height:1px;
+  pointer-events:none;
+  background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 18%,transparent) 52%,transparent);
+  box-shadow:0 0 15px color-mix(in srgb,var(--accent) 32%,transparent);
+}
+#studentProfilePanel .avatar{
+  position:relative;
+  width:136px;
+  height:136px;
+  border:1px solid color-mix(in srgb,var(--accent) 58%,rgba(255,255,255,.08));
+  border-radius:27px;
+  background:
+    radial-gradient(circle at 50% 24%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 50%),
+    rgba(3,3,6,.88);
+  box-shadow:
+    0 0 0 5px rgba(0,0,0,.20),
+    0 18px 30px rgba(0,0,0,.28),
+    0 0 26px color-mix(in srgb,var(--accent) 17%,transparent),
+    inset 0 0 28px color-mix(in srgb,var(--accent) 10%,transparent);
+}
+#studentProfilePanel .avatar::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.07),inset 0 -24px 38px rgba(0,0,0,.20);
+}
+#studentProfilePanel .identity{
+  position:relative;
+  z-index:2;
+  padding:4px 0;
+}
+#studentProfilePanel .studentName{
+  max-width:100%;
+  overflow:hidden;
+  color:var(--strong);
+  font-size:34px;
+  line-height:.98;
+  letter-spacing:.018em;
+  text-overflow:ellipsis;
+  text-shadow:
+    0 3px 20px rgba(0,0,0,.48),
+    0 0 20px color-mix(in srgb,var(--accent) 12%,transparent);
+}
+#studentProfilePanel .metaLine{
+  margin-top:13px;
+  gap:12px;
+}
+#studentProfilePanel .studentKanji{
+  color:color-mix(in srgb,var(--strong) 72%,var(--accent));
+  font-size:19px;
+  font-weight:700;
+  letter-spacing:.035em;
+  text-shadow:0 0 14px color-mix(in srgb,var(--accent) 17%,transparent);
+}
+#studentProfilePanel .divider{
+  color:var(--accent);
+  opacity:.55;
+}
+#studentProfilePanel .badges{
+  gap:8px;
+  flex-wrap:wrap;
+}
+#studentProfilePanel .badge{
+  min-height:30px;
+  padding:6px 11px;
+  border-color:color-mix(in srgb,var(--accent) 38%,rgba(255,255,255,.07));
+  background:linear-gradient(135deg,rgba(255,255,255,.055),rgba(0,0,0,.18));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.07),0 6px 15px rgba(0,0,0,.14);
+  letter-spacing:.075em;
+}
+#studentProfilePanel .crest{
+  position:relative;
+  width:110px;
+  height:132px;
+  padding:9px;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--accent) 48%,rgba(255,255,255,.06));
+  border-radius:25px;
+  background:
+    radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--accent) 20%,transparent),transparent 57%),
+    linear-gradient(155deg,rgba(255,255,255,.045),rgba(2,2,5,.62));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 0 28px color-mix(in srgb,var(--accent) 8%,transparent),
+    0 14px 28px rgba(0,0,0,.22);
+}
+#studentProfilePanel .crest img{
+  width:78px;
+  height:78px;
+  filter:drop-shadow(0 0 13px color-mix(in srgb,var(--accent) 35%,transparent));
+}
+#studentProfilePanel .crestName{
+  margin-top:2px;
+  color:var(--strong);
+  font-size:9px;
+  letter-spacing:.09em;
+}
+
+/* -----------------------------------------------------
+   2) BASIC INFO — MINI STAT CARDS + EMPHASIZED GRADE
+   ----------------------------------------------------- */
+#studentProfilePanel .infoGrid{
+  gap:12px;
+  margin-top:16px;
+}
+#studentProfilePanel .infoGrid>.infoCard.compact{
+  position:relative;
+  overflow:hidden;
+  min-height:86px;
+  padding:15px 17px 14px 19px;
+  border-color:color-mix(in srgb,var(--accent) 31%,rgba(255,255,255,.055));
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 48%),
+    linear-gradient(135deg,rgba(255,255,255,.035),rgba(3,3,7,.54));
+  box-shadow:
+    inset 3px 0 0 color-mix(in srgb,var(--accent) 76%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.055),
+    0 10px 24px rgba(0,0,0,.16);
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+#studentProfilePanel .infoGrid>.infoCard.compact:hover{
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--accent) 53%,transparent);
+  box-shadow:
+    inset 3px 0 0 var(--accent),
+    inset 0 1px 0 rgba(255,255,255,.075),
+    0 14px 28px rgba(0,0,0,.20),
+    0 0 18px color-mix(in srgb,var(--accent) 6%,transparent);
+}
+#studentProfilePanel .infoGrid>.infoCard.compact .label{
+  margin-bottom:8px;
+  color:color-mix(in srgb,var(--accent) 84%,var(--strong));
+  font-size:9px;
+  letter-spacing:.13em;
+}
+#studentProfilePanel .infoGrid>.infoCard.compact .value{
+  color:var(--strong);
+  font-size:17px;
+  font-weight:800;
+  letter-spacing:.018em;
+}
+#studentProfilePanel .infoGrid>.infoCard.compact:nth-child(3){
+  border-color:color-mix(in srgb,var(--accent) 55%,rgba(255,255,255,.06));
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent2) 11%,transparent),transparent 45%),
+    linear-gradient(125deg,color-mix(in srgb,var(--accent) 18%,rgba(7,7,10,.68)),rgba(3,3,7,.60));
+  box-shadow:
+    inset 4px 0 0 var(--accent),
+    inset 0 1px 0 rgba(255,255,255,.08),
+    0 12px 26px rgba(0,0,0,.20),
+    0 0 20px color-mix(in srgb,var(--accent) 8%,transparent);
+}
+#studentProfilePanel #currentGrade{
+  color:var(--strong);
+  font-size:21px;
+  font-weight:900;
+  letter-spacing:.045em;
+  text-shadow:0 0 15px color-mix(in srgb,var(--accent) 20%,transparent);
+}
+
+/* -----------------------------------------------------
+   3) FINANCE BALANCE — VAULT-LIKE PREMIUM SURFACE
+   ----------------------------------------------------- */
+#studentProfilePanel .finance{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  min-height:112px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:18px 22px 17px;
+  border-color:color-mix(in srgb,var(--accent) 49%,rgba(255,255,255,.06));
+  background:
+    radial-gradient(circle at 86% 50%,color-mix(in srgb,var(--accent) 18%,transparent),transparent 30%),
+    radial-gradient(circle at 100% 100%,color-mix(in srgb,var(--accent2) 11%,transparent),transparent 35%),
+    linear-gradient(118deg,color-mix(in srgb,var(--accent) 10%,rgba(7,7,10,.76)),rgba(3,3,7,.72));
+  box-shadow:
+    inset 5px 0 0 var(--accent),
+    inset 0 1px 0 rgba(255,255,255,.09),
+    inset 0 0 36px color-mix(in srgb,var(--accent) 6%,transparent),
+    0 15px 32px rgba(0,0,0,.22);
+}
+#studentProfilePanel .finance::before{
+  content:"";
+  position:absolute;
+  z-index:-1;
+  right:24px;
+  top:50%;
+  width:78px;
+  height:78px;
+  transform:translateY(-50%);
+  border:1px solid color-mix(in srgb,var(--accent) 18%,transparent);
+  border-radius:50%;
+  box-shadow:
+    0 0 0 12px color-mix(in srgb,var(--accent) 4%,transparent),
+    0 0 0 25px color-mix(in srgb,var(--accent) 2%,transparent);
+  opacity:.75;
+}
+#studentProfilePanel .finance .label{
+  margin-bottom:8px;
+  color:color-mix(in srgb,var(--accent) 82%,var(--strong));
+  font-size:9px;
+  letter-spacing:.16em;
+}
+#studentProfilePanel .financeValue{
+  position:relative;
+  z-index:1;
+  max-width:82%;
+  color:var(--strong);
+  font-size:37px;
+  line-height:1;
+  letter-spacing:.018em;
+  text-shadow:
+    0 3px 18px rgba(0,0,0,.45),
+    0 0 18px color-mix(in srgb,var(--accent) 18%,transparent);
+}
+
+/* -----------------------------------------------------
+   4) OFFICIAL MEDIA — ID CARD / COMPLETION CERTIFICATE SHOWCASE
+   ----------------------------------------------------- */
+.rightColumn>aside.panel:has(#studentMediaTitle){
+  position:relative;
+  border-color:color-mix(in srgb,var(--accent) 39%,rgba(255,255,255,.05));
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 15%,transparent),transparent 42%),
+    linear-gradient(145deg,rgba(15,15,19,.88),rgba(4,4,8,.94));
+  box-shadow:
+    0 22px 60px rgba(0,0,0,.34),
+    0 0 26px color-mix(in srgb,var(--accent) 6%,transparent);
+}
+.rightColumn>aside.panel:has(#studentMediaTitle) .sectionHeader{
+  position:relative;
+  min-height:64px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 8%,rgba(0,0,0,.18)),transparent 72%);
+}
+#studentMediaTitle{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  color:var(--strong);
+  font-size:13px;
+  letter-spacing:.105em;
+}
+#studentMediaTitle::before{
+  content:"";
+  width:8px;
+  height:8px;
+  flex:0 0 8px;
+  border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 13px color-mix(in srgb,var(--accent) 70%,transparent);
+}
+.rightColumn>aside.panel:has(#studentMediaTitle) .mediaStack{
+  padding:19px 22px 23px;
+}
+.rightColumn>aside.panel:has(#studentMediaTitle) .mediaCard{
+  position:relative;
+  overflow:hidden;
+  border-color:color-mix(in srgb,var(--accent) 44%,rgba(255,255,255,.06));
+  border-radius:23px;
+  background:rgba(2,2,5,.62);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.065),
+    0 16px 34px rgba(0,0,0,.25);
+}
+.rightColumn>aside.panel:has(#studentMediaTitle) .mediaPreview{
+  position:relative;
+  isolation:isolate;
+  min-height:285px;
+  padding:18px;
+  overflow:hidden;
+  background:
+    radial-gradient(ellipse at 50% 42%,color-mix(in srgb,var(--accent) 16%,transparent),transparent 46%),
+    linear-gradient(145deg,rgba(255,255,255,.025),rgba(0,0,0,.52));
+}
+.rightColumn>aside.panel:has(#studentMediaTitle) .mediaPreview::before{
+  content:"";
+  position:absolute;
+  inset:15px;
+  z-index:-1;
+  border:1px solid color-mix(in srgb,var(--accent) 16%,transparent);
+  border-radius:18px;
+  background:
+    linear-gradient(115deg,rgba(255,255,255,.035),transparent 27%),
+    rgba(0,0,0,.14);
+  box-shadow:inset 0 0 32px rgba(0,0,0,.22);
+}
+.rightColumn>aside.panel:has(#studentMediaTitle) .mediaPreview img{
+  position:relative;
+  z-index:1;
+  width:calc(100% - 12px);
+  max-height:540px;
+  object-fit:contain;
+  filter:
+    drop-shadow(0 18px 24px rgba(0,0,0,.34))
+    drop-shadow(0 0 14px color-mix(in srgb,var(--accent) 13%,transparent));
+}
+.rightColumn>aside.panel:has(#studentMediaTitle) .mediaAction{
+  padding:12px 14px 14px;
+  border-top-color:color-mix(in srgb,var(--accent) 28%,transparent);
+  background:linear-gradient(180deg,rgba(255,255,255,.018),color-mix(in srgb,var(--accent) 5%,rgba(0,0,0,.20)));
+}
+.rightColumn>aside.panel:has(#studentMediaTitle) .openButton{
+  min-height:46px;
+  border-radius:13px;
+  box-shadow:0 10px 22px rgba(0,0,0,.20),0 0 16px color-mix(in srgb,var(--accent) 10%,transparent);
+}
+
+/* -----------------------------------------------------
+   5) STUDENT POINT LOG — VERTICAL TIMELINE
+   ----------------------------------------------------- */
+#studentPointPanel{
+  border-color:color-mix(in srgb,var(--accent) 36%,rgba(255,255,255,.05));
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 11%,transparent),transparent 40%),
+    linear-gradient(145deg,var(--panel),var(--panel2));
+}
+#studentPointPanel .sectionHeader{
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 7%,rgba(0,0,0,.13)),transparent 72%);
+}
+#studentPointPanel .semesterBadge{
+  border-color:color-mix(in srgb,var(--accent) 52%,transparent);
+  color:var(--strong);
+  background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 14%,rgba(0,0,0,.52)),rgba(0,0,0,.32));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 15px color-mix(in srgb,var(--accent) 8%,transparent);
+}
+#studentPointPanel .totals{
+  gap:9px;
+}
+#studentPointPanel .total{
+  position:relative;
+  overflow:hidden;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.035),rgba(0,0,0,.21));
+  box-shadow:
+    inset 4px 0 0 currentColor,
+    inset 0 1px 0 rgba(255,255,255,.045);
+}
+#studentPointPanel .logBar{
+  padding-top:3px;
+  padding-bottom:13px;
+  color:var(--strong);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 6%,transparent),transparent);
+}
+#studentPointPanel .pointLogs{
+  position:relative;
+  max-height:430px;
+  gap:12px;
+  padding:19px 22px 24px 46px;
+}
+#studentPointPanel .pointLogs::before{
+  content:"";
+  position:absolute;
+  left:29px;
+  top:25px;
+  bottom:27px;
+  width:1px;
+  pointer-events:none;
+  background:linear-gradient(180deg,var(--accent),color-mix(in srgb,var(--accent) 35%,transparent),transparent);
+  box-shadow:0 0 10px color-mix(in srgb,var(--accent) 25%,transparent);
+}
+#studentPointPanel .logItem{
+  position:relative;
+  grid-template-columns:116px minmax(0,1fr);
+  gap:14px;
+  min-height:79px;
+  padding:13px 14px 13px 17px;
+  border-color:color-mix(in srgb,var(--accent) 26%,rgba(255,255,255,.045));
+  border-radius:16px;
+  background:
+    linear-gradient(115deg,color-mix(in srgb,var(--accent) 6%,rgba(255,255,255,.023)),rgba(0,0,0,.17));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.03),0 8px 20px rgba(0,0,0,.13);
+}
+#studentPointPanel .logItem::before{
+  content:"";
+  position:absolute;
+  left:-24px;
+  top:22px;
+  width:11px;
+  height:11px;
+  border:2px solid color-mix(in srgb,var(--accent) 78%,var(--strong));
+  border-radius:50%;
+  background:var(--panel2);
+  box-shadow:
+    0 0 0 4px color-mix(in srgb,var(--accent) 8%,transparent),
+    0 0 14px color-mix(in srgb,var(--accent) 45%,transparent);
+}
+#studentPointPanel .logDate{
+  align-self:start;
+  padding-top:2px;
+  color:color-mix(in srgb,var(--accent) 72%,var(--muted));
+  font-size:10px;
+  font-weight:800;
+  line-height:1.35;
+}
+#studentPointPanel .logDesc{
+  color:var(--strong);
+  font-size:14px;
+  line-height:1.28;
+}
+#studentPointPanel .chips{
+  margin-top:10px;
+}
+#studentPointPanel .chip{
+  padding:5px 9px;
+  background:rgba(0,0,0,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035);
+  font-size:10px;
+  font-weight:900;
+}
+
+/* -----------------------------------------------------
+   6) GP RANKING — TOP THREE PREMIUM PODIUM
+   Existing cards/data/click behavior remain unchanged.
+   ----------------------------------------------------- */
+.gpRankingSection{
+  border-color:color-mix(in srgb,var(--accent) 39%,rgba(255,255,255,.05));
+  background:
+    radial-gradient(circle at 50% 0%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 32%),
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent2) 8%,transparent),transparent 35%),
+    linear-gradient(145deg,var(--panel),var(--panel2));
+}
+.gpRankingHeader{
+  background:linear-gradient(100deg,color-mix(in srgb,var(--accent) 6%,rgba(0,0,0,.10)),transparent 68%);
+}
+.gpRankingContent{
+  padding:28px 24px 25px;
+}
+.gpArena{
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:15px;
+  align-items:end;
+}
+.gpArena>.gpRankCard{
+  grid-column:span 3;
+}
+.gpArena>.gpRankCard:nth-child(-n+3){
+  min-height:338px;
+  display:grid;
+  grid-template-columns:1fr;
+  grid-template-rows:auto minmax(0,1fr) auto;
+  gap:12px;
+  align-items:start;
+  justify-items:center;
+  padding:21px 17px 19px;
+  text-align:center;
+  border-radius:25px;
+}
+.gpArena>.gpRankCard:nth-child(1){
+  grid-column:3 / span 2;
+  grid-row:1;
+  min-height:366px;
+  z-index:3;
+  border-color:rgba(244,214,111,.58);
+  background:
+    radial-gradient(circle at 50% 22%,rgba(244,214,111,.13),transparent 38%),
+    radial-gradient(circle at 50% 62%,var(--gpGlow2),transparent 48%),
+    linear-gradient(145deg,rgba(255,255,255,.055),rgba(5,5,8,.88));
+  box-shadow:
+    0 24px 48px rgba(0,0,0,.38),
+    0 0 32px rgba(244,214,111,.15),
+    inset 0 1px 0 rgba(255,255,255,.08);
+}
+.gpArena>.gpRankCard:nth-child(2){
+  grid-column:1 / span 2;
+  grid-row:1;
+  min-height:338px;
+}
+.gpArena>.gpRankCard:nth-child(3){
+  grid-column:5 / span 2;
+  grid-row:1;
+  min-height:338px;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankLeft{
+  width:100%;
+  justify-items:center;
+  gap:10px;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankNo{
+  min-width:82px;
+  min-height:36px;
+  font-size:15px;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankAvatar{
+  width:142px;
+  height:142px;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankAvatarFrame{
+  width:126px;
+  height:126px;
+  border-radius:22px;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankHouseWatermark{
+  inset:4px;
+  width:132px;
+  height:132px;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankHouseBadge{
+  right:-1px;
+  bottom:0;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankBody{
+  width:100%;
+  display:grid;
+  justify-items:center;
+  align-content:start;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankTopline{
+  width:100%;
+  justify-content:center;
+  flex-wrap:wrap;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankId{
+  width:100%;
+  text-align:center;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankNameButton{
+  margin-top:9px;
+  text-align:center;
+  font-size:20px;
+  line-height:1.02;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankNameButton:hover,
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankNameButton:focus-visible{
+  transform:translateY(-1px);
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankKanji{
+  margin-top:7px;
+  font-size:14px;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankUsername{
+  margin-top:8px;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankScore{
+  width:100%;
+  justify-items:center;
+  padding-top:12px;
+  border-top:1px solid color-mix(in srgb,var(--accent) 22%,transparent);
+  text-align:center;
+}
+.gpArena>.gpRankCard:nth-child(-n+3) .gpRankScoreValue{
+  font-size:34px;
+}
+.gpArena>.gpRankCard:nth-child(1) .gpRankScoreValue{
+  color:#f4d66f;
+  font-size:40px;
+  text-shadow:0 0 20px rgba(244,214,111,.25);
+}
+.gpArena>.gpRankCard:nth-child(n+4){
+  min-height:160px;
+  transition:transform .18s ease,border-color .18s ease,box-shadow .18s ease;
+}
+.gpArena>.gpRankCard:nth-child(n+4):hover{
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--accent) 42%,transparent);
+  box-shadow:0 19px 38px rgba(0,0,0,.31),0 0 20px var(--gpGlow2);
+}
+
+/* =====================================================
+   V58 — PROFILE BADGES / ACADEMIC HEADER / PHOTO FRAME
+   Visual-only refinement. Existing structure and JS remain unchanged.
+   ===================================================== */
+
+/* -----------------------------------------------------
+   1) PROFILE RANK BADGES — RESTORE ORIGINAL GOLD / PINK
+   Keep V57 sizing, but restore the original rank identity colors.
+   ----------------------------------------------------- */
+#studentProfilePanel .badge.first{
+  color:#302400;
+  border-color:rgba(245,220,122,.56);
+  background:linear-gradient(135deg,#b88b1e,#f5dc7a);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.34),
+    0 6px 16px rgba(184,139,30,.18),
+    0 0 14px rgba(245,220,122,.12);
+  text-shadow:none;
+}
+#studentProfilePanel .badge.second{
+  color:#5c2840;
+  border-color:rgba(255,224,236,.58);
+  background:linear-gradient(135deg,#e8a9c3,#ffe0ec);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.40),
+    0 6px 16px rgba(232,169,195,.16),
+    0 0 14px rgba(255,224,236,.10);
+  text-shadow:none;
+}
+
+/* -----------------------------------------------------
+   2) EXTRACURRICULAR / PARTICIPATION BADGES — STRONGER
+   Quidditch, Combat, Quest and Shiken remain semantic,
+   but the status badge is now much easier to scan.
+   ----------------------------------------------------- */
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .participation{
+  gap:9px;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part{
+  min-height:72px;
+  justify-items:center;
+  align-content:center;
+  gap:8px;
+  padding:10px 8px;
+  border-width:1px;
+  border-radius:14px;
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.055),
+    0 8px 18px rgba(0,0,0,.13);
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .partName{
+  color:color-mix(in srgb,var(--strong) 82%,var(--muted));
+  font-size:9.5px;
+  font-weight:900;
+  letter-spacing:.075em;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .partState{
+  min-height:25px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px 9px 4px;
+  border:1px solid currentColor;
+  border-radius:999px;
+  font-size:8.5px;
+  font-weight:950;
+  letter-spacing:.035em;
+  line-height:1;
+  background:rgba(0,0,0,.25);
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part.yes{
+  border-color:rgba(103,214,151,.34);
+  background:
+    radial-gradient(circle at 50% 0%,rgba(92,213,143,.12),transparent 62%),
+    linear-gradient(145deg,rgba(30,105,65,.24),rgba(3,12,8,.20));
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part.yes .partState{
+  color:#bff4d5;
+  border-color:rgba(150,242,191,.34);
+  background:rgba(34,122,75,.34);
+  box-shadow:0 0 12px rgba(83,207,137,.13);
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part.no{
+  border-color:rgba(255,75,75,.34);
+  background:
+    radial-gradient(circle at 50% 0%,rgba(255,64,72,.10),transparent 62%),
+    linear-gradient(145deg,rgba(120,23,31,.23),rgba(14,3,5,.20));
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part.no .partState{
+  color:#ff4b4b!important;
+  border-color:rgba(255,90,90,.40);
+  background:rgba(126,21,29,.34);
+  box-shadow:0 0 12px rgba(255,38,45,.14);
+  text-shadow:0 0 9px rgba(255,38,45,.28);
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part.locked{
+  border-color:rgba(175,170,164,.22);
+  background:linear-gradient(145deg,rgba(92,88,84,.10),rgba(5,5,7,.18));
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .part.locked .partState{
+  color:#c0b9b1;
+  border-color:rgba(192,185,177,.24);
+  background:rgba(80,76,72,.22);
+}
+
+/* -----------------------------------------------------
+   3) ACADEMIC RECORDS — REFINED TOP TITLE AREA
+   A cleaner frosted header with clearer hierarchy and actions.
+   ----------------------------------------------------- */
+#academicCardPanel .academicTop{
+  position:relative;
+  isolation:isolate;
+  min-height:94px;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:18px;
+  margin:0;
+  padding:17px 18px;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--accent) 34%,rgba(255,255,255,.055));
+  border-radius:17px;
+  background:
+    radial-gradient(circle at 0 0,color-mix(in srgb,var(--accent) 17%,transparent),transparent 42%),
+    radial-gradient(circle at 100% 100%,color-mix(in srgb,var(--accent2) 8%,transparent),transparent 38%),
+    linear-gradient(118deg,rgba(255,255,255,.052),rgba(3,3,7,.34) 54%,rgba(0,0,0,.23));
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.085),
+    inset 4px 0 0 color-mix(in srgb,var(--accent) 88%,transparent),
+    0 12px 28px rgba(0,0,0,.17);
+  backdrop-filter:blur(12px) saturate(1.10);
+  -webkit-backdrop-filter:blur(12px) saturate(1.10);
+}
+#academicCardPanel .academicTop::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(115deg,rgba(255,255,255,.075),transparent 20%,transparent 74%,color-mix(in srgb,var(--accent) 6%,transparent));
+}
+#academicCardPanel .academicTop::after{
+  content:"";
+  position:absolute;
+  left:18px;
+  right:18px;
+  bottom:0;
+  height:1px;
+  background:linear-gradient(90deg,var(--accent),color-mix(in srgb,var(--accent) 24%,transparent) 42%,transparent 86%);
+  box-shadow:0 0 12px color-mix(in srgb,var(--accent) 20%,transparent);
+}
+#academicCardPanel .academicTop>div:first-child{
+  min-width:0;
+  padding-left:2px;
+}
+#academicCardPanel .largeCardLabel{
+  color:var(--strong);
+  font-size:17px;
+  font-weight:950;
+  letter-spacing:.115em;
+  text-shadow:0 2px 14px rgba(0,0,0,.46),0 0 16px color-mix(in srgb,var(--accent) 22%,transparent);
+}
+#academicCardPanel .academicIntro{
+  max-width:360px;
+  margin-top:7px;
+  color:color-mix(in srgb,var(--muted) 86%,var(--strong));
+  font-size:11px;
+  line-height:1.45;
+}
+#academicCardPanel .academicActions{
+  display:grid;
+  grid-template-columns:auto;
+  justify-items:end;
+  gap:7px;
+  flex-shrink:0;
+}
+#academicCardPanel .count{
+  min-height:27px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  padding:6px 10px;
+  border-color:color-mix(in srgb,var(--accent) 38%,transparent);
+  color:color-mix(in srgb,var(--strong) 76%,var(--accent));
+  background:rgba(0,0,0,.24);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.045);
+  font-size:8px;
+  letter-spacing:.06em;
+}
+#academicCardPanel .transcriptButton{
+  min-height:35px;
+  padding:8px 13px;
+  border-radius:11px;
+  font-size:8px;
+  letter-spacing:.035em;
+}
+#academicCardPanel .academicRecords{
+  margin-top:15px;
+}
+
+/* -----------------------------------------------------
+   4) GRADUATED PROFILE PHOTO — SAME POSITION AS REGULAR
+   Remove the older graduated-only header offset and use the exact
+   same premium portrait layout/crop as regular students.
+   ----------------------------------------------------- */
+.resultGrid.graduatedLayout #studentProfilePanel .profileHeader{
+  margin:0;
+  min-height:178px;
+  grid-template-columns:138px minmax(0,1fr) 112px;
+  gap:24px;
+  align-items:center;
+  padding:21px 22px;
+  border:1px solid color-mix(in srgb,var(--accent) 44%,rgba(255,255,255,.06));
+  border-radius:24px;
+}
+#studentProfilePanel .avatar img,
+.resultGrid.graduatedLayout #studentProfilePanel .avatar img{
+  position:relative;
+  z-index:1;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  object-position:50% 17%;
+  transform:scale(1.17);
+  transform-origin:50% 17%;
+}
+
+/* -----------------------------------------------------
+   5) ALL STUDENT PROFILE PHOTOS — PREMIUM SLEEK FRAME
+   Applies equally to regular and graduated student profile photos.
+   ----------------------------------------------------- */
+#studentProfilePanel .avatar{
+  position:relative;
+  isolation:isolate;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--strong) 26%,var(--accent));
+  background:
+    linear-gradient(145deg,color-mix(in srgb,var(--accent) 13%,#060608),#020204 72%);
+  box-shadow:
+    0 0 0 3px rgba(2,2,4,.88),
+    0 0 0 4px color-mix(in srgb,var(--accent) 36%,transparent),
+    0 18px 34px rgba(0,0,0,.34),
+    0 0 24px color-mix(in srgb,var(--accent) 15%,transparent),
+    inset 0 1px 0 rgba(255,255,255,.12);
+}
+#studentProfilePanel .avatar::before{
+  content:"";
+  position:absolute;
+  inset:5px;
+  z-index:3;
+  pointer-events:none;
+  border:1px solid color-mix(in srgb,var(--strong) 22%,var(--accent));
+  border-radius:21px;
+  box-shadow:
+    inset 0 0 0 1px rgba(0,0,0,.22),
+    0 0 10px color-mix(in srgb,var(--accent) 8%,transparent);
+}
+#studentProfilePanel .avatar::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+  border-radius:inherit;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.075),transparent 23%,transparent 72%,rgba(0,0,0,.14)),
+    linear-gradient(180deg,transparent 66%,rgba(0,0,0,.24));
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,.045),
+    inset 0 -22px 36px rgba(0,0,0,.13);
+}
