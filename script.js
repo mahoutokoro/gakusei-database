@@ -4630,49 +4630,80 @@ function startGpRankingRefresh(){
       mount.innerHTML='';
 
       const app=document.createElement('div');
-      app.className='m74AcademicApp';
+      app.className='m90AcademicApp';
+
       const head=document.createElement('div');
-      head.className='m74AcademicHead';
-      head.innerHTML='<div><h3>Academic Records</h3><p>From the first recorded semester through the latest semester.</p></div>';
+      head.className='m90AcademicHead';
+      head.innerHTML='<div class="m90AcademicHeading"><span>ACADEMIC ARCHIVE</span><h3>Academic Records</h3><p>Latest recorded semester first. Navigate one semester at a time.</p></div>';
       const actions=document.createElement('div');
-      actions.className='m74AcademicActions';
+      actions.className='m90AcademicActions';
       const count=document.createElement('span');
+      count.className='m90AcademicCount';
       count.textContent=records.length+' RECORDED';
       const transcript=document.createElement('button');
       transcript.type='button';
-      transcript.textContent='VIEW ACADEMIC TRANSCRIPT';
+      transcript.textContent='VIEW TRANSCRIPT';
       transcript.disabled=!records.length;
       transcript.addEventListener('click',()=>downloadTranscript(transcript));
       actions.append(count,transcript);head.appendChild(actions);app.appendChild(head);
 
       if(!records.length){
-        const empty=document.createElement('div');empty.className='m74MobileEmpty';empty.textContent=(data&&data.message)||'No recorded academic semester was found for this student.';app.appendChild(empty);mount.appendChild(app);if(MobileSwipeApp.isActive())requestAnimationFrame(()=>MobileSwipeApp.measure());return;
+        const empty=document.createElement('div');
+        empty.className='m74MobileEmpty';
+        empty.textContent=(data&&data.message)||'No recorded academic semester was found for this student.';
+        app.appendChild(empty);mount.appendChild(app);
+        if(MobileSwipeApp.isActive())requestAnimationFrame(()=>MobileSwipeApp.measure());
+        return;
       }
 
-      const list=document.createElement('div');
-      list.className='m74AcademicList';
-      records.forEach(record=>{
+      const pager=document.createElement('div');
+      pager.className='m90SemesterPager';
+      const nav=document.createElement('div');
+      nav.className='m90SemesterNav';
+      const newer=document.createElement('button');
+      newer.type='button';newer.className='m90SemesterArrow m90SemesterNewer';newer.setAttribute('aria-label','Show newer semester');newer.innerHTML='<b>‹</b><span>NEWER</span>';
+      const navCopy=document.createElement('div');
+      navCopy.className='m90SemesterNavCopy';
+      navCopy.innerHTML='<span class="m90SemesterState">LATEST RECORD</span><strong class="m90SemesterCurrent">-</strong><small class="m90SemesterCounter">1 / '+records.length+'</small>';
+      const older=document.createElement('button');
+      older.type='button';older.className='m90SemesterArrow m90SemesterOlder';older.setAttribute('aria-label','Show one earlier semester');older.innerHTML='<span>OLDER</span><b>›</b>';
+      nav.append(newer,navCopy,older);
+
+      const viewport=document.createElement('div');
+      viewport.className='m90SemesterViewport';
+      viewport.tabIndex=0;
+      viewport.setAttribute('aria-label','Academic semester pager');
+      const live=document.createElement('div');
+      live.className='m90SemesterLive';
+      viewport.appendChild(live);
+
+      const hint=document.createElement('div');
+      hint.className='m90SemesterHint';
+      hint.innerHTML='<span>SWIPE OR USE ARROWS</span><b>ONE SEMESTER BACK AT A TIME</b>';
+      pager.append(nav,viewport,hint);app.appendChild(pager);mount.appendChild(app);
+
+      function buildSemesterCard(record){
         const card=document.createElement('section');
-        card.className='m74SemesterCard'+(record.recordType==='GRADUATED_DEVOTED'?' m74DevotedCard':'');
-        card.innerHTML='<div class="m74SemesterHead"><div class="m74SemesterTitle">'+escapeHtml(record.semesterTitle||'-')+'</div><div class="m74Nensei">'+escapeHtml(record.nenseiLabel||'-')+'</div></div>';
+        card.className='m90SemesterCard'+(record.recordType==='GRADUATED_DEVOTED'?' m90DevotedCard':'');
+        card.innerHTML='<div class="m90SemesterHead"><div><span>SEMESTER RECORD</span><strong>'+escapeHtml(record.semesterTitle||'-')+'</strong></div><div class="m90Nensei">'+escapeHtml(record.nenseiLabel||'-')+'</div></div>';
 
         if(record.recordType==='GRADUATED_DEVOTED'){
           const details=document.createElement('div');
-          details.className='m74DevotedDetails';
+          details.className='m90DevotedDetails';
           details.innerHTML=
-            '<div class="m74DevotedScoreRow"><span>Devoted Student Score</span><strong>'+escapeHtml(record.devotedStudentScore||'-')+'</strong></div>'+
-            '<div class="m74DevotedField"><span>Devoted Student Subject</span><strong>'+escapeHtml(record.devotedStudentSubject||'-')+'</strong></div>'+
-            '<div class="m74DevotedField"><span>Devoted Student Title</span><strong>'+escapeHtml(record.devotedStudentTitle||'-')+'</strong></div>';
-          const file=document.createElement('div');file.className='m74DevotedFile';
+            '<div class="m90DevotedScore"><span>Devoted Student Score</span><strong>'+escapeHtml(record.devotedStudentScore||'-')+'</strong></div>'+ 
+            '<div class="m90DevotedField"><span>Devoted Student Subject</span><strong>'+escapeHtml(record.devotedStudentSubject||'-')+'</strong></div>'+ 
+            '<div class="m90DevotedField"><span>Devoted Student Title</span><strong>'+escapeHtml(record.devotedStudentTitle||'-')+'</strong></div>';
+          const file=document.createElement('div');file.className='m90DevotedFile';
           const label=document.createElement('span');label.textContent='Devoted Student Kōron';file.appendChild(label);
           const media=record.devotedStudentFile||{};
           if(media.raw){const button=document.createElement('button');button.type='button';button.textContent='VIEW KŌRON';button.addEventListener('click',()=>openDevotedStudentFile(media,record.devotedStudentCover||{}));file.appendChild(button)}
           else{const unavailable=document.createElement('strong');unavailable.textContent='KŌRON UNAVAILABLE';file.appendChild(unavailable)}
-          details.appendChild(file);card.appendChild(details);list.appendChild(card);return;
+          details.appendChild(file);card.appendChild(details);return card;
         }
 
-        const participationTitle=document.createElement('div');participationTitle.className='m74MiniTitle';participationTitle.textContent='Activity Participation';card.appendChild(participationTitle);
-        const participation=document.createElement('div');participation.className='m74Participation';
+        const participationTitle=document.createElement('div');participationTitle.className='m90MiniTitle';participationTitle.textContent='Activity Participation';card.appendChild(participationTitle);
+        const participation=document.createElement('div');participation.className='m90Participation';
         [['Quidditch',record.participation&&record.participation.quidditch],['Combat',record.participation&&record.participation.combat],['Quest',record.participation&&record.participation.quest],['Shiken',record.participation&&record.participation.shiken]].forEach(([name,state])=>{
           const code=state&&state.code||'NOT_PARTICIPATED';
           const item=document.createElement('div');item.className=code==='PARTICIPATED'?'yes':code==='NOT_ELIGIBLE'?'locked':'no';
@@ -4681,23 +4712,73 @@ function startGpRankingRefresh(){
         });
         card.appendChild(participation);
 
-        const subjectsTitle=document.createElement('div');subjectsTitle.className='m74MiniTitle';subjectsTitle.textContent='Subject Results';card.appendChild(subjectsTitle);
-        const subjects=document.createElement('div');subjects.className='m74Subjects';
-        subjects.innerHTML='<div class="m74SubjectHeader"><span>Subject (科目)</span><span>Score in Number</span><span>Score in Kanji</span></div>';
+        const subjectsTitle=document.createElement('div');subjectsTitle.className='m90MiniTitle';subjectsTitle.textContent='Subject Results';card.appendChild(subjectsTitle);
+        const subjects=document.createElement('div');subjects.className='m90Subjects';
+        subjects.innerHTML='<div class="m90SubjectHeader"><span>Subject (科目)</span><span>Number</span><span>Kanji</span></div>';
         (record.subjects||[]).forEach(subject=>{
-          const row=document.createElement('div');row.className='m74SubjectRow';
+          const row=document.createElement('div');row.className='m90SubjectRow';
           row.innerHTML='<strong>'+escapeHtml(subject.name||'-')+'</strong><b>'+escapeHtml(subject.numberMark||'-')+'</b><b class="jp">'+escapeHtml(subject.kanjiMark||'-')+'</b>';
           subjects.appendChild(row);
         });
         card.appendChild(subjects);
 
-        const foot=document.createElement('div');foot.className='m74SemesterFoot';
+        const foot=document.createElement('div');foot.className='m90SemesterFoot';
         foot.innerHTML='<div><span>Grade Status</span><strong class="'+gradeClass(record.gradeStatus||'')+'">'+escapeHtml(record.gradeStatus||'-')+'</strong></div><div><span>Ranking Result</span><strong class="'+rankClass(record.rankingResult||'')+'">'+escapeHtml(record.rankingResult||'-')+'</strong></div>';
         const detail=document.createElement('button');detail.type='button';detail.textContent='VIEW DETAIL';detail.addEventListener('click',()=>requestPdf('semester',record.sheetName,detail));foot.appendChild(detail);card.appendChild(foot);
-        list.appendChild(card);
+        return card;
+      }
+
+      let activeIndex=0;
+      let touchStartX=0;
+      let touchStartY=0;
+      let touchActive=false;
+
+      function showSemester(index,direction){
+        const nextIndex=Math.max(0,Math.min(records.length-1,Number(index)||0));
+        const record=records[nextIndex];
+        activeIndex=nextIndex;
+        live.innerHTML='';
+        const card=buildSemesterCard(record);
+        card.classList.add(direction==='newer'?'from-newer':direction==='older'?'from-older':'is-initial');
+        live.appendChild(card);
+        const current=navCopy.querySelector('.m90SemesterCurrent');
+        const counter=navCopy.querySelector('.m90SemesterCounter');
+        const state=navCopy.querySelector('.m90SemesterState');
+        if(current)current.textContent=record.semesterTitle||'-';
+        if(counter)counter.textContent=(activeIndex+1)+' / '+records.length;
+        if(state)state.textContent=activeIndex===0?'LATEST RECORD':activeIndex===records.length-1?'EARLIEST RECORD':'EARLIER SEMESTER';
+        newer.disabled=activeIndex===0;
+        older.disabled=activeIndex>=records.length-1;
+        pager.dataset.activeSemester=String(activeIndex);
+        if(MobileSwipeApp.isActive())requestAnimationFrame(()=>MobileSwipeApp.measure());
+      }
+
+      newer.addEventListener('click',()=>showSemester(activeIndex-1,'newer'));
+      older.addEventListener('click',()=>showSemester(activeIndex+1,'older'));
+      viewport.addEventListener('keydown',event=>{
+        if(event.key==='ArrowLeft'){event.preventDefault();showSemester(activeIndex-1,'newer')}
+        if(event.key==='ArrowRight'){event.preventDefault();showSemester(activeIndex+1,'older')}
       });
-      app.appendChild(list);mount.appendChild(app);
-      if(MobileSwipeApp.isActive())requestAnimationFrame(()=>MobileSwipeApp.measure());
+      viewport.addEventListener('touchstart',event=>{
+        const touch=event.changedTouches&&event.changedTouches[0];if(!touch)return;
+        touchStartX=touch.clientX;touchStartY=touch.clientY;touchActive=true;
+      },{passive:true});
+      viewport.addEventListener('touchend',event=>{
+        if(!touchActive)return;touchActive=false;
+        const touch=event.changedTouches&&event.changedTouches[0];if(!touch)return;
+        const dx=touch.clientX-touchStartX;const dy=touch.clientY-touchStartY;
+        if(Math.abs(dx)<42||Math.abs(dx)<Math.abs(dy)*1.2)return;
+        if(dx<0)showSemester(activeIndex+1,'older');else showSemester(activeIndex-1,'newer');
+      },{passive:true});
+
+      showSemester(0,'initial');
+      window.MahoutokoroMobileAcademicPager={
+        next:()=>showSemester(activeIndex+1,'older'),
+        previous:()=>showSemester(activeIndex-1,'newer'),
+        goTo:index=>showSemester(index,index>activeIndex?'older':'newer'),
+        getIndex:()=>activeIndex,
+        getCount:()=>records.length
+      };
     }
 
     function applyGraduatedLayout(isGraduated){
