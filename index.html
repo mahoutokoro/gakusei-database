@@ -2,13 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=1280,initial-scale=.3,minimum-scale=.1,maximum-scale=5,user-scalable=yes">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+  <meta name="theme-color" content="#08080b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate, max-age=0">
   <title>MAHOUTOKORO GAKUSEI DATABASE</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=20260720-v63-visible-header-artwork-controls-fix">
+    <link rel="stylesheet" href="./style.css?v=20260722-v89-mobile-glass-ta-fix">
 
 </head>
 <body class="front-mode">
@@ -17,7 +20,18 @@
     <section class="hero">
       <div id="heroBackdrop" class="heroBackdrop" aria-hidden="true"></div>
       <div class="heroFeatureArt" aria-hidden="true"></div>
-      <button id="homeButton" class="recapButton recapButtonCorner homeButtonCorner" type="button" onclick="goHome()">HOME</button>
+      <div class="mobileCornerLogo" aria-hidden="true"><img src="https://drive.google.com/thumbnail?id=1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK&sz=w300" alt=""></div>
+      <div class="mobileAppHeader" aria-label="Mahoutokoro mobile portal header">
+        <div class="mobileAppBrand">
+          <span class="mobileAppBrandSeal"><img src="https://drive.google.com/thumbnail?id=1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK&sz=w300" alt=""></span>
+          <span class="mobileAppBrandCopy"><strong>MAHOUTOKORO</strong><small>Gakusei Portal</small></span>
+        </div>
+        <span class="mobileAppLive"><i aria-hidden="true"></i> LIVE DATABASE</span>
+      </div>
+      <button id="homeButton" class="recapButton recapButtonCorner homeButtonCorner" type="button" onclick="goHome()" aria-label="Back to Home">
+        <span class="desktopHomeLabel">HOME</span>
+        <span class="mobileHomeGlyph" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.8 10.7 12 4l8.2 6.7v8.1a1.2 1.2 0 0 1-1.2 1.2h-4.3v-6.1H9.3V20H5a1.2 1.2 0 0 1-1.2-1.2z"/></svg></span>
+      </button>
       <div id="generalMenu" class="generalMenu">
         <button id="generalMenuButton" class="recapButton recapButtonCorner generalMenuButton" type="button" onclick="toggleGeneralMenu(event)" aria-haspopup="true" aria-expanded="false">
           <span>GENERAL</span>
@@ -35,19 +49,161 @@
         </div>
       </div>
       <div class="heroContent">
-        <div class="logo"><img src="https://drive.google.com/thumbnail?id=1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK&sz=w700" alt="Mahoutokoro"></div>
+        <div class="logo desktopHeroLogo"><img src="https://drive.google.com/thumbnail?id=1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK&sz=w700" alt="Mahoutokoro"></div>
         <div class="heroCore">
           <div class="eyebrow jp">魔法所's</div>
-          <h1 class="mainTitle">GAKUSEI DATABASE</h1>
+          <h1 class="mainTitle"><span>GAKUSEI</span> <span>DATABASE</span></h1>
           <div class="searchBar">
             <input id="idInput" placeholder="Type your Gakusei ID number..." autocomplete="off">
-            <button id="searchButton" type="button" onclick="searchGakusei()">SEARCH DATA</button>
+            <button id="searchButton" type="button" onclick="searchGakusei()" aria-label="Search Gakusei data">
+              <span class="desktopSearchText">SEARCH DATA</span>
+              <span class="mobileSearchIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="5.8"></circle><path d="m14.9 14.9 4.6 4.6"></path></svg></span>
+            </button>
           </div>
           <p class="heroNote jp">データは、学校システムに登録されている識別番号に基づいて表示されます。</p>
           <div id="statusLine" class="statusLine"></div>
+          <div class="mobileHeroStats" aria-hidden="true">
+            <span><b>LIVE</b><small>Student data</small></span>
+            <span><b>SYNC</b><small>Academic records</small></span>
+            <span><b>SECURE</b><small>ID access</small></span>
+          </div>
         </div>
       </div>
     </section>
+
+    <section id="mobileStudentDossier" class="mobileStudentDossier hidden" aria-label="Student mobile dossier">
+    <section id="mobileStudentHeader" class="mobileStudentHeader hidden" aria-live="polite">
+      <div class="mobileStudentHeaderArt" aria-hidden="true"></div>
+      <div class="mobileStudentHeaderShade" aria-hidden="true"></div>
+      <div class="m74HeaderTop">
+        <div class="m74HeaderBrand">
+          <span class="m74HeaderSeal"><img src="https://drive.google.com/thumbnail?id=1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK&sz=w300" alt=""></span>
+          <div class="m74HeaderTitle">
+            <span id="mobileStudentHeaderMode" class="jp">魔法所's</span>
+            <h2 id="mobileStudentHeaderTitle">GAKUSEI DATABASE</h2>
+          </div>
+        </div>
+        <div class="m74HeaderActions">
+          <button class="m74HeaderHome" type="button" onclick="goHome()" aria-label="HOME">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 10.7 12 4l8.2 6.7v8.1a1.2 1.2 0 0 1-1.2 1.2h-4.3v-6.1H9.3V20H5a1.2 1.2 0 0 1-1.2-1.2z"/></svg>
+          </button>
+          <div id="mobileStudentGeneralMenu" class="m74HeaderGeneral">
+            <button id="mobileStudentGeneralButton" class="m74HeaderGeneralButton" type="button" onclick="toggleMobileStudentGeneralMenu(event)" aria-haspopup="true" aria-expanded="false">
+              <span>GENERAL</span><span class="m74HeaderChevron" aria-hidden="true">⌄</span>
+            </button>
+            <div id="mobileStudentGeneralPanel" class="m74HeaderGeneralPanel hidden" role="menu">
+              <button type="button" role="menuitem" onclick="openNenseiRecapFromMenu();closeMobileStudentGeneralMenu()">
+                <span class="generalMenuItemTitle">NENSEI RECAP</span>
+                <span class="generalMenuItemText">Current students grouped by Nensei and House</span>
+              </button>
+              <button type="button" role="menuitem" onclick="openPromotionRecapFromMenu();closeMobileStudentGeneralMenu()">
+                <span class="generalMenuItemTitle">NENSEI PROMOTION RECAP</span>
+                <span class="generalMenuItemText">Latest promotion and retention results</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="m74HeaderSearch">
+        <input id="mobileStudentSearchInput" placeholder="Type your Gakusei ID number..." autocomplete="off">
+        <button id="mobileStudentSearchButton" type="button" onclick="searchGakuseiFromMobileHeader()">SEARCH DATA</button>
+      </div>
+    </section>
+
+    <section id="mobileStudentSummary" class="mobileStudentSummary hidden" aria-live="polite">
+      <div class="mobileStudentSummaryGlow" aria-hidden="true"></div>
+      <div class="mobileStudentSummaryTop">
+        <div class="mobileSummaryPortrait" id="mobileSummaryAvatar"><div class="mobileSummaryEmpty">NO PHOTO</div></div>
+        <div class="mobileSummaryIdentity">
+          <div id="mobileSummaryKicker" class="mobileSummaryKicker">CURRENT STUDENT</div>
+          <h2 id="mobileSummaryName" class="mobileSummaryName">-</h2>
+          <div id="mobileSummaryKanji" class="mobileSummaryKanji jp">-</div>
+          <div class="mobileSummaryBadges">
+            <span id="mobileSummaryStatus" class="mobileSummaryStatus">ACTIVE</span>
+            <span id="mobileSummaryRank" class="mobileSummaryRank">RANK —</span>
+          </div>
+        </div>
+        <div class="mobileSummaryHouse">
+          <div id="mobileSummaryHouseLogo" class="mobileSummaryHouseLogo"></div>
+          <div id="mobileSummaryHouseName" class="mobileSummaryHouseName">HOUSE</div>
+        </div>
+      </div>
+      <div class="mobileSummaryFacts">
+        <div class="mobileSummaryFact"><span>CURRENT GRADE</span><strong id="mobileSummaryGrade">-</strong></div>
+        <div class="mobileSummaryFact"><span>GAKUSEI ID NUMBER</span><strong id="mobileSummaryId">-</strong></div>
+      </div>
+    </section>
+
+    <section id="mobileStudentDirect" class="mobileStudentDirect hidden" aria-label="Student essentials">
+      <div class="mobileDirectSectionHeader">
+        <div><span>STUDENT ESSENTIALS</span><h3>Account & Personal Data</h3></div>
+        <span class="mobileDirectSectionMark">LIVE</span>
+      </div>
+      <div class="mobileDirectEssentials">
+        <article class="mobileDirectMiniCard">
+          <span class="mobileDirectLabel">X USERNAME</span>
+          <div id="mobileDirectX" class="mobileDirectValue">—</div>
+        </article>
+        <article class="mobileDirectMiniCard">
+          <span class="mobileDirectLabel">DATE OF BIRTH</span>
+          <div id="mobileDirectDob" class="mobileDirectValue">—</div>
+        </article>
+        <article class="mobileDirectFinanceCard">
+          <div><span class="mobileDirectLabel">FINANCE BALANCE</span><small>Current recorded balance</small></div>
+          <strong id="mobileDirectFinance">—</strong>
+        </article>
+      </div>
+
+      <article id="mobileDirectJourneyCard" class="mobileDirectCard">
+        <div class="mobileDirectCardHead">
+          <div><span id="mobileDirectJourneyEyebrow">STUDENT ACTIVITY</span><h3 id="mobileDirectJourneyTitle">Side Occupations</h3></div>
+          <span class="mobileDirectCardIcon" aria-hidden="true">✦</span>
+        </div>
+        <div id="mobileDirectJourney" class="mobileDirectJourney"></div>
+      </article>
+
+      <article id="mobileDirectMediaCard" class="mobileDirectCard mobileDirectMediaCard">
+        <div class="mobileDirectCardHead">
+          <div><span>OFFICIAL MEDIA</span><h3 id="mobileDirectMediaTitle">Gakusei ID Card / Nametag</h3></div>
+          <span class="mobileDirectCardIcon" aria-hidden="true">▣</span>
+        </div>
+        <div id="mobileDirectMediaPreview" class="mobileDirectMediaPreview"><div class="mobileDirectEmpty">ID CARD UNAVAILABLE</div></div>
+        <div id="mobileDirectMediaAction" class="mobileDirectMediaAction"></div>
+      </article>
+    </section>
+
+    <section id="mobileRecordSwipe" class="mobileRecordSwipe hidden" aria-label="Swipe student records">
+      <div class="mobileSwipeCallout">
+        <button id="mobileSwipePrev" class="mobileSwipeArrow mobileSwipePrev" type="button" aria-label="Previous student record"><span>‹</span></button>
+        <div class="mobileSwipeCalloutCopy">
+          <strong id="mobileSwipeActiveTitle">Student Point Log</strong>
+          <small id="mobileSwipeCounter">1 / 2</small>
+        </div>
+        <button id="mobileSwipeNext" class="mobileSwipeArrow mobileSwipeNext" type="button" aria-label="Next student record"><span>›</span></button>
+      </div>
+      <div id="mobileRecordSwipeTrack" class="mobileRecordSwipeTrack">
+        <section class="mobileRecordPage" data-mobile-record="points" aria-label="Student Point Log">
+          <div class="mobileRecordPageScroll">
+            <div id="mobilePointsMount" class="mobileRecordMount"></div>
+          </div>
+        </section>
+        <section class="mobileRecordPage" data-mobile-record="academic" aria-label="Academic Records">
+          <div class="mobileRecordPageScroll">
+            <div id="mobileAcademicMount" class="mobileRecordMount"></div>
+          </div>
+        </section>
+        </div>
+      <div id="mobileSwipeDots" class="mobileSwipeDots" aria-label="Swipe page indicators"></div>
+    </section>
+    </section>
+
+    <div id="dormMascotStage" class="dormMascotStage hidden" aria-hidden="true">
+      <div class="dormMascotPerspective"><div id="dormMascotBody" class="dormMascotBody"></div></div>
+      <div class="dormMascotSparkTrail">
+        <i style="--i:0"></i><i style="--i:1"></i><i style="--i:2"></i><i style="--i:3"></i><i style="--i:4"></i><i style="--i:5"></i><i style="--i:6"></i><i style="--i:7"></i>
+      </div>
+    </div>
+    <div id="dormMascotParticleLayer" class="dormMascotParticleLayer" aria-hidden="true"></div>
 
     <section id="gpRankingSection" class="gpRankingSection">
       <div class="gpRankingHeader">
@@ -167,7 +323,7 @@
 
   <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING DOCUMENT</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
 
-    <script src="./script.js?v=20260720-v63-visible-header-artwork-controls-fix" defer></script>
+    <script src="./script.js?v=20260722-v89-mobile-glass-ta-fix" defer></script>
 
 </body>
 </html>
