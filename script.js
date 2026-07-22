@@ -4009,21 +4009,34 @@ function startGpRankingRefresh(){
       if(theme==='yamiyo')return `
         <svg viewBox="0 0 140 140" role="img" aria-label="Yamiyo black fox mascot">
           <defs>
-            <radialGradient id="foxBody" cx="38%" cy="28%" r="76%"><stop offset="0" stop-color="#5d5268"/><stop offset=".35" stop-color="#17131d"/><stop offset="1" stop-color="#030205"/></radialGradient>
-            <linearGradient id="foxTail" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#07050a"/><stop offset=".62" stop-color="#211528"/><stop offset="1" stop-color="#9f69c0"/></linearGradient>
-            <radialGradient id="foxEye"><stop stop-color="#fff"/><stop offset=".22" stop-color="#e2b5ff"/><stop offset="1" stop-color="#7a36a0"/></radialGradient>
-            <filter id="foxShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000" flood-opacity=".72"/><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#8e45b5" flood-opacity=".72"/></filter>
+            <radialGradient id="fox93Fur" cx="32%" cy="20%" r="88%"><stop offset="0" stop-color="#51465b"/><stop offset=".26" stop-color="#211a28"/><stop offset=".68" stop-color="#0b080e"/><stop offset="1" stop-color="#020103"/></radialGradient>
+            <linearGradient id="fox93Tail" x1=".12" y1=".08" x2=".88" y2=".92"><stop offset="0" stop-color="#020103"/><stop offset=".54" stop-color="#17101e"/><stop offset=".79" stop-color="#4a2a5a"/><stop offset="1" stop-color="#c18cdd"/></linearGradient>
+            <linearGradient id="fox93Muzzle" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#9471a2"/><stop offset="1" stop-color="#3b2942"/></linearGradient>
+            <radialGradient id="fox93Eye"><stop offset="0" stop-color="#fff"/><stop offset=".25" stop-color="#efd2ff"/><stop offset="1" stop-color="#8e42b0"/></radialGradient>
+            <filter id="fox93Glow" x="-48%" y="-48%" width="196%" height="196%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity=".78"/><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#9148b7" flood-opacity=".78"/></filter>
           </defs>
-          <ellipse cx="70" cy="119" rx="37" ry="9" fill="#000" opacity=".34"/>
-          <g filter="url(#foxShadow)" class="mascotSvgFigure">
-            <path d="M33 91c-26 2-29-22-13-34 10-7 28-2 31 11 2 11-7 18-18 23Z" fill="url(#foxTail)"/>
-            <ellipse cx="76" cy="87" rx="31" ry="28" fill="url(#foxBody)"/>
-            <path d="M50 53 55 22 72 46M101 51l-2-30-18 25" fill="#08070b" stroke="#6f4b82" stroke-width="2.2" stroke-linejoin="round"/>
-            <path d="M53 58c5-21 40-24 49-2 6 16-2 35-25 38-22-1-31-19-24-36Z" fill="url(#foxBody)"/>
-            <path d="M61 72c7 7 24 8 33 0-4 16-28 19-33 0Z" fill="#28202f" opacity=".8"/>
-            <ellipse cx="66" cy="62" rx="4.1" ry="5.2" fill="url(#foxEye)"/><ellipse cx="89" cy="62" rx="4.1" ry="5.2" fill="url(#foxEye)"/>
-            <path d="M76 69l4 0-2 4Z" fill="#cfa6dc"/><path d="M72 76c4 3 8 3 12 0" fill="none" stroke="#a97bc0" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M62 92 57 112M89 92l7 20" stroke="#111016" stroke-width="11" stroke-linecap="round"/><path d="M55 112h15M88 112h16" stroke="#8c5ca5" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="71" cy="121" rx="40" ry="8" fill="#000" opacity=".36"/>
+          <g filter="url(#fox93Glow)" class="mascotSvgFigure">
+            <!-- very large bushy tail with pale purple fox tip -->
+            <path d="M55 102C29 121 7 111 7 89 7 68 27 52 49 59c17 5 22 21 13 32-8 10-23 12-32 4-7-7-5-16 2-20 7-4 15 0 18 7-2-10-13-14-23-7-11 8-8 24 4 29 8 4 17 1 24-4Z" fill="url(#fox93Tail)" stroke="#8e58a7" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M9 82c3-12 13-21 24-24-5 7-7 15-5 23-8-2-14-1-19 1Z" fill="#b77fd0" opacity=".68"/>
+            <!-- slim fox body and chest ruff -->
+            <path d="M52 84c0-18 11-29 27-29 17 0 29 12 29 31 0 21-11 33-29 33S52 106 52 84Z" fill="url(#fox93Fur)"/>
+            <path d="M65 79 79 91 94 79 90 108 79 117 68 108Z" fill="url(#fox93Muzzle)" opacity=".72"/>
+            <!-- unmistakably tall triangular fox ears -->
+            <path d="M47 49 48 12 70 40M110 49l-5-37-22 29" fill="#09070c" stroke="#9d69b4" stroke-width="2.4" stroke-linejoin="round"/>
+            <path d="M53 39 54 22 65 41M101 40l-2-18-11 20" fill="#855172" opacity=".78"/>
+            <!-- narrower fox skull, cheek ruffs and long pointed muzzle -->
+            <path d="M47 52c5-16 18-24 32-24 17 0 31 9 35 25 3 11-1 21-9 29l-10 8-16 5-16-5-10-8c-8-8-10-19-6-30Z" fill="url(#fox93Fur)"/>
+            <path d="m48 65 13 1-10 11 15-3M110 65l-13 1 10 11-15-3" fill="#16101b" stroke="#684176" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M58 64c5 15 12 26 21 32 10-6 18-17 23-32-3 20-10 33-23 36-12-3-19-16-21-36Z" fill="url(#fox93Muzzle)"/>
+            <path d="M66 70c6 4 20 4 27 0l-3 11c-6 7-15 10-22 0Z" fill="#5e4262" opacity=".92"/>
+            <path d="M58 57c6-4 12-4 18 0M84 57c6-4 12-4 18 0" fill="none" stroke="#7f548f" stroke-width="1.6" stroke-linecap="round"/>
+            <ellipse cx="67" cy="60" rx="4.2" ry="5.3" fill="url(#fox93Eye)"/><ellipse cx="92" cy="60" rx="4.2" ry="5.3" fill="url(#fox93Eye)"/>
+            <path d="M75 76h9l-4.5 5Z" fill="#e0b6df"/><path d="M73 84c4 4 9 4 13 0" fill="none" stroke="#c08bca" stroke-width="1.9" stroke-linecap="round"/>
+            <!-- fox forelegs and pointed paws -->
+            <path d="M64 102 60 118M75 104l-1 15M86 104l1 15M98 102l4 16" stroke="#100c13" stroke-width="8.5" stroke-linecap="round"/>
+            <path d="M53 119h15M68 120h12M81 120h12M95 119h15" stroke="#a974ba" stroke-width="3.5" stroke-linecap="round"/>
           </g>
         </svg>`;
       if(theme==='tsukiyomi')return `
@@ -4046,24 +4059,40 @@ function startGpRankingRefresh(){
           </g>
         </svg>`;
       return `
-        <svg viewBox="0 0 140 140" role="img" aria-label="Kosei green dragon mascot">
+        <svg viewBox="0 0 140 140" role="img" aria-label="Kosei emerald dragon mascot">
           <defs>
-            <radialGradient id="dragonBody" cx="34%" cy="25%" r="82%"><stop offset="0" stop-color="#b6d67a"/><stop offset=".34" stop-color="#507a35"/><stop offset=".72" stop-color="#18351f"/><stop offset="1" stop-color="#07150d"/></radialGradient>
-            <linearGradient id="dragonWing" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8ea851"/><stop offset="1" stop-color="#244522"/></linearGradient>
-            <radialGradient id="dragonEye"><stop stop-color="#fffbd7"/><stop offset=".2" stop-color="#f4d16e"/><stop offset="1" stop-color="#9c6813"/></radialGradient>
-            <filter id="dragonShadow" x="-40%" y="-40%" width="180%" height="180%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#001307" flood-opacity=".7"/><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#e0b74d" flood-opacity=".7"/></filter>
+            <radialGradient id="dragon93Scale" cx="31%" cy="21%" r="88%"><stop offset="0" stop-color="#b8d66f"/><stop offset=".28" stop-color="#557c34"/><stop offset=".67" stop-color="#17351f"/><stop offset="1" stop-color="#06120b"/></radialGradient>
+            <linearGradient id="dragon93Belly" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#d5c878"/><stop offset="1" stop-color="#7f8a42"/></linearGradient>
+            <linearGradient id="dragon93Wing" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8fb052"/><stop offset=".52" stop-color="#31572b"/><stop offset="1" stop-color="#10261a"/></linearGradient>
+            <radialGradient id="dragon93Eye"><stop offset="0" stop-color="#fffde2"/><stop offset=".25" stop-color="#ffd96e"/><stop offset="1" stop-color="#a36913"/></radialGradient>
+            <filter id="dragon93Glow" x="-48%" y="-48%" width="196%" height="196%"><feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#001407" flood-opacity=".78"/><feDropShadow dx="0" dy="0" stdDeviation="5" flood-color="#e5bd55" flood-opacity=".76"/></filter>
           </defs>
-          <ellipse cx="72" cy="119" rx="38" ry="9" fill="#001409" opacity=".3"/>
-          <g filter="url(#dragonShadow)" class="mascotSvgFigure">
-            <path d="M45 77 15 54l8 34 25 6Z" fill="url(#dragonWing)" stroke="#d0ac49" stroke-width="1.4"/><path d="m97 76 27-24-6 36-24 7Z" fill="url(#dragonWing)" stroke="#d0ac49" stroke-width="1.4"/>
-            <path d="M47 93c-27 7-28-10-14-17 12-6 27 0 30 12 3 14-10 25-24 25" fill="none" stroke="url(#dragonBody)" stroke-width="12" stroke-linecap="round"/>
-            <ellipse cx="76" cy="88" rx="30" ry="28" fill="url(#dragonBody)"/>
-            <path d="M59 49 52 28l17 13M89 47l10-19-20 12" fill="#375d2a" stroke="#d5b34f" stroke-width="2" stroke-linejoin="round"/>
-            <path d="M53 61c6-22 40-27 51-4 8 17-1 36-25 38-23 0-34-17-26-34Z" fill="url(#dragonBody)"/>
-            <path d="M68 78c6 5 18 5 24 0-3 12-20 15-24 0Z" fill="#adc26b" opacity=".4"/>
-            <ellipse cx="67" cy="62" rx="4" ry="5" fill="url(#dragonEye)"/><ellipse cx="91" cy="62" rx="4" ry="5" fill="url(#dragonEye)"/>
-            <path d="M78 69h5l-3 4Z" fill="#e3c36e"/><path d="M72 74c5 4 11 4 16 0" fill="none" stroke="#d1ae49" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M61 101 57 115M91 101l5 14" stroke="#365d2c" stroke-width="11" stroke-linecap="round"/><path d="M52 116h17M89 116h17" stroke="#d4b14d" stroke-width="4" stroke-linecap="round"/>
+          <ellipse cx="72" cy="121" rx="41" ry="8" fill="#001409" opacity=".34"/>
+          <g filter="url(#dragon93Glow)" class="mascotSvgFigure">
+            <!-- broad membrane wings with ribs -->
+            <path d="M55 69 24 38 13 76l24-8-9 26 31-10Z" fill="url(#dragon93Wing)" stroke="#d3b654" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="m88 69 30-32 10 39-23-9 8 27-30-11Z" fill="url(#dragon93Wing)" stroke="#d3b654" stroke-width="1.8" stroke-linejoin="round"/>
+            <path d="M25 41 37 68M15 75l22-7M117 40l-12 27M126 75l-21-8" fill="none" stroke="#d6be67" stroke-width="1.2" opacity=".75"/>
+            <!-- curled dragon tail with spear tip -->
+            <path d="M53 100c-24 7-33-8-22-20 9-10 25-6 29 5 4 12-4 24-16 29-8 3-13 1-16-3" fill="none" stroke="url(#dragon93Scale)" stroke-width="11" stroke-linecap="round"/>
+            <path d="m23 107 10-3-4 10Z" fill="#d3b654" stroke="#6f7939" stroke-width="1.2"/>
+            <!-- pear-shaped scaled torso and gold belly plates -->
+            <path d="M50 82c0-22 13-34 29-34 17 0 31 13 31 35 0 23-12 36-31 36S50 106 50 82Z" fill="url(#dragon93Scale)"/>
+            <path d="M71 67c-4 15-5 34 0 49h17c5-16 4-34 0-49Z" fill="url(#dragon93Belly)" opacity=".78"/>
+            <path d="M72 76h15M70 87h18M70 98h18M72 109h14" stroke="#54662e" stroke-width="1.3" opacity=".75"/>
+            <!-- horns, crest spikes and long dragon snout -->
+            <path d="M55 48 46 20l20 17M98 47l12-27-22 17" fill="#d8c463" stroke="#786f36" stroke-width="1.7" stroke-linejoin="round"/>
+            <path d="m63 38 4-15 9 13 6-16 8 18" fill="#315727" stroke="#d5b84f" stroke-width="1.5" stroke-linejoin="round"/>
+            <path d="M48 54c5-17 18-26 33-26 17 0 31 10 34 27 2 10-2 19-9 26l-9 9-17-3-17 3-10-9c-7-7-9-17-5-27Z" fill="url(#dragon93Scale)"/>
+            <path d="M61 66c5-8 12-11 20-11 9 0 18 3 23 11l4 10c-7 8-17 12-28 12-11 0-21-4-27-12Z" fill="#244a29"/>
+            <path d="M57 72c8 6 38 6 47 0l-3 9c-11 7-31 7-41 0Z" fill="#547943" opacity=".86"/>
+            <ellipse cx="67" cy="56" rx="4.3" ry="5.5" fill="url(#dragon93Eye)"/><ellipse cx="95" cy="56" rx="4.3" ry="5.5" fill="url(#dragon93Eye)"/>
+            <ellipse cx="70" cy="72" rx="2.2" ry="1.5" fill="#07140b"/><ellipse cx="92" cy="72" rx="2.2" ry="1.5" fill="#07140b"/>
+            <path d="M69 82c7 4 16 4 23 0" fill="none" stroke="#d8b84d" stroke-width="1.8" stroke-linecap="round"/>
+            <!-- clawed feet -->
+            <path d="M62 103 57 117M96 103l5 14" stroke="#22462a" stroke-width="11" stroke-linecap="round"/>
+            <path d="M49 118h20M93 118h20" stroke="#d5b94f" stroke-width="3.5" stroke-linecap="round"/>
+            <path d="m51 118-4 4m11-4-2 5m39-5-2 5m11-5 4 4" stroke="#f0d977" stroke-width="1.7" stroke-linecap="round"/>
           </g>
         </svg>`;
     }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
+  <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=0.5,maximum-scale=5,user-scalable=yes,viewport-fit=cover">
   <meta name="theme-color" content="#08080b">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=20260722-v92-mobile-frame-filigree">
+    <link rel="stylesheet" href="./style.css?v=20260722-v98-mobile-ui-precision">
 
 </head>
 <body class="front-mode">
@@ -75,7 +75,7 @@
     <section id="mobileStudentHeader" class="mobileStudentHeader hidden" aria-live="polite">
       <div class="mobileStudentHeaderArt" aria-hidden="true"></div>
       <div class="mobileStudentHeaderShade" aria-hidden="true"></div>
-      <div class="m74HeaderTop">
+      <div class="m74HeaderTop m95BrandOnly">
         <div class="m74HeaderBrand">
           <span class="m74HeaderSeal"><img src="https://drive.google.com/thumbnail?id=1cdbjaAkcEI3KodOgpCNbtEL-K5VQm7pK&sz=w300" alt=""></span>
           <div class="m74HeaderTitle">
@@ -83,32 +83,10 @@
             <h2 id="mobileStudentHeaderTitle">GAKUSEI DATABASE</h2>
           </div>
         </div>
-        <div class="m74HeaderActions">
-          <button class="m74HeaderHome" type="button" onclick="goHome()" aria-label="HOME">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 10.7 12 4l8.2 6.7v8.1a1.2 1.2 0 0 1-1.2 1.2h-4.3v-6.1H9.3V20H5a1.2 1.2 0 0 1-1.2-1.2z"/></svg>
-          </button>
-          <div id="mobileStudentGeneralMenu" class="m74HeaderGeneral">
-            <button id="mobileStudentGeneralButton" class="m74HeaderGeneralButton" type="button" onclick="toggleMobileStudentGeneralMenu(event)" aria-haspopup="true" aria-expanded="false">
-              <span>GENERAL</span><span class="m74HeaderChevron" aria-hidden="true">⌄</span>
-            </button>
-            <div id="mobileStudentGeneralPanel" class="m74HeaderGeneralPanel hidden" role="menu">
-              <button type="button" role="menuitem" onclick="openNenseiRecapFromMenu();closeMobileStudentGeneralMenu()">
-                <span class="generalMenuItemTitle">NENSEI RECAP</span>
-                <span class="generalMenuItemText">Current students grouped by Nensei and House</span>
-              </button>
-              <button type="button" role="menuitem" onclick="openPromotionRecapFromMenu();closeMobileStudentGeneralMenu()">
-                <span class="generalMenuItemTitle">NENSEI PROMOTION RECAP</span>
-                <span class="generalMenuItemText">Latest promotion and retention results</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="m74HeaderSearch">
-        <input id="mobileStudentSearchInput" placeholder="Type your Gakusei ID number..." autocomplete="off">
-        <button id="mobileStudentSearchButton" type="button" onclick="searchGakuseiFromMobileHeader()">SEARCH DATA</button>
       </div>
     </section>
+
+    
 
     <section id="mobileStudentSummary" class="mobileStudentSummary hidden" aria-live="polite">
       <div class="mobileStudentSummaryGlow" aria-hidden="true"></div>
@@ -196,6 +174,26 @@
       <div id="mobileSwipeDots" class="mobileSwipeDots" aria-label="Swipe page indicators"></div>
     </section>
     </section>
+
+<nav id="mobileStudentAppDock" class="mobileStudentAppDock" aria-label="Student quick navigation">
+      <div class="mobileStudentDockSearch m74HeaderSearch">
+        <input id="mobileStudentSearchInput" placeholder="Type your Gakusei ID number..." autocomplete="off" aria-label="Type your Gakusei ID number...">
+        <button id="mobileStudentSearchButton" type="button" onclick="searchGakuseiFromMobileHeader()" aria-label="Search student">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.5" cy="10.5" r="5.8"></circle><path d="m14.9 14.9 4.6 4.6"></path></svg><span>SEARCH</span>
+        </button>
+      </div>
+      <div class="mobileStudentDockNav">
+        <button class="mobileDockItem mobileDockHome" type="button" onclick="goHome()" aria-label="Home">
+          <span class="mobileDockIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.8 10.7 12 4l8.2 6.7v8.1a1.2 1.2 0 0 1-1.2 1.2h-4.3v-6.1H9.3V20H5a1.2 1.2 0 0 1-1.2-1.2z"/></svg></span><span class="mobileDockLabel">HOME</span>
+        </button>
+        <button class="mobileDockItem" type="button" onclick="openNenseiRecapFromMenu()" aria-label="Nensei Recap">
+          <span class="mobileDockIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5h16v13H4z"/><path d="M7.2 9h9.6M7.2 12h9.6M7.2 15h6.1"/></svg></span><span class="mobileDockLabel">NENSEI<br>RECAP</span>
+        </button>
+        <button class="mobileDockItem" type="button" onclick="openPromotionRecapFromMenu()" aria-label="Nensei Promotion Recap">
+          <span class="mobileDockIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 15 9l6 .9-4.4 4.2 1 5.9-5.6-2.8L6.4 20l1-5.9L3 9.9 9 9z"/></svg></span><span class="mobileDockLabel">PROMOTION<br>RECAP</span>
+        </button>
+      </div>
+    </nav>
 
     <div id="dormMascotStage" class="dormMascotStage hidden" aria-hidden="true">
       <div class="dormMascotPerspective"><div id="dormMascotBody" class="dormMascotBody"></div></div>
@@ -323,7 +321,7 @@
 
   <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING DOCUMENT</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
 
-    <script src="./script.js?v=20260722-v92-mobile-frame-filigree" defer></script>
+    <script src="./script.js?v=20260722-v98-mobile-ui-precision" defer></script>
 
 </body>
 </html>
