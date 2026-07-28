@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=20260728-v124-admin-semester-scroll-tall">
+    <link rel="stylesheet" href="./style.css?v=20260728-v128-ksi-unified-dock-admin-general-only">
 
 </head>
 <body class="front-mode">
@@ -280,6 +280,9 @@
         <button class="mobileDockItem" type="button" onclick="openPromotionRecapFromMenu()" aria-label="Nensei Promotion Recap">
           <span class="mobileDockIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 15 9l6 .9-4.4 4.2 1 5.9-5.6-2.8L6.4 20l1-5.9L3 9.9 9 9z"/></svg></span><span class="mobileDockLabel">PROMOTION<br>RECAP</span>
         </button>
+        <button id="mobileStudentDockLogout" class="mobileDockItem mobileDockLogout hidden" type="button" onclick="studentLogout()" aria-label="Log out Gakusei session">
+          <span class="mobileDockIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H5.8A1.8 1.8 0 0 0 4 5.8v12.4A1.8 1.8 0 0 0 5.8 20H10"></path><path d="M14 8l4 4-4 4"></path><path d="M18 12H9"></path></svg></span><span class="mobileDockLabel">LOG<br>OUT</span>
+        </button>
       </div>
     </nav>
 
@@ -544,7 +547,7 @@
 
   <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING DOCUMENT</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
 
-    <script src="./script.js?v=20260728-v125-smooth-soa-direct-student-login" defer></script>
+    <script src="./script.js?v=20260728-v127-ksi-header-mobile-logout" defer></script>
 
 </body>
 </html>

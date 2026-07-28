@@ -16273,3 +16273,156 @@ body.student-login-open{overflow:hidden}
     flex:0 0 560px!important;
   }
 }
+
+
+/* =====================================================================
+   V127 — MOBILE KSI HEADER ART RESTORE + AUTH-ONLY FLOATING LOGOUT
+   Scope:
+   1) KŌSEI/KSI student mobile header artwork only.
+   2) One Gakusei logout item inside the existing mobile floating nav.
+   ===================================================================== */
+
+@media (max-width:768px){
+  /* KSI artwork: preserve the original file, add a direct-image fallback,
+     and prevent the darker KSI artwork from disappearing under the shade. */
+  body:not(.front-mode).dorm-kosei
+  .mobileStudentDossier>.mobileStudentHeader .mobileStudentHeaderArt{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    background-image:
+      url("https://drive.google.com/thumbnail?id=1KJiRkV957u2OvAXbXWc1MDGXLKhDhcEv&sz=w2400"),
+      url("https://lh3.googleusercontent.com/d/1KJiRkV957u2OvAXbXWc1MDGXLKhDhcEv=w2400")!important;
+    background-size:cover,cover!important;
+    background-position:center 31%,center 31%!important;
+    background-repeat:no-repeat,no-repeat!important;
+    background-color:#14180b!important;
+    filter:saturate(1.06) contrast(1.05) brightness(.96)!important;
+  }
+
+  body:not(.front-mode).dorm-kosei
+  .mobileStudentDossier>.mobileStudentHeader .mobileStudentHeaderShade{
+    opacity:.72!important;
+  }
+
+  /* Existing 3-icon nav remains exactly the same before login.
+     After Gakusei authentication, one fourth track is opened for LOG OUT. */
+  body:not(.front-mode) #mobileStudentAppDock
+  .mobileStudentDockNav.has-student-logout{
+    grid-template-columns:repeat(4,38px)!important;
+  }
+
+  body:not(.front-mode) #mobileStudentAppDock .mobileDockLogout{
+    color:#ffc5ca!important;
+  }
+  body:not(.front-mode) #mobileStudentAppDock .mobileDockLogout .mobileDockIcon{
+    color:#ff9ca5!important;
+    background:rgba(137,29,40,.16)!important;
+  }
+}
+
+@media (max-width:390px){
+  body:not(.front-mode) #mobileStudentAppDock
+  .mobileStudentDockNav.has-student-logout{
+    grid-template-columns:repeat(4,38px)!important;
+  }
+}
+
+
+/* =====================================================================
+   V128 — KSI HEADER UNIFIED + ONE-ROW AUTH DOCK + ADMIN GENERAL ONLY
+   Requested scope only:
+   1) KSI artwork uses the same mobile header treatment as the other Houses.
+   2) Floating navigation is always one row; Gakusei LOG OUT exists only
+      while an authenticated Gakusei session is active.
+   3) Administrator Home panel is removed from the visible Home flow;
+      Administrator remains accessible through GENERAL.
+   ===================================================================== */
+
+/* Admin must not occupy a Home section before Student GP Ranking. */
+#adminHomePanel{
+  display:none!important;
+}
+
+@media (max-width:768px){
+  /*
+   * KSI/KŌSEI — same visual system as TSUKIYOMI/YAMIYO.
+   * V127 made KSI brighter/fully opaque and reduced only its shade.
+   * Restore the shared V98 House-header values while retaining the
+   * alternate image fallback that protects against Drive thumbnail failure.
+   */
+  body:not(.front-mode).dorm-kosei
+  .mobileStudentDossier>.mobileStudentHeader .mobileStudentHeaderArt{
+    display:block!important;
+    visibility:visible!important;
+    position:absolute!important;
+    inset:0!important;
+    z-index:0!important;
+    width:100%!important;
+    height:100%!important;
+    opacity:.92!important;
+    border-radius:inherit!important;
+    background-image:
+      url("https://drive.google.com/thumbnail?id=1KJiRkV957u2OvAXbXWc1MDGXLKhDhcEv&sz=w2400"),
+      url("https://lh3.googleusercontent.com/d/1KJiRkV957u2OvAXbXWc1MDGXLKhDhcEv=w2400")!important;
+    background-color:transparent!important;
+    background-size:cover,cover!important;
+    background-repeat:no-repeat,no-repeat!important;
+    background-position:center 31%,center 31%!important;
+    filter:saturate(.96) contrast(1.04) brightness(.80)!important;
+    transform:none!important;
+    clip-path:none!important;
+    -webkit-clip-path:none!important;
+    -webkit-mask-image:none!important;
+    mask-image:none!important;
+    pointer-events:none!important;
+  }
+
+  body:not(.front-mode).dorm-kosei
+  .mobileStudentDossier>.mobileStudentHeader .mobileStudentHeaderShade{
+    opacity:1!important;
+  }
+
+  /*
+   * One-row floating navigation.
+   * The explicit hidden guard is intentionally more specific than the
+   * existing .mobileDockItem { display:grid!important } rule.
+   */
+  body:not(.front-mode) #mobileStudentAppDock
+  #mobileStudentDockLogout.hidden{
+    display:none!important;
+  }
+
+  body:not(.front-mode) #mobileStudentAppDock .mobileStudentDockNav{
+    grid-auto-flow:column!important;
+    grid-template-rows:1fr!important;
+    grid-auto-rows:1fr!important;
+    grid-auto-columns:38px!important;
+    align-items:center!important;
+    white-space:nowrap!important;
+  }
+
+  body:not(.front-mode) #mobileStudentAppDock
+  .mobileStudentDockNav.has-student-logout{
+    grid-template-columns:repeat(4,38px)!important;
+    grid-auto-columns:38px!important;
+  }
+}
+
+@media (max-width:390px){
+  body:not(.front-mode) #mobileStudentAppDock
+  #mobileStudentDockLogout.hidden{
+    display:none!important;
+  }
+
+  body:not(.front-mode) #mobileStudentAppDock .mobileStudentDockNav{
+    grid-auto-flow:column!important;
+    grid-template-rows:1fr!important;
+    grid-auto-columns:38px!important;
+  }
+
+  body:not(.front-mode) #mobileStudentAppDock
+  .mobileStudentDockNav.has-student-logout{
+    grid-template-columns:repeat(4,38px)!important;
+  }
+}

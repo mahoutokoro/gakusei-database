@@ -3975,6 +3975,15 @@ function syncStudentAuthUi(){
     text('studentSessionId',account.id||'');
   }
   syncGeneralLogoutOption();
+
+  /*
+   * V127 — mobile floating LOG OUT is a Gakusei-session control only.
+   * It stays absent before login and disappears immediately on logout.
+   */
+  const mobileLogout=$('mobileStudentDockLogout');
+  const mobileDockNav=document.querySelector('#mobileStudentAppDock .mobileStudentDockNav');
+  if(mobileLogout)mobileLogout.classList.toggle('hidden',!logged);
+  if(mobileDockNav)mobileDockNav.classList.toggle('has-student-logout',logged);
 }
 
 function syncGeneralLogoutOption(){
