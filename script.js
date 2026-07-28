@@ -3173,18 +3173,1209 @@ function detectTaNenseiFromAcademicBlock(displayValues, studentRowIndex, semeste
     }
   }
 
+  async function getDetectedAcademicSheets(forceRefresh = false) {
+    const sheets = await discoverAcademicSheets(Boolean(forceRefresh));
+    return sheets
+      .map(sheetName => ({
+        sheetName: String(sheetName || '').trim(),
+        semesterNumber: extractSemesterNumber(sheetName)
+      }))
+      .filter(item => item.sheetName && item.semesterNumber >= 0)
+      .sort((a, b) => a.semesterNumber - b.semesterNumber);
+  }
+
   return {
     getStudentData,
     getAcademicData,
     getAcademicPdfPayload,
     getCurrentNenseiRecap,
     getCurrentGpRanking,
-    getLatestPromotionRecap
+    getLatestPromotionRecap,
+    getDetectedAcademicSheets
+  };
+})();
+
+
+/* =========================================================
+   ACADEMIC RECORD PUBLICATION CONTROL — V105
+   ---------------------------------------------------------
+   Student-facing rule:
+   - Existing/older A.R. semesters are visible by default.
+   - The newest detected A.R. semester is HIDDEN by default
+     until Admin explicitly publishes it.
+   - Explicit Admin choices always override the default.
+   - DEVOTED STUDENT is not an A.R. tab and stays visible.
+
+   GLOBAL MODE:
+   Paste the deployed Apps Script Web App /exec URL below.
+   When blank, the Admin UI works in LOCAL TEST MODE only.
+   ========================================================= */
+const ACADEMIC_PUBLICATION_CONFIG=Object.freeze({
+  API_URL:'',
+  LOCAL_SETTINGS_KEY:'mahoutokoro-academic-publication-v1',
+  ADMIN_PASSWORD_SHA256:'6d00671b21139644b658cb6f0184e5f4e7893dd3e299045d8d93049df01e319c',
+  REQUEST_TIMEOUT_MS:12000
+});
+
+const AcademicPublicationControl=(()=>{
+  let settings={version:1,configured:false,semesters:{},updatedAt:'',updatedBy:'',source:'default'};
+  let readyPromise=null;
+  let catalog=[];
+  let adminAuthenticated=false;
+  let adminPasswordMemory='';
+  let storageMode='LOCAL TEST MODE';
+  let remoteError='';
+
+  function apiUrl(){
+    const runtime=typeof window!=='undefined'&&window.MAHOUTOKORO_ADMIN_API_URL
+      ? String(window.MAHOUTOKORO_ADMIN_API_URL).trim()
+      : '';
+    return runtime||String(ACADEMIC_PUBLICATION_CONFIG.API_URL||'').trim();
+  }
+
+  function normalizeSemesterMap(value){
+    const output={};
+    if(!value||typeof value!=='object')return output;
+    Object.keys(value).forEach(key=>{
+      const number=Number(key);
+      if(!Number.isInteger(number)||number<0)return;
+      if(typeof value[key]==='boolean')output[String(number)]=value[key];
+    });
+    return output;
+  }
+
+  function normalizeSettings(value,source){
+    const input=value&&typeof value==='object'?value:{};
+    return{
+      version:1,
+      configured:Boolean(input.configured),
+      semesters:normalizeSemesterMap(input.semesters),
+      updatedAt:String(input.updatedAt||''),
+      updatedBy:String(input.updatedBy||''),
+      source:source||String(input.source||'default')
+    };
+  }
+
+  function loadLocalSettings(){
+    try{
+      const parsed=JSON.parse(localStorage.getItem(ACADEMIC_PUBLICATION_CONFIG.LOCAL_SETTINGS_KEY)||'null');
+      return normalizeSettings(parsed,'local');
+    }catch(error){
+      return normalizeSettings(null,'default');
+    }
+  }
+
+  function saveLocalSettings(next){
+    try{localStorage.setItem(ACADEMIC_PUBLICATION_CONFIG.LOCAL_SETTINGS_KEY,JSON.stringify(next))}catch(error){}
+  }
+
+  async function fetchJsonWithTimeout(url,options={}){
+    const controller=typeof AbortController!=='undefined'?new AbortController():null;
+    const timer=controller?setTimeout(()=>controller.abort(),ACADEMIC_PUBLICATION_CONFIG.REQUEST_TIMEOUT_MS):null;
+    try{
+      const response=await fetch(url,{...options,signal:controller?controller.signal:undefined,cache:'no-store',redirect:'follow'});
+      if(!response.ok)throw new Error('HTTP '+response.status);
+      return await response.json();
+    }finally{
+      if(timer)clearTimeout(timer);
+    }
+  }
+
+  function jsonpRequest(baseUrl,params={}){
+    return new Promise((resolve,reject)=>{
+      const callback='__mahoutokoroPublicationJsonp_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+      const script=document.createElement('script');
+      const url=new URL(baseUrl,location.href);
+      Object.keys(params).forEach(key=>url.searchParams.set(key,String(params[key])));
+      url.searchParams.set('callback',callback);
+      url.searchParams.set('_',String(Date.now()));
+      let settled=false;
+      const cleanup=()=>{
+        if(script.parentNode)script.parentNode.removeChild(script);
+        try{delete window[callback]}catch(error){window[callback]=undefined}
+      };
+      const timer=setTimeout(()=>{
+        if(settled)return;
+        settled=true;cleanup();reject(new Error('Publication settings request timed out.'));
+      },ACADEMIC_PUBLICATION_CONFIG.REQUEST_TIMEOUT_MS);
+      window[callback]=payload=>{
+        if(settled)return;
+        settled=true;clearTimeout(timer);cleanup();resolve(payload);
+      };
+      script.onerror=()=>{
+        if(settled)return;
+        settled=true;clearTimeout(timer);cleanup();reject(new Error('Publication settings endpoint could not be reached.'));
+      };
+      script.src=url.toString();
+      script.async=true;
+      document.head.appendChild(script);
+    });
+  }
+
+  async function readRemoteSettings(url){
+    const separator=url.includes('?')?'&':'?';
+    try{
+      return await fetchJsonWithTimeout(url+separator+'action=getPublicationSettings&_='+Date.now());
+    }catch(fetchError){
+      return await jsonpRequest(url,{action:'getPublicationSettings'});
+    }
+  }
+
+  function postRemoteSettingsViaHiddenForm(url,password,next){
+    return new Promise((resolve,reject)=>{
+      try{
+        const frameName='mahoutokoroAdminPost_'+Date.now()+'_'+Math.random().toString(36).slice(2);
+        const iframe=document.createElement('iframe');
+        iframe.name=frameName;
+        iframe.setAttribute('aria-hidden','true');
+        iframe.tabIndex=-1;
+        iframe.style.cssText='position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;left:-9999px;top:-9999px;border:0';
+        const form=document.createElement('form');
+        form.method='POST';
+        form.action=url;
+        form.target=frameName;
+        form.style.display='none';
+        const fields={
+          action:'savePublicationSettings',
+          password:String(password||''),
+          settings:JSON.stringify(next)
+        };
+        Object.keys(fields).forEach(name=>{
+          const input=document.createElement('input');
+          input.type='hidden';input.name=name;input.value=fields[name];form.appendChild(input);
+        });
+        document.body.appendChild(iframe);
+        document.body.appendChild(form);
+        form.submit();
+        setTimeout(()=>{
+          try{form.remove();iframe.remove()}catch(error){}
+          resolve(true);
+        },1100);
+      }catch(error){reject(error)}
+    });
+  }
+
+  async function loadSettings(force=false){
+    if(readyPromise&&!force)return readyPromise;
+    readyPromise=(async()=>{
+      const url=apiUrl();
+      remoteError='';
+      if(!url){
+        settings=loadLocalSettings();
+        storageMode='LOCAL TEST MODE';
+        return settings;
+      }
+      try{
+        const payload=await readRemoteSettings(url);
+        if(!payload||payload.success===false)throw new Error(payload&&payload.message?payload.message:'Invalid settings response.');
+        settings=normalizeSettings(payload.settings||payload,'remote');
+        storageMode='GLOBAL REMOTE MODE';
+        saveLocalSettings(settings);
+      }catch(error){
+        remoteError=error&&error.message?error.message:String(error);
+        settings=loadLocalSettings();
+        storageMode='OFFLINE FALLBACK';
+      }
+      return settings;
+    })();
+    return readyPromise;
+  }
+
+  function semesterNumberFrom(value){
+    const text=String(value||'').normalize('NFKC').toUpperCase();
+    let match=text.match(/(?:^|[^0-9])(\d{1,3})\s*A\s*\.?\s*R\s*\.?/i);
+    if(!match)match=text.match(/A\s*\.?\s*R\s*\.?\s*(\d{1,3})/i);
+    if(!match)match=text.match(/(?:^|[^0-9])(\d{1,3})(?:$|[^0-9])/);
+    return match?Number(match[1]):-1;
+  }
+
+  function numberForRecord(record){
+    const direct=Number(record&&record.semesterNumber);
+    if(Number.isInteger(direct)&&direct>=0)return direct;
+    return semesterNumberFrom(record&&record.sheetName||record&&record.semesterTitle||'');
+  }
+
+  function latestNumberFromData(data,records){
+    const explicit=semesterNumberFrom(data&&data.latestSemesterTitle||'');
+    const numbers=(records||[])
+      .filter(record=>record&&record.recordType!=='GRADUATED_DEVOTED')
+      .map(numberForRecord)
+      .filter(number=>Number.isInteger(number)&&number>=0);
+    if(explicit>=0)numbers.push(explicit);
+    return numbers.length?Math.max(...numbers):-1;
+  }
+
+  function hasExplicitDecision(number){
+    return Object.prototype.hasOwnProperty.call(settings.semesters,String(number));
+  }
+
+  function isPublished(number,latestNumber){
+    if(number<0)return true;
+    const key=String(number);
+    if(Object.prototype.hasOwnProperty.call(settings.semesters,key))return Boolean(settings.semesters[key]);
+    return number===latestNumber?false:true;
+  }
+
+  function publicationReason(number,latestNumber){
+    if(hasExplicitDecision(number))return isPublished(number,latestNumber)?'PUBLISHED BY ADMIN':'UNPUBLISHED BY ADMIN';
+    if(number===latestNumber)return 'AWAITING ADMIN DECISION';
+    return 'DEFAULT PUBLISHED';
+  }
+
+  function filterAcademicData(data){
+    const source=data&&typeof data==='object'?data:{};
+    const all=Array.isArray(source.records)?source.records:[];
+    const latestNumber=latestNumberFromData(source,all);
+    const visible=[];
+    const hidden=[];
+    all.forEach(record=>{
+      if(!record)return;
+      if(record.recordType==='GRADUATED_DEVOTED'){
+        visible.push(record);
+        return;
+      }
+      const number=numberForRecord(record);
+      if(isPublished(number,latestNumber))visible.push(record);
+      else hidden.push(record);
+    });
+    return{
+      ...source,
+      records:visible,
+      publicationHiddenCount:hidden.length,
+      publicationHiddenSemesters:hidden.map(record=>record.sheetName||record.semesterTitle||''),
+      publicationLatestNumber:latestNumber,
+      publicationLatestExplicit:latestNumber>=0?hasExplicitDecision(latestNumber):false,
+      publicationMode:storageMode,
+      message:visible.length
+        ? source.message||''
+        : hidden.length
+          ? 'Academic Records are awaiting official publication by the administrator.'
+          : source.message||'No recorded academic semester was found for this student.'
+    };
+  }
+
+  function filterPdfPayload(payload){
+    const source=payload&&typeof payload==='object'?payload:{};
+    const records=Array.isArray(source.records)?source.records:[];
+    const latestNumber=latestNumberFromData({},records);
+    const visible=records.filter(record=>{
+      if(!record)return false;
+      if(record.recordType==='GRADUATED_DEVOTED')return true;
+      return isPublished(numberForRecord(record),latestNumber);
+    });
+    return{
+      ...source,
+      records:visible,
+      matchedRecordCount:visible.length,
+      totalTimelineCount:visible.length
+    };
+  }
+
+  async function sha256(text){
+    if(!window.crypto||!window.crypto.subtle)throw new Error('Secure browser crypto is unavailable.');
+    const bytes=new TextEncoder().encode(String(text||''));
+    const hash=await crypto.subtle.digest('SHA-256',bytes);
+    return Array.from(new Uint8Array(hash)).map(byte=>byte.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function login(password){
+    const hash=await sha256(password);
+    if(hash!==ACADEMIC_PUBLICATION_CONFIG.ADMIN_PASSWORD_SHA256){
+      adminAuthenticated=false;
+      adminPasswordMemory='';
+      throw new Error('Incorrect administrator password.');
+    }
+    adminAuthenticated=true;
+    adminPasswordMemory=String(password||'');
+    return true;
+  }
+
+  function logout(){
+    adminAuthenticated=false;
+    adminPasswordMemory='';
+  }
+
+  async function getCatalog(force=false){
+    try{
+      const result=await GakuseiDataService.getDetectedAcademicSheets(Boolean(force));
+      catalog=Array.isArray(result)?result.filter(item=>item&&Number.isInteger(Number(item.semesterNumber))):[];
+    }catch(error){
+      if(!catalog.length){
+        catalog=Array.from({length:20},(_,index)=>({sheetName:(index+1)+' A.R.',semesterNumber:index+1}));
+      }
+      remoteError=remoteError||(error&&error.message?error.message:String(error));
+    }
+    return catalog.slice();
+  }
+
+  function getCatalogSnapshot(){return catalog.slice()}
+  function getSettings(){return normalizeSettings(settings,settings.source)}
+  function getLatestCatalogItem(){return catalog.length?catalog[catalog.length-1]:null}
+
+  async function save(nextSemesterMap){
+    if(!adminAuthenticated)throw new Error('Admin authentication is required.');
+    const next=normalizeSettings({
+      configured:true,
+      semesters:nextSemesterMap,
+      updatedAt:new Date().toISOString(),
+      updatedBy:'ADMIN'
+    },'local');
+    saveLocalSettings(next);
+
+    const url=apiUrl();
+    if(!url){
+      settings=next;
+      storageMode='LOCAL TEST MODE';
+      return{success:true,localOnly:true,settings};
+    }
+
+    try{
+      await postRemoteSettingsViaHiddenForm(url,adminPasswordMemory,next);
+      const verification=await readRemoteSettings(url);
+      if(!verification||verification.success===false){
+        throw new Error(verification&&verification.message?verification.message:'Remote save verification failed.');
+      }
+      const verified=normalizeSettings(verification.settings||verification,'remote');
+      const expected=JSON.stringify(normalizeSemesterMap(next.semesters));
+      const actual=JSON.stringify(normalizeSemesterMap(verified.semesters));
+      if(expected!==actual){
+        throw new Error('Remote settings did not match the requested publication state. Check the Admin password and Web App deployment permissions.');
+      }
+      settings=verified;
+      storageMode='GLOBAL REMOTE MODE';
+      remoteError='';
+      saveLocalSettings(settings);
+      return{success:true,localOnly:false,settings};
+    }catch(error){
+      settings=next;
+      storageMode='OFFLINE FALLBACK';
+      remoteError=error&&error.message?error.message:String(error);
+      throw new Error('Global settings could not be saved: '+remoteError);
+    }
+  }
+
+  function setLocalSettingsForPreview(next){
+    settings=normalizeSettings(next,'preview');
+    storageMode='PREVIEW';
+  }
+
+  return{
+    ready:loadSettings,
+    reload:()=>loadSettings(true),
+    getCatalog,
+    getCatalogSnapshot,
+    getLatestCatalogItem,
+    getSettings,
+    isPublished,
+    hasExplicitDecision,
+    publicationReason,
+    filterAcademicData,
+    filterPdfPayload,
+    login,
+    logout,
+    isAdmin:()=>adminAuthenticated,
+    getAdminPasswordForBackend:()=>adminAuthenticated?adminPasswordMemory:'',
+    save,
+    getStorageMode:()=>storageMode,
+    getRemoteError:()=>remoteError,
+    getApiUrl:apiUrl,
+    setLocalSettingsForPreview
   };
 })();
 
 
 const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingTimer=null,gpRankingLoadToken=0,pdfBusy=false,promotionData=null,nenseiData=null,currentTheme='front',currentDocumentReview=null,academicLoadToken=0,currentAcademicReady=false,academicLoadPromise=null;
+
+/* =========================================================
+   V111 — GAKUSEI LOGIN + SOA FRONTEND BRIDGE
+   ---------------------------------------------------------
+   - Uses the deployed MAHOUTOKORO PORTAL API.
+   - Session token is stored only in sessionStorage.
+   - SOA UI is rendered only when the authenticated ID equals
+     the student record currently open in the portal.
+   - The browser never supplies a student ID to submitSOA;
+     backend identity comes from the authenticated session.
+   ========================================================= */
+const SOA_PORTAL_CONFIG=Object.freeze({
+  API_URL:'https://script.google.com/macros/s/AKfycbzgr2KVBm9Iibql6pTqo-d5lrgddNYXOnpN4GC1cENGjSFnHBEBbmZHEDU7Cea2LvHy/exec',
+  TOKEN_KEY:'mahoutokoro-gakusei-auth-token-v1',
+  SUBMITTED_KEY:'mahoutokoro-soa-submitted-v1',
+  REQUEST_TIMEOUT_MS:18000
+});
+
+const SOAAccessControl=(()=>{
+  let enabled=false;
+  let loaded=false;
+  let updatedAt='';
+  let lastLoadedAt=0;
+  let loadPromise=null;
+
+  async function request(params){
+    const controller=typeof AbortController!=='undefined'?new AbortController():null;
+    const timer=controller?setTimeout(()=>controller.abort(),SOA_PORTAL_CONFIG.REQUEST_TIMEOUT_MS):null;
+    try{
+      const body=new URLSearchParams();
+      Object.keys(params||{}).forEach(key=>body.set(key,String(params[key]==null?'':params[key])));
+      const response=await fetch(SOA_PORTAL_CONFIG.API_URL,{
+        method:'POST',body,redirect:'follow',cache:'no-store',credentials:'omit',
+        signal:controller?controller.signal:undefined
+      });
+      if(!response.ok)throw new Error('Portal API HTTP '+response.status);
+      const text=await response.text();
+      try{return JSON.parse(text)}catch(error){throw new Error('Portal API returned an unreadable response.')}
+    }catch(error){
+      if(error&&error.name==='AbortError')throw new Error('Portal API request timed out.');
+      throw error;
+    }finally{if(timer)clearTimeout(timer)}
+  }
+
+  function applyState(result){
+    if(!result||result.success===false)throw new Error(result&&result.message?result.message:'SOA access state could not be loaded.');
+    enabled=Boolean(result.enabled);
+    updatedAt=String(result.updatedAt||'');
+    loaded=true;
+    lastLoadedAt=Date.now();
+    syncAdminSOAAccessUi();
+    return snapshot();
+  }
+
+  function snapshot(){return{enabled,loaded,updatedAt}}
+  function isOpen(){return Boolean(loaded&&enabled)}
+  function isLoaded(){return loaded}
+
+  async function refresh(force=false){
+    if(!force&&loaded&&Date.now()-lastLoadedAt<15000)return snapshot();
+    if(loadPromise&&!force)return loadPromise;
+    loadPromise=request({action:'getSOAAccess'}).then(applyState).finally(()=>{loadPromise=null});
+    return loadPromise;
+  }
+
+  async function setEnabled(next){
+    if(!AcademicPublicationControl.isAdmin())throw new Error('Administrator authentication is required.');
+    const password=AcademicPublicationControl.getAdminPasswordForBackend();
+    if(!password)throw new Error('Administrator password session is unavailable. Please login as Admin again.');
+    const result=await request({action:'setSOAAccess',password,enabled:next?'true':'false'});
+    return applyState(result);
+  }
+
+  return{refresh,setEnabled,isOpen,isLoaded,getState:snapshot};
+})();
+
+const AdminSOAApplications=(()=>{
+  async function request(params){
+    const controller=typeof AbortController!=='undefined'?new AbortController():null;
+    const timer=controller?setTimeout(()=>controller.abort(),SOA_PORTAL_CONFIG.REQUEST_TIMEOUT_MS):null;
+    try{
+      const body=new URLSearchParams();
+      Object.keys(params||{}).forEach(key=>body.set(key,String(params[key]==null?'':params[key])));
+      const response=await fetch(SOA_PORTAL_CONFIG.API_URL,{
+        method:'POST',body,redirect:'follow',cache:'no-store',credentials:'omit',
+        signal:controller?controller.signal:undefined
+      });
+      if(!response.ok)throw new Error('Portal API HTTP '+response.status);
+      const text=await response.text();
+      try{return JSON.parse(text)}catch(error){throw new Error('Portal API returned an unreadable response.')}
+    }catch(error){
+      if(error&&error.name==='AbortError')throw new Error('Portal API request timed out.');
+      throw error;
+    }finally{if(timer)clearTimeout(timer)}
+  }
+
+  async function getRecap(){
+    if(!AcademicPublicationControl.isAdmin())throw new Error('Administrator authentication is required.');
+    const password=AcademicPublicationControl.getAdminPasswordForBackend();
+    if(!password)throw new Error('Administrator password session is unavailable. Please login as Admin again.');
+    const result=await request({action:'getSOARecap',password});
+    if(!result||result.success===false)throw new Error(result&&result.message?result.message:'SOA recap could not be loaded.');
+    return result;
+  }
+
+  async function annul(item){
+    if(!AcademicPublicationControl.isAdmin())throw new Error('Administrator authentication is required.');
+    const password=AcademicPublicationControl.getAdminPasswordForBackend();
+    if(!password)throw new Error('Administrator password session is unavailable. Please login as Admin again.');
+    const result=await request({
+      action:'adminAnnulSOA',password,
+      studentId:item&&item.studentId||'',
+      submittedSemester:item&&item.submittedSemester||'',
+      soaSemester:item&&item.soaSemester||'',
+      subject:item&&item.subject||''
+    });
+    if(!result||result.success===false)throw new Error(result&&result.message?result.message:'SOA application could not be annulled.');
+    return result;
+  }
+
+  return{getRecap,annul};
+})();
+
+const StudentPortalAuth=(()=>{
+  let token='';
+  let student=null;
+  let restorePromise=null;
+  let applications=[];
+  let applicationsCurrentSemester='';
+  let applicationsLoadedAt=0;
+
+  function normalizeId(value){
+    return String(value==null?'':value).normalize('NFKC').toUpperCase().replace(/\s+/g,'').trim();
+  }
+  function normalizeSemester(value){
+    const text=String(value==null?'':value).normalize('NFKC').toUpperCase().trim();
+    const match=text.match(/(\d{1,3})\s*A\s*\.?\s*R\s*\.?/);
+    return match?Number(match[1])+' A.R.':text;
+  }
+  function normalizeSubject(value){
+    return String(value==null?'':value).normalize('NFKC').toUpperCase().replace(/\s+/g,' ').trim();
+  }
+
+  function current(){return student?{id:student.id,name:student.name}:null}
+  function isAuthenticated(){return Boolean(token&&student&&student.id)}
+  function matchesStudent(studentId){return isAuthenticated()&&normalizeId(student&&student.id)===normalizeId(studentId)}
+
+  async function post(params){
+    const controller=typeof AbortController!=='undefined'?new AbortController():null;
+    const timer=controller?setTimeout(()=>controller.abort(),SOA_PORTAL_CONFIG.REQUEST_TIMEOUT_MS):null;
+    try{
+      const body=new URLSearchParams();
+      Object.keys(params||{}).forEach(key=>body.set(key,String(params[key]==null?'':params[key])));
+      const response=await fetch(SOA_PORTAL_CONFIG.API_URL,{
+        method:'POST',body,redirect:'follow',cache:'no-store',credentials:'omit',
+        signal:controller?controller.signal:undefined
+      });
+      if(!response.ok)throw new Error('Portal API HTTP '+response.status);
+      const text=await response.text();
+      try{return JSON.parse(text)}catch(error){throw new Error('Portal API returned an unreadable response.')}
+    }catch(error){
+      if(error&&error.name==='AbortError')throw new Error('Portal API request timed out.');
+      throw error;
+    }finally{if(timer)clearTimeout(timer)}
+  }
+
+  function clearApplications(){applications=[];applicationsCurrentSemester='';applicationsLoadedAt=0}
+  function reconcileSubmittedCacheWithApplications(){
+    if(!student||!student.id)return;
+    const prefix=normalizeId(student.id)+'|';
+    const set=loadSubmitted();
+    Array.from(set).forEach(key=>{
+      if(String(key||'').startsWith(prefix))set.delete(key);
+    });
+    applications.forEach(item=>{
+      const key=submittedKey(item&&item.soaSemester,item&&item.subject);
+      if(key)set.add(key);
+    });
+    safeSessionSet(SOA_PORTAL_CONFIG.SUBMITTED_KEY,JSON.stringify(Array.from(set)));
+  }
+
+  function applyApplications(result){
+    applications=result&&Array.isArray(result.rows)?result.rows.slice():[];
+    applicationsCurrentSemester=String(result&&result.currentSemester||'');
+    applicationsLoadedAt=Date.now();
+    reconcileSubmittedCacheWithApplications();
+    return applications.slice();
+  }
+
+  async function refreshApplications(force=false){
+    if(!isAuthenticated()){clearApplications();return[]}
+    if(!force&&applicationsLoadedAt&&Date.now()-applicationsLoadedAt<30000)return applications.slice();
+    const result=await post({action:'getMySOAApplications',token});
+    if(!result||result.success===false){
+      if(result&&result.authenticated===false)clearLocal();
+      throw new Error(result&&result.message?result.message:'SOA application history could not be loaded.');
+    }
+    return applyApplications(result);
+  }
+
+  function findApplication(semester,subject){
+    const wantedSemester=normalizeSemester(semester);
+    const wantedSubject=normalizeSubject(subject);
+    const matches=applications.filter(item=>
+      normalizeSemester(item&&item.soaSemester)===wantedSemester&&
+      normalizeSubject(item&&item.subject)===wantedSubject
+    );
+    if(!matches.length)return null;
+    matches.sort((a,b)=>(Number(b&&b.rowNumber)||0)-(Number(a&&a.rowNumber)||0));
+    return matches[0];
+  }
+
+  function clearLocal(){
+    token='';student=null;clearApplications();safeSessionRemove(SOA_PORTAL_CONFIG.TOKEN_KEY);syncStudentAuthUi();
+  }
+
+  async function restore(){
+    if(restorePromise)return restorePromise;
+    restorePromise=(async()=>{
+      const saved=String(safeSessionGet(SOA_PORTAL_CONFIG.TOKEN_KEY)||'').trim();
+      if(!saved){syncStudentAuthUi();return false}
+      try{
+        const result=await post({action:'checkSession',token:saved});
+        if(!result||!result.success||!result.authenticated||!result.student){clearLocal();return false}
+        token=saved;
+        student={id:String(result.student.id||''),name:String(result.student.name||'')};
+        try{await refreshApplications(true)}catch(error){}
+        syncStudentAuthUi();
+        return true;
+      }catch(error){
+        token=saved;
+        syncStudentAuthUi();
+        return false;
+      }
+    })();
+    return restorePromise;
+  }
+
+  async function login(studentId,password){
+    const result=await post({action:'login',studentId,password});
+    if(!result||!result.success||!result.token||!result.student){
+      throw new Error(result&&result.message?result.message:'Login failed.');
+    }
+    token=String(result.token);
+    student={id:String(result.student.id||''),name:String(result.student.name||'')};
+    safeSessionSet(SOA_PORTAL_CONFIG.TOKEN_KEY,token);
+    clearApplications();
+    try{await refreshApplications(true)}catch(error){}
+    syncStudentAuthUi();
+    return result;
+  }
+
+  async function logout(){
+    const previous=token;
+    clearLocal();
+    if(previous){try{await post({action:'logout',token:previous})}catch(error){}}
+    return true;
+  }
+
+  function rememberSubmittedApplication(payload,result){
+    if(!student||!student.id)return null;
+
+    const soaSemester=String(payload&&payload.soaSemester||'').trim();
+    const subjectName=String(payload&&payload.subject||'').trim();
+    if(!soaSemester||!subjectName)return null;
+
+    const localApplication={
+      studentId:String(student.id||''),
+      submittedSemester:String(result&&result.submittedSemester||applicationsCurrentSemester||''),
+      soaSemester,
+      originalMark:String(payload&&payload.originalMark||'').trim(),
+      subject:subjectName,
+      currentMark:String(result&&result.currentMark||'').trim(),
+      status:String(result&&result.status||'ACTIVE').trim()||'ACTIVE',
+      rowNumber:Number(result&&result.rowNumber)||0,
+      optimistic:true
+    };
+
+    const wantedSemester=normalizeSemester(soaSemester);
+    const wantedSubject=normalizeSubject(subjectName);
+    const existingIndex=applications.findIndex(item=>
+      normalizeSemester(item&&item.soaSemester)===wantedSemester&&
+      normalizeSubject(item&&item.subject)===wantedSubject
+    );
+
+    if(existingIndex>=0){
+      applications[existingIndex]={...applications[existingIndex],...localApplication};
+    }else{
+      applications.push(localApplication);
+    }
+
+    /*
+     * Make the successful server response visible immediately. This prevents
+     * the button from falling back to APPLY SOA while a second history request
+     * is still pending or slow.
+     */
+    applicationsLoadedAt=Date.now();
+    markSubmitted(soaSemester,subjectName);
+    return localApplication;
+  }
+
+  async function submitSOA(payload){
+    if(!isAuthenticated())throw new Error('Please login first.');
+    if(!matchesStudent(currentStudentId))throw new Error('SOA is only available on the authenticated Gakusei record.');
+    const result=await post({
+      action:'submitSOA',token,
+      soaSemester:payload&&payload.soaSemester||'',
+      originalMark:payload&&payload.originalMark||'',
+      subject:payload&&payload.subject||''
+    });
+
+    /*
+     * V125: the submit request itself is the authoritative success signal.
+     * Do not block the button on a second getMySOAApplications round-trip.
+     */
+    if(result&&(result.success||result.duplicate)){
+      rememberSubmittedApplication(payload,result);
+    }
+    return result;
+  }
+
+  async function cancelSOA(payload){
+    if(!isAuthenticated())throw new Error('Please login first.');
+    if(!matchesStudent(currentStudentId))throw new Error('SOA cancellation is only available on the authenticated Gakusei record.');
+    const result=await post({
+      action:'cancelSOA',token,
+      soaSemester:payload&&payload.soaSemester||'',
+      subject:payload&&payload.subject||''
+    });
+    if(result&&result.success){
+      try{await refreshApplications(true)}catch(error){}
+    }
+    return result;
+  }
+
+  function submittedKey(semester,subject){
+    if(!student)return'';
+    return[normalizeId(student.id),normalizeSemester(semester),normalizeSubject(subject)].join('|');
+  }
+  function loadSubmitted(){
+    try{const parsed=JSON.parse(safeSessionGet(SOA_PORTAL_CONFIG.SUBMITTED_KEY)||'[]');return new Set(Array.isArray(parsed)?parsed:[])}catch(error){return new Set()}
+  }
+  function isSubmitted(semester,subject){
+    if(findApplication(semester,subject))return true;
+    /*
+     * Once the authenticated application list has been loaded successfully,
+     * OUTPUT/backend is authoritative. This prevents an old sessionStorage
+     * marker from keeping CANCEL APPLY visible after Admin ANNUL removed the
+     * request from OUTPUT.
+     */
+    if(applicationsLoadedAt)return false;
+    const key=submittedKey(semester,subject);return Boolean(key&&loadSubmitted().has(key));
+  }
+  function markSubmitted(semester,subject){
+    const key=submittedKey(semester,subject);if(!key)return;
+    const set=loadSubmitted();set.add(key);safeSessionSet(SOA_PORTAL_CONFIG.SUBMITTED_KEY,JSON.stringify(Array.from(set)));
+  }
+  function unmarkSubmitted(semester,subject){
+    const key=submittedKey(semester,subject);if(!key)return;
+    const set=loadSubmitted();set.delete(key);safeSessionSet(SOA_PORTAL_CONFIG.SUBMITTED_KEY,JSON.stringify(Array.from(set)));
+  }
+
+  return{
+    restore,login,logout,submitSOA,cancelSOA,refreshApplications,
+    current,isAuthenticated,matchesStudent,isSubmitted,markSubmitted,unmarkSubmitted,
+    findApplication,getApplications:()=>applications.slice(),getApplicationsCurrentSemester:()=>applicationsCurrentSemester
+  };
+})();
+
+function syncStudentAuthUi(){
+  const account=StudentPortalAuth.current();
+  const logged=StudentPortalAuth.isAuthenticated();
+  const title=$('generalStudentLoginTitle');
+  const description=$('generalStudentLoginText');
+  const item=$('generalStudentLoginItem');
+  if(item)item.classList.toggle('is-authenticated',logged);
+  if(title)title.textContent=logged?'GAKUSEI SESSION':'LOGIN AS GAKUSEI';
+  if(description)description.textContent=logged
+    ?((account&&account.name?account.name:'Authenticated Gakusei')+' • '+(account&&account.id?account.id:'')+' • '+(SOAAccessControl.isOpen()?'SOA access open':'SOA access closed'))
+    :'Authenticate your ID to access eligible SOA requests';
+
+  const form=$('studentLoginForm');
+  const view=$('studentSessionView');
+  if(form)form.classList.toggle('hidden',logged);
+  if(view)view.classList.toggle('hidden',!logged);
+  if(logged&&account){
+    text('studentSessionName',account.name||'GAKUSEI');
+    text('studentSessionId',account.id||'');
+  }
+  syncGeneralLogoutOption();
+}
+
+function syncGeneralLogoutOption(){
+  const item=$('generalLogoutItem');
+  const title=$('generalLogoutTitle');
+  const description=$('generalLogoutText');
+  if(!item)return;
+  const studentActive=StudentPortalAuth.isAuthenticated();
+  const adminActive=AcademicPublicationControl.isAdmin();
+  const visible=studentActive||adminActive;
+  item.classList.toggle('hidden',!visible);
+  if(title)title.textContent='LOG OUT';
+  if(description){
+    description.textContent=studentActive&&adminActive
+      ?'End Admin and Gakusei authenticated sessions'
+      :studentActive
+        ?'End the active Gakusei session'
+        :'End the active Administrator session';
+  }
+}
+
+async function logoutFromGeneralMenu(){
+  closeGeneralMenu();
+  const studentActive=StudentPortalAuth.isAuthenticated();
+  const adminActive=AcademicPublicationControl.isAdmin();
+  const wasOwnRecord=studentActive&&StudentPortalAuth.matchesStudent(currentStudentId);
+
+  if(studentActive){
+    try{await StudentPortalAuth.logout()}catch(error){}
+    closeStudentLoginModal();
+  }
+
+  if(adminActive){
+    AcademicPublicationControl.logout();
+    closeAdminPanel();
+    const panel=$('adminHomePanel');
+    if(panel)panel.classList.add('hidden');
+  }
+
+  updateAdminAccessButton();
+  syncStudentAuthUi();
+  syncGeneralLogoutOption();
+
+  if(currentStudentId&&wasOwnRecord){
+    setStatus('Gakusei session ended. Removing SOA actions...');
+    fetchStudent(currentStudentId,true);
+  }else if(studentActive&&adminActive){
+    setStatus('Administrator and Gakusei sessions ended.');
+  }else if(studentActive){
+    setStatus(currentStudentId?'Gakusei session ended.':'');
+  }else if(adminActive){
+    setStatus('Administrator session ended.');
+  }
+}
+
+function setPasswordVisibilityState(inputId,button,visible){
+  const input=$(inputId);
+  if(!input)return;
+  input.type=visible?'text':'password';
+  if(button){
+    button.classList.toggle('is-visible',Boolean(visible));
+    button.setAttribute('aria-pressed',visible?'true':'false');
+    button.setAttribute('aria-label',visible?'Hide password':'Show password');
+  }
+}
+
+function togglePasswordVisibility(inputId,button){
+  const input=$(inputId);
+  if(!input)return;
+  setPasswordVisibilityState(inputId,button,input.type==='password');
+}
+
+function resetPasswordVisibility(inputId){
+  const input=$(inputId);
+  if(!input)return;
+  const scope=input.parentElement;
+  const button=scope?scope.querySelector('.passwordVisibilityButton'):null;
+  setPasswordVisibilityState(inputId,button,false);
+}
+
+function openStudentLoginFromGeneralMenu(){
+  closeGeneralMenu();
+  syncStudentAuthUi();
+  const modal=$('studentLoginModal');if(!modal)return;
+  const idInput=$('studentLoginIdInput');
+  const current=StudentPortalAuth.current();
+  if(!StudentPortalAuth.isAuthenticated()&&idInput){
+    const suggested=String(currentStudentId||($('idInput')&&$('idInput').value)||'').trim();
+    if(suggested)idInput.value=suggested;
+  }
+  modal.classList.remove('hidden');
+  document.body.classList.add('student-login-open');
+  requestAnimationFrame(()=>{
+    if(StudentPortalAuth.isAuthenticated())return;
+    const target=$('studentLoginIdInput');if(target)target.focus();
+  });
+}
+
+function closeStudentLoginModal(){
+  const modal=$('studentLoginModal');if(modal)modal.classList.add('hidden');
+  document.body.classList.remove('student-login-open');
+  resetPasswordVisibility('studentLoginPasswordInput');
+  const message=$('studentLoginMessage');if(message){message.textContent='';message.className='studentLoginMessage'}
+}
+
+async function studentLogin(event){
+  if(event)event.preventDefault();
+  const idInput=$('studentLoginIdInput');
+  const passwordInput=$('studentLoginPasswordInput');
+  const button=$('studentLoginSubmitButton');
+  const message=$('studentLoginMessage');
+  const studentId=idInput?String(idInput.value||'').trim():'';
+  const password=passwordInput?String(passwordInput.value||''):'';
+  if(!studentId||!password){
+    if(message){message.textContent='Enter both Gakusei ID and password.';message.className='studentLoginMessage error'}
+    return;
+  }
+  if(button){button.disabled=true;button.textContent='AUTHENTICATING...'}
+  if(message){message.textContent='Authenticating with MAHOUTOKORO...';message.className='studentLoginMessage'}
+  try{
+    const result=await StudentPortalAuth.login(studentId,password);
+    const account=StudentPortalAuth.current();
+    const ownStudentId=String(account&&account.id||studentId||'').trim();
+
+    if(passwordInput)passwordInput.value='';
+    if(message){message.textContent=result.message||'Login successful.';message.className='studentLoginMessage success'}
+    syncStudentAuthUi();
+
+    /*
+     * V125: successful Gakusei login goes straight to that student's own
+     * database. Do not add an extra SOA access refresh wait before opening
+     * the main student page.
+     */
+    closeStudentLoginModal();
+    if($('idInput'))$('idInput').value=ownStudentId;
+    if($('mobileStudentSearchInput'))$('mobileStudentSearchInput').value=ownStudentId;
+    setStatus('Gakusei authenticated. Loading your database...');
+    SOAAccessControl.refresh(true).catch(()=>{});
+
+    if(ownStudentId){
+      fetchStudent(ownStudentId,false);
+    }
+  }catch(error){
+    if(message){message.textContent=error&&error.message?error.message:'Login failed.';message.className='studentLoginMessage error'}
+  }finally{
+    if(button){button.disabled=false;button.textContent='LOGIN'}
+  }
+}
+
+async function studentLogout(){
+  const wasOwnRecord=StudentPortalAuth.matchesStudent(currentStudentId);
+  await StudentPortalAuth.logout();
+  closeStudentLoginModal();
+  if(currentStudentId&&wasOwnRecord){
+    setStatus('Gakusei session ended. Removing SOA actions...');
+    fetchStudent(currentStudentId,true);
+  }else{
+    setStatus(currentStudentId?'Gakusei session ended.':'');
+  }
+}
+
+function soaCanonicalGradeFromKanjiMark(mark){
+  const source=String(mark==null?'':mark).normalize('NFKC').trim();
+  if(!source)return'';
+  const ascii=source.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase();
+  const token=ascii.replace(/[\s\/\\()（）\[\]{}・·:：|_]+/g,'');
+
+  /* Exact C / 良 (Ryō) family only. C+, C-, etc. are intentionally excluded. */
+  if(['C','良','RYO','良RYO','C良','CRYO','C良RYO'].includes(token))return'C';
+
+  /* Exact D / 可 (Ka) family only. D+, D-, etc. are intentionally excluded. */
+  if(['D','可','KA','可KA','D可','DKA','D可KA'].includes(token))return'D';
+
+  return'';
+}
+
+function isSOAEligibleKanjiMark(mark){
+  return Boolean(soaCanonicalGradeFromKanjiMark(mark));
+}
+
+function isSOAPromotedRecord(record){
+  const status=String(record&&record.gradeStatus||'').normalize('NFKC').toUpperCase().replace(/\s+/g,' ').trim();
+  return /\bPROMOTED\b/.test(status);
+}
+
+function isSOARetainedRecord(record){
+  const status=String(record&&record.gradeStatus||'').normalize('NFKC').toUpperCase().replace(/\s+/g,' ').trim();
+  return /\bRETAINED\b/.test(status);
+}
+
+function createSOARetainedNotice(mobile){
+  const notice=document.createElement('div');
+  notice.className=mobile?'m112SoaRetainedNotice':'soaRetainedNotice';
+  notice.textContent='Pada semester ini, Gakusei berstatus RETAINED, jadi tidak ada opsi SOA.';
+  return notice;
+}
+
+function soaSemesterForRecord(record){
+  return String(record&&record.sheetName||record&&record.semesterTitle||'').trim();
+}
+
+function soaGradeScoreFromMark(mark){
+  const text=String(mark==null?'':mark).normalize('NFKC').toUpperCase().trim();
+  if(!text)return null;
+  const letter=text.match(/(?:^|[^A-Z])([ABCD])([+\-])?(?:$|[^A-Z])/);
+  if(letter){
+    const base={A:40,B:30,C:20,D:10}[letter[1]];
+    return base+(letter[2]==='+'?2:letter[2]==='-'?-2:0);
+  }
+  const canonical=soaCanonicalGradeFromKanjiMark(text);
+  return canonical==='C'?20:canonical==='D'?10:null;
+}
+
+function isSOAPassedApplicationWithSubject(application,subject){
+  if(!application)return false;
+  if(String(application.status||'').toUpperCase()==='PASSED')return true;
+  const original=soaGradeScoreFromMark(application.originalMark);
+  const current=soaGradeScoreFromMark(subject&&subject.kanjiMark);
+  return original!==null&&current!==null&&current>original;
+}
+
+function createSOAPassedStatus(application,subject,mobile){
+  const status=document.createElement('div');
+  status.className=mobile?'m115SoaPassedStatus':'soaPassedStatus';
+  const liveMark=String(subject&&subject.kanjiMark||'').trim();
+  const mark=liveMark||String(application&&application.currentMark||'-').trim()||'-';
+  status.textContent='PASSED SOA. MARK UPGRADED TO '+mark;
+  status.setAttribute('aria-label','Passed SOA. Mark upgraded to '+mark);
+  return status;
+}
+
+function syncSOAActionButton(button,record,subject){
+  if(!button)return;
+  const semester=soaSemesterForRecord(record);
+  const subjectName=String(subject&&subject.name||'').trim();
+  const application=StudentPortalAuth.findApplication(semester,subjectName);
+  const already=Boolean(application)||StudentPortalAuth.isSubmitted(semester,subjectName);
+  const open=SOAAccessControl.isOpen();
+
+  button.classList.remove('is-loading','is-submitted','is-cancel','is-closed');
+  button.disabled=false;
+  button.onclick=null;
+
+  if(application&&isSOAPassedApplicationWithSubject(application,subject)){
+    button.textContent='PASSED SOA';
+    button.classList.add('is-submitted');
+    button.disabled=true;
+    return;
+  }
+
+  if(already){
+    button.textContent='CANCEL APPLY';
+    button.classList.add('is-submitted','is-cancel');
+    button.setAttribute('aria-label','Cancel SOA application for '+(subjectName||'this subject'));
+    button.onclick=()=>cancelSOAFromAcademic(record,subject,button);
+    return;
+  }
+
+  if(!open){
+    button.textContent='SOA CLOSED';
+    button.classList.add('is-closed');
+    button.disabled=true;
+    button.setAttribute('aria-label','SOA application access is closed by Administrator');
+    return;
+  }
+
+  button.textContent='APPLY SOA';
+  button.setAttribute('aria-label','Apply SOA for '+(subjectName||'this subject'));
+  button.onclick=()=>submitSOAFromAcademic(record,subject,button);
+}
+
+function createSOAActionCell(record,subject,mobile){
+  const cell=document.createElement('div');
+  cell.className=mobile?'m111SoaActionCell':'soaActionCell';
+  if(!StudentPortalAuth.matchesStudent(currentStudentId)||!isSOAPromotedRecord(record))return cell;
+
+  const semester=soaSemesterForRecord(record);
+  const subjectName=String(subject&&subject.name||'').trim();
+  const application=StudentPortalAuth.findApplication(semester,subjectName);
+
+  if(application&&isSOAPassedApplicationWithSubject(application,subject)){
+    cell.appendChild(createSOAPassedStatus(application,subject,mobile));
+    return cell;
+  }
+
+  if(!application&&!isSOAEligibleKanjiMark(subject&&subject.kanjiMark))return cell;
+
+  const button=document.createElement('button');
+  button.type='button';
+  button.className=mobile?'m111SoaButton':'soaButton';
+  syncSOAActionButton(button,record,subject);
+  cell.appendChild(button);
+  return cell;
+}
+
+async function submitSOAFromAcademic(record,subject,button){
+  if(!StudentPortalAuth.matchesStudent(currentStudentId)){
+    setStatus('SOA is available only on the authenticated Gakusei record.');return;
+  }
+  if(!isSOAPromotedRecord(record)){
+    setStatus(isSOARetainedRecord(record)?'This semester is RETAINED, so SOA is not available.':'SOA is available only for a PROMOTED semester.');return;
+  }
+
+  /*
+   * V125: do not add a second API wait before the actual APPLY request.
+   * When access state is already known CLOSED, block immediately. Otherwise
+   * submit directly; the backend still enforces the global SOA gate.
+   */
+  if(SOAAccessControl.isLoaded()&&!SOAAccessControl.isOpen()){
+    syncSOAActionButton(button,record,subject);
+    setStatus('APPLY SOA access is currently CLOSED by Administrator.');
+    return;
+  }
+
+  const semester=soaSemesterForRecord(record);
+  const visibleMark=String(subject&&subject.kanjiMark||'').trim();
+  const originalMark=soaCanonicalGradeFromKanjiMark(visibleMark);
+  const subjectName=String(subject&&subject.name||'').trim();
+  if(!originalMark)return;
+  if(button){button.disabled=true;button.classList.add('is-loading');button.textContent='SENDING...'}
+  setStatus('Submitting SOA request...');
+  try{
+    const result=await StudentPortalAuth.submitSOA({soaSemester:semester,originalMark,subject:subjectName});
+    if(result&&(result.success||result.duplicate)){
+      /*
+       * StudentPortalAuth already records the successful request locally from
+       * the server response, so CANCEL APPLY appears immediately without
+       * waiting for a second API call.
+       */
+      syncSOAActionButton(button,record,subject);
+      setStatus(
+        result.message||
+        (result.duplicate?'SOA has already been submitted for this subject.':'SOA request submitted successfully.')
+      );
+      return;
+    }
+    throw new Error(result&&result.message?result.message:'SOA request could not be submitted.');
+  }catch(error){
+    const errorText=String(error&&error.message?error.message:error||'');
+    const uncertain=/timed out|failed to fetch|network|load failed/i.test(errorText);
+
+    if(uncertain&&button){
+      /*
+       * A timed-out browser response can occur after Apps Script already wrote
+       * OUTPUT. Keep the button in a verification state instead of instantly
+       * reverting to APPLY SOA, then reconcile with the server in background.
+       */
+      button.disabled=true;
+      button.classList.add('is-loading');
+      button.textContent='CHECKING...';
+      setStatus('SOA response is taking longer than expected. Verifying the submission...');
+
+      StudentPortalAuth.refreshApplications(true).then(()=>{
+        if(StudentPortalAuth.findApplication(semester,subjectName)){
+          syncSOAActionButton(button,record,subject);
+          setStatus('SOA request submitted successfully.');
+        }else{
+          syncSOAActionButton(button,record,subject);
+          setStatus('SOA request could not be confirmed. Please try APPLY SOA again.');
+        }
+      }).catch(()=>{
+        syncSOAActionButton(button,record,subject);
+        setStatus('SOA request could not be confirmed. Please try APPLY SOA again.');
+      });
+      return;
+    }
+
+    syncSOAActionButton(button,record,subject);
+    setStatus('SOA error: '+errorText);
+  }
+}
+
+async function cancelSOAFromAcademic(record,subject,button){
+  if(!StudentPortalAuth.matchesStudent(currentStudentId)){
+    setStatus('SOA cancellation is available only on the authenticated Gakusei record.');return;
+  }
+  const semester=soaSemesterForRecord(record);
+  const subjectName=String(subject&&subject.name||'').trim();
+  if(!semester||!subjectName)return;
+
+  const application=StudentPortalAuth.findApplication(semester,subjectName);
+  if(application&&isSOAPassedApplicationWithSubject(application,subject)){
+    setStatus('PASSED SOA cannot be cancelled because the Academic Record mark has already been upgraded.');
+    return;
+  }
+
+  if(button){button.disabled=true;button.classList.add('is-loading');button.textContent='CANCELLING...'}
+  setStatus('Cancelling SOA request...');
+  try{
+    const result=await StudentPortalAuth.cancelSOA({soaSemester:semester,subject:subjectName});
+    if(!result||result.success===false)throw new Error(result&&result.message?result.message:'SOA cancellation failed.');
+    StudentPortalAuth.unmarkSubmitted(semester,subjectName);
+    syncSOAActionButton(button,record,subject);
+    setStatus(result.message||'SOA application cancelled and removed from OUTPUT.');
+  }catch(error){
+    syncSOAActionButton(button,record,subject);
+    setStatus('SOA cancellation error: '+(error&&error.message?error.message:error));
+  }
+}
+
+
     function safeSessionGet(key){try{return window.sessionStorage?sessionStorage.getItem(key):null}catch(error){return null}}
     function safeSessionSet(key,value){try{if(window.sessionStorage)sessionStorage.setItem(key,String(value))}catch(error){}}
     function safeSessionRemove(key){try{if(window.sessionStorage)sessionStorage.removeItem(key)}catch(error){}}
@@ -3237,6 +4428,7 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingT
         const prev=$('mobileSwipePrev'),next=$('mobileSwipeNext');
         if(prev)prev.addEventListener('click',previous);
         if(next)next.addEventListener('click',nextPage);
+        document.querySelectorAll('[data-mobile-record-preview]').forEach(button=>button.addEventListener('click',onPreviewClick));
         if(typeof ResizeObserver!=='undefined'){
           resizeObserver=new ResizeObserver(()=>measureActivePage());
           definitions.forEach(item=>{const p=page(item.key);if(p)resizeObserver.observe(p)});
@@ -3258,6 +4450,7 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingT
         const prev=$('mobileSwipePrev'),next=$('mobileSwipeNext');
         if(prev)prev.removeEventListener('click',previous);
         if(next)next.removeEventListener('click',nextPage);
+        document.querySelectorAll('[data-mobile-record-preview]').forEach(button=>button.removeEventListener('click',onPreviewClick));
         if(resizeObserver){resizeObserver.disconnect();resizeObserver=null}
         active=false;
         document.body.classList.remove('mobile-detail-app');
@@ -3323,6 +4516,11 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingT
         if(prev)prev.disabled=index<=0;
         if(next)next.disabled=index>=keys.length-1;
         document.querySelectorAll('[data-mobile-record-dot]').forEach(dot=>dot.classList.toggle('is-active',dot.dataset.mobileRecordDot===currentKey));
+        document.querySelectorAll('[data-mobile-record-preview]').forEach(button=>{
+          const selected=button.dataset.mobileRecordPreview===currentKey;
+          button.classList.toggle('is-active',selected);
+          button.setAttribute('aria-pressed',selected?'true':'false');
+        });
         const def=definitions.find(item=>item.key===currentKey)||definitions[0];
         text('mobileSwipeActiveTitle',def.title);
         text('mobileSwipeCounter',keys.length?String(index+1)+' / '+String(keys.length):'');
@@ -3350,6 +4548,7 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingT
 
       function previous(){const keys=visibleKeys();const index=keys.indexOf(currentKey);if(index>0)to(keys[index-1],true,false)}
       function nextPage(){const keys=visibleKeys();const index=keys.indexOf(currentKey);if(index>=0&&index<keys.length-1)to(keys[index+1],true,false)}
+      function onPreviewClick(event){const button=event.currentTarget;to(button&&button.dataset?button.dataset.mobileRecordPreview:'points',true,false)}
 
       function onTouchStart(event){
         const touch=event.touches&&event.touches[0];
@@ -3377,6 +4576,160 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingT
       return{init,build,destroy,sync,to,reset,next:nextPage,previous,isActive,isMobile,getCurrent:()=>currentKey,getDeck:deck,measure:measureActivePage};
     })();
     window.MahoutokoroMobileDetails=MobileSwipeApp;
+
+    /* =====================================================
+       V100 UPPER PROFILE SWIPE
+       A separate two-page swipe for Occupations / Life Path and
+       ID Card / Certificate. This is intentionally independent from
+       Student Point Log / Academic Records below.
+       ===================================================== */
+    const MobileProfileSwipe=(()=>{
+      const mobileQuery=window.matchMedia('(max-width: 768px)');
+      const keys=['media','journey'];
+      let active=false,currentIndex=0,touchStartX=0,touchStartY=0,touchActive=false;
+      let resizeObserver=null;
+
+      const viewport=()=>document.getElementById('mobileProfileSwipeViewport');
+      const track=()=>document.getElementById('mobileProfileSwipeTrack');
+      const pages=()=>keys.map(key=>document.querySelector('.mobileProfileSwipePage[data-profile-swipe-page="'+key+'"]')).filter(Boolean);
+
+      function isMobile(){return Boolean(mobileQuery.matches)}
+      function isActive(){return active}
+
+      function titleFor(page,key){
+        return String((page&&page.dataset&&page.dataset.title)||(
+          key==='media'?'ID Card / Nametag':'Side Occupations'
+        )).trim();
+      }
+
+      function measure(){
+        if(!active)return;
+        const vp=viewport();
+        const list=pages();
+        const current=list[currentIndex];
+        if(!vp||!current)return;
+        const height=Math.max(1,Math.ceil(current.getBoundingClientRect().height));
+        vp.style.height=height+'px';
+      }
+
+      function updateUi(smooth=true){
+        if(!active)return;
+        const tr=track();
+        const list=pages();
+        if(!tr||!list.length)return;
+
+        currentIndex=Math.max(0,Math.min(currentIndex,list.length-1));
+        tr.style.transition=smooth?'transform .34s cubic-bezier(.2,.76,.22,1)':'none';
+        tr.style.transform='translate3d(-'+(currentIndex*100)+'%,0,0)';
+
+        const activeKey=keys[currentIndex]||keys[0];
+        document.querySelectorAll('[data-profile-swipe-to]').forEach(button=>{
+          const selected=button.dataset.profileSwipeTo===activeKey;
+          button.classList.toggle('is-active',selected);
+          if(button.classList.contains('mobileProfilePreview'))button.setAttribute('aria-pressed',selected?'true':'false');
+        });
+
+        const counter=document.getElementById('mobileProfileSwipeCounter');
+        if(counter)counter.textContent=(currentIndex+1)+' / '+list.length;
+
+        const title=titleFor(list[currentIndex],activeKey);
+        const heading=document.querySelector('.mobileProfileSwipeHeading strong');
+        if(heading){
+          heading.textContent=currentIndex===0
+            ? 'Swipe to student activity • '+title
+            : 'Swipe back to official media • '+title;
+        }
+
+        requestAnimationFrame(measure);
+      }
+
+      function to(target,smooth=true){
+        const index=typeof target==='number'?target:keys.indexOf(String(target||''));
+        if(index<0)return;
+        currentIndex=index;
+        updateUi(smooth);
+      }
+
+      function reset(){
+        currentIndex=0;
+        updateUi(false);
+      }
+
+      function onTouchStart(event){
+        const touch=event.touches&&event.touches[0];
+        if(!touch)return;
+        touchStartX=touch.clientX;
+        touchStartY=touch.clientY;
+        touchActive=true;
+      }
+
+      function onTouchEnd(event){
+        if(!touchActive)return;
+        touchActive=false;
+        const touch=event.changedTouches&&event.changedTouches[0];
+        if(!touch)return;
+        const dx=touch.clientX-touchStartX;
+        const dy=touch.clientY-touchStartY;
+        if(Math.abs(dx)<38||Math.abs(dx)<=Math.abs(dy)*1.12)return;
+        if(dx<0&&currentIndex<keys.length-1)to(currentIndex+1);
+        else if(dx>0&&currentIndex>0)to(currentIndex-1);
+      }
+
+      function onPreviewClick(event){
+        const button=event.currentTarget;
+        to(button&&button.dataset?button.dataset.profileSwipeTo:'');
+      }
+
+      function build(){
+        if(active||!isMobile())return;
+        const vp=viewport();
+        if(vp){
+          vp.addEventListener('touchstart',onTouchStart,{passive:true});
+          vp.addEventListener('touchend',onTouchEnd,{passive:true});
+        }
+        document.querySelectorAll('[data-profile-swipe-to]').forEach(button=>button.addEventListener('click',onPreviewClick));
+        if(typeof ResizeObserver!=='undefined'){
+          resizeObserver=new ResizeObserver(()=>measure());
+          pages().forEach(page=>resizeObserver.observe(page));
+        }
+        active=true;
+        updateUi(false);
+      }
+
+      function destroy(){
+        if(!active)return;
+        const vp=viewport(),tr=track();
+        if(vp){
+          vp.removeEventListener('touchstart',onTouchStart);
+          vp.removeEventListener('touchend',onTouchEnd);
+          vp.style.height='';
+        }
+        document.querySelectorAll('[data-profile-swipe-to]').forEach(button=>button.removeEventListener('click',onPreviewClick));
+        if(tr){tr.style.transition='';tr.style.transform=''}
+        if(resizeObserver){resizeObserver.disconnect();resizeObserver=null}
+        active=false;
+      }
+
+      function onViewportChange(){
+        if(isMobile()&&!active)build();
+        else if(!isMobile()&&active)destroy();
+      }
+
+      function init(){
+        if(isMobile())build();
+        if(mobileQuery.addEventListener)mobileQuery.addEventListener('change',onViewportChange);
+        else if(mobileQuery.addListener)mobileQuery.addListener(onViewportChange);
+      }
+
+      function sync(){
+        if(!active&&isMobile())build();
+        if(active)requestAnimationFrame(()=>updateUi(false));
+      }
+
+      return{init,build,destroy,sync,reset,to,measure,isActive,isMobile,getCurrent:()=>keys[currentIndex]||keys[0]};
+    })();
+    window.MahoutokoroMobileProfileSwipe=MobileProfileSwipe;
+
     window.addEventListener('load',()=>{
       renderDecorations('front');
 
@@ -3402,6 +4755,10 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingT
         if(e.target===$('promotionModal'))closePromotionRecap();
       });
 
+      $('adminModal').addEventListener('click',e=>{
+        if(e.target===$('adminModal'))closeAdminPanel();
+      });
+
       document.addEventListener('click',e=>{
         const menu=$('generalMenu');
         if(menu&&!menu.contains(e.target))closeGeneralMenu();
@@ -3416,9 +4773,12 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingT
         if(!$('documentReviewModal').classList.contains('hidden'))closeDocumentReview();
         else if(!$('nenseiModal').classList.contains('hidden'))closeNenseiRecap();
         else if(!$('promotionModal').classList.contains('hidden'))closePromotionRecap();
+        else if(!$('adminModal').classList.contains('hidden'))closeAdminPanel();
       });
 
       MobileSwipeApp.init();
+      MobileProfileSwipe.init();
+      AcademicPublicationControl.ready().then(()=>syncAdminHomePanel()).catch(()=>syncAdminHomePanel());
 
       const q=new URLSearchParams(location.search);
       const initial=q.get('id')||safeSessionGet('lastGakuseiId')||'';
@@ -3462,6 +4822,7 @@ const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingT
       showHomeRanking();
       loadCurrentGpRanking(false);
       startGpRankingRefresh();
+      syncAdminHomePanel();
       MobileSwipeApp.reset('points');
       if(MobileSwipeApp.isActive())MobileSwipeApp.sync(true);
       window.scrollTo({top:0,behavior:'smooth'});
@@ -3665,6 +5026,10 @@ function gpAvatarHtml(row){
   const firstPhoto=photoUrls[0]||'';
   const firstLogo=dormLogoUrls[0]||'';
   const encodedPhotos=encodeURIComponent(JSON.stringify(photoUrls));
+  const isMobileRanking=Boolean(window.matchMedia&&window.matchMedia('(max-width: 768px)').matches);
+  const mobileFallbackCrest=firstLogo
+    ? '<span class="gpRankMobileFallbackCrest" aria-hidden="true"><img src="'+escapeHtml(cache(firstLogo))+'" alt="" referrerpolicy="no-referrer"></span>'
+    : '';
 
   if(firstPhoto){
     return '<div class="gpRankAvatar" data-dorm="'+escapeHtml(row.dormCode||'')+'">'+
@@ -3672,19 +5037,33 @@ function gpAvatarHtml(row){
       (firstLogo?'<img class="gpRankHouseWatermark" src="'+escapeHtml(cache(firstLogo))+'" alt="" aria-hidden="true" referrerpolicy="no-referrer">':'')+
       '<div class="gpRankAvatarFrame">'+
         '<img class="gpRankAvatarImage" src="'+escapeHtml(cache(firstPhoto))+'" data-photo-candidates="'+escapeHtml(encodedPhotos)+'" alt="'+escapeHtml(row.namaLatin||'Student photo')+'" loading="lazy" referrerpolicy="no-referrer">'+
+        mobileFallbackCrest+
       '</div>'+ 
       (firstLogo?'<span class="gpRankHouseBadge"><img src="'+escapeHtml(cache(firstLogo))+'" alt="'+escapeHtml((row.dormName||row.dormCode||'House')+' emblem')+'" referrerpolicy="no-referrer"></span>':'')+
     '</div>';
   }
 
+  if(isMobileRanking){
+    return '<div class="gpRankAvatar isFallback" data-dorm="'+escapeHtml(row.dormCode||'')+'">'+
+      '<div class="gpRankAvatarGlow"></div>'+ 
+      '<div class="gpRankAvatarFrame">'+
+        mobileFallbackCrest+
+        (!firstLogo?'<span class="gpRankFallbackInitial">'+(escapeHtml((row.namaLatin||'?').trim().charAt(0)||'?'))+'</span>':'')+
+      '</div>'+ 
+    '</div>';
+  }
+
+  /* Desktop fallback markup deliberately remains identical to the source version. */
   return '<div class="gpRankAvatar isFallback" data-dorm="'+escapeHtml(row.dormCode||'')+'">'+
     '<div class="gpRankAvatarGlow"></div>'+ 
     (firstLogo?'<img class="gpRankHouseWatermark" src="'+escapeHtml(cache(firstLogo))+'" alt="" aria-hidden="true" referrerpolicy="no-referrer">':'')+
-    '<div class="gpRankAvatarFrame"><span>'+(escapeHtml((row.namaLatin||'?').trim().charAt(0)||'?'))+'</span></div>'+ 
+    '<div class="gpRankAvatarFrame">'+
+      mobileFallbackCrest+
+      '<span>'+(escapeHtml((row.namaLatin||'?').trim().charAt(0)||'?'))+'</span>'+
+    '</div>'+ 
     (firstLogo?'<span class="gpRankHouseBadge"><img src="'+escapeHtml(cache(firstLogo))+'" alt="'+escapeHtml((row.dormName||row.dormCode||'House')+' emblem')+'" referrerpolicy="no-referrer"></span>':'')+
   '</div>';
 }
-
 function openStudentFromRanking(studentId){
   const normalized=String(studentId||'').trim();
   if(!normalized)return;
@@ -3713,6 +5092,15 @@ function enhanceGpRankingPhotos(container){
         displayImage.src=cache(candidates[index]);
       }else{
         displayImage.onerror=null;
+        if(window.matchMedia&&window.matchMedia('(max-width: 768px)').matches){
+          const avatar=displayImage.closest('.gpRankAvatar');
+          if(avatar){
+            avatar.classList.add('isPhotoUnavailable');
+            displayImage.style.display='none';
+            const externalBadge=avatar.querySelector(':scope > .gpRankHouseBadge');
+            if(externalBadge)externalBadge.remove();
+          }
+        }
       }
     };
   });
@@ -3904,6 +5292,7 @@ function startGpRankingRefresh(){
       renderDorm(dorm);
       renderDormMascot(dorm);
       if(!silent)MobileSwipeApp.reset('points');
+      if(!silent&&MobileProfileSwipe.isActive())MobileProfileSwipe.reset();
       renderMobileStudentHeader(d,dorm,status);
       renderMobileStudentSummary(d,dorm,status);
       renderMobileDirectData(d,dorm,status);
@@ -3952,8 +5341,10 @@ function startGpRankingRefresh(){
           return;
         }
 
-        renderAcademic(response.data||{});
-        renderMobileAcademic(response.data||{});
+        await AcademicPublicationControl.ready();
+        const publishedAcademicData=AcademicPublicationControl.filterAcademicData(response.data||{});
+        renderAcademic(publishedAcademicData);
+        renderMobileAcademic(publishedAcademicData);
         if(MobileSwipeApp.isActive())MobileSwipeApp.sync();
         currentAcademicReady=true;
         setStatus(silent?'Student record refreshed.':'Student data and academic records loaded.');
@@ -4581,6 +5972,16 @@ function startGpRankingRefresh(){
         action.innerHTML='';
         if(media.url){const a=document.createElement('a');a.href=media.url;a.target='_blank';a.rel='noopener';a.className='mobileDirectOpenButton';a.textContent=graduated?'🎓 OPEN STUDY COMPLETION CERTIFICATE':'📇 OPEN ID CARD / NAMETAG';action.appendChild(a)}
       }
+
+      const journeySwipePage=document.querySelector('.mobileProfileSwipePage[data-profile-swipe-page="journey"]');
+      const mediaSwipePage=document.querySelector('.mobileProfileSwipePage[data-profile-swipe-page="media"]');
+      const journeySwipeTitle=graduated?'Life After Graduation':'Side Occupations';
+      const mediaSwipeTitle=graduated?'Study Completion Certificate':'ID Card / Nametag';
+      if(journeySwipePage)journeySwipePage.dataset.title=journeySwipeTitle;
+      if(mediaSwipePage)mediaSwipePage.dataset.title=mediaSwipeTitle;
+      text('mobileProfileJourneyPreviewTitle',journeySwipeTitle);
+      text('mobileProfileMediaPreviewTitle',mediaSwipeTitle);
+      if(MobileProfileSwipe.isActive())requestAnimationFrame(()=>MobileProfileSwipe.sync());
     }
 
 
@@ -4676,6 +6077,14 @@ function startGpRankingRefresh(){
       transcript.addEventListener('click',()=>downloadTranscript(transcript));
       actions.append(count,transcript);head.appendChild(actions);app.appendChild(head);
 
+      const publicationHiddenCount=Number(data&&data.publicationHiddenCount)||0;
+      if(publicationHiddenCount>0){
+        const notice=document.createElement('div');
+        notice.className='m90PublicationNotice';
+        notice.innerHTML='<span>LOCKED</span><div><strong>ACADEMIC RELEASE PENDING</strong><p>'+escapeHtml(publicationHiddenCount===1?'Newest Academic Record awaiting Admin publication.':publicationHiddenCount+' Academic Records are unpublished.')+'</p></div>';
+        app.appendChild(notice);
+      }
+
       if(!records.length){
         const empty=document.createElement('div');
         empty.className='m74MobileEmpty';
@@ -4742,14 +6151,19 @@ function startGpRankingRefresh(){
         card.appendChild(participation);
 
         const subjectsTitle=document.createElement('div');subjectsTitle.className='m90MiniTitle';subjectsTitle.textContent='Subject Results';card.appendChild(subjectsTitle);
-        const subjects=document.createElement('div');subjects.className='m90Subjects';
-        subjects.innerHTML='<div class="m90SubjectHeader"><span>Subject (科目)</span><span>Number</span><span>Kanji</span></div>';
+        const soaOwnRecord=StudentPortalAuth.matchesStudent(currentStudentId);
+        const soaAccess=soaOwnRecord&&isSOAPromotedRecord(record);
+        const soaRetained=soaOwnRecord&&isSOARetainedRecord(record);
+        const subjects=document.createElement('div');subjects.className='m90Subjects'+(soaAccess?' soaEnabled':'');
+        subjects.innerHTML='<div class="m90SubjectHeader'+(soaAccess?' soaEnabled':'')+'"><span>Subject (科目)</span><span>Number</span><span>Kanji</span>'+(soaAccess?'<span class="m111SoaHeader">SOA</span>':'')+'</div>';
         (record.subjects||[]).forEach(subject=>{
-          const row=document.createElement('div');row.className='m90SubjectRow';
+          const row=document.createElement('div');row.className='m90SubjectRow'+(soaAccess?' soaEnabled':'');
           row.innerHTML='<strong>'+escapeHtml(subject.name||'-')+'</strong><b>'+escapeHtml(subject.numberMark||'-')+'</b><b class="jp">'+escapeHtml(subject.kanjiMark||'-')+'</b>';
+          if(soaAccess)row.appendChild(createSOAActionCell(record,subject,true));
           subjects.appendChild(row);
         });
         card.appendChild(subjects);
+        if(soaRetained)card.appendChild(createSOARetainedNotice(true));
 
         const foot=document.createElement('div');foot.className='m90SemesterFoot';
         foot.innerHTML='<div><span>Grade Status</span><strong class="'+gradeClass(record.gradeStatus||'')+'">'+escapeHtml(record.gradeStatus||'-')+'</strong></div><div><span>Ranking Result</span><strong class="'+rankClass(record.rankingResult||'')+'">'+escapeHtml(record.rankingResult||'-')+'</strong></div>';
@@ -4914,8 +6328,13 @@ function startGpRankingRefresh(){
       $('transcriptButton').disabled=recordedCount<1;
       $('transcriptButton').textContent='VIEW ACADEMIC TRANSCRIPT';
 
+      const publicationHiddenCount=Number(data&&data.publicationHiddenCount)||0;
+      const publicationNoticeHtml=publicationHiddenCount>0
+        ? '<div class="academicPublicationNotice"><span class="academicPublicationLock">LOCKED</span><div><strong>ACADEMIC RELEASE PENDING</strong><p>'+escapeHtml(publicationHiddenCount===1?'The newest Academic Record is awaiting official publication by the administrator.':publicationHiddenCount+' Academic Records are currently unpublished by the administrator.')+'</p></div></div>'
+        : '';
+
       if(!records.length){
-        box.innerHTML=
+        box.innerHTML=publicationNoticeHtml+
           '<div class="empty">'+
             escapeHtml(
               data.message||
@@ -4924,6 +6343,8 @@ function startGpRankingRefresh(){
           '</div>';
         return;
       }
+
+      if(publicationNoticeHtml)box.insertAdjacentHTML('beforeend',publicationNoticeHtml);
 
       records.forEach(record=>{
         const card=document.createElement('section');
@@ -5003,25 +6424,31 @@ function startGpRankingRefresh(){
 
         card.appendChild(miniTitle('Subject Results'));
 
+        const soaOwnRecord=StudentPortalAuth.matchesStudent(currentStudentId);
+        const soaAccess=soaOwnRecord&&isSOAPromotedRecord(record);
+        const soaRetained=soaOwnRecord&&isSOARetainedRecord(record);
         const subjects=document.createElement('div');
-        subjects.className='subjects';
+        subjects.className='subjects'+(soaAccess?' soaEnabled':'');
         subjects.innerHTML=
-          '<div class="subjectHeader">'+
+          '<div class="subjectHeader'+(soaAccess?' soaEnabled':'')+'">'+
             '<span>Subject (科目)</span>'+
             '<span>Score in Number</span>'+
             '<span>Score in Kanji</span>'+
+            (soaAccess?'<span class="soaHeader">SOA</span>':'')+
           '</div>';
 
         (record.subjects||[]).forEach(subject=>{
           const row=document.createElement('div');
-          row.className='subjectRow';
+          row.className='subjectRow'+(soaAccess?' soaEnabled':'');
           row.innerHTML=
             '<div class="subjectName">'+escapeHtml(subject.name||'-')+'</div>'+
             '<div class="mark numberMark">'+escapeHtml(subject.numberMark||'-')+'</div>'+
             '<div class="mark kanjiMark">'+escapeHtml(subject.kanjiMark||'-')+'</div>';
+          if(soaAccess)row.appendChild(createSOAActionCell(record,subject,false));
           subjects.appendChild(row);
         });
         card.appendChild(subjects);
+        if(soaRetained)card.appendChild(createSOARetainedNotice(false));
 
         const foot=document.createElement('div');
         foot.className='semesterFoot';
@@ -5079,11 +6506,16 @@ async function requestPdf(mode,sheetName,button){
       await academicLoadPromise;
     }
 
-    const payload=await GakuseiDataService.getAcademicPdfPayload(
+    await AcademicPublicationControl.ready();
+    const rawPayload=await GakuseiDataService.getAcademicPdfPayload(
       currentStudentId,
       sheetName,
       normalizedMode
     );
+    const payload=AcademicPublicationControl.filterPdfPayload(rawPayload);
+    if(!Array.isArray(payload.records)||!payload.records.length){
+      throw new Error('This Academic Record is not published yet.');
+    }
 
     await buildAcademicPdf(payload);
     setStatus(
@@ -5218,16 +6650,44 @@ async function requestPdf(mode,sheetName,button){
     function renderPoints(data){const totals=data.totals||{};text('semesterBadge',data.semesterTitle||'CURRENT SEMESTER');text('totalGp',pointTotal(totals.gp,'GP'));text('totalRp',pointTotal(totals.rp,'RP'));text('totalFhp',pointTotal(totals.fhp,'FHP'));text('pointUpdated',data.spreadsheetUpdatedAt?'Updated: '+data.spreadsheetUpdatedAt:'');const box=$('pointLogs');box.innerHTML='';const logs=Array.isArray(data.logs)?data.logs:[];if(!logs.length){box.innerHTML='<div class="empty">'+escapeHtml(data.message||'No point log found.')+'</div>';return}logs.forEach(item=>{const row=document.createElement('div');row.className='logItem';const chips=[['gp',item.gp],['rp',item.rp],['fhp',item.fhp]].filter(x=>x[1]&&x[1].hasValue).map(x=>'<span class="chip '+x[0]+'">'+escapeHtml(x[1].text)+'</span>').join('');row.innerHTML='<div class="logDate">'+escapeHtml(item.date||'-')+'</div><div><div class="logDesc">'+escapeHtml(item.description||'-')+'</div><div class="chips">'+chips+'</div></div>';box.appendChild(row)})}
     function pointTotal(value,code){let v=String(value==null||value===''?'0':value).trim().replace(new RegExp(code+'$','i'),'').trim();return(v||'0')+code}
 
+    function shouldPortalGeneralMenuOnMobile(){
+      return Boolean(
+        document.body&&
+        document.body.classList.contains('front-mode')&&
+        window.matchMedia&&
+        window.matchMedia('(max-width: 768px)').matches
+      );
+    }
+
+    function portalGeneralMenuPanelForMobile(){
+      const panel=$('generalMenuPanel');
+      const menu=$('generalMenu');
+      if(!panel||!menu||!shouldPortalGeneralMenuOnMobile())return;
+      if(panel.parentElement!==document.body)document.body.appendChild(panel);
+      panel.classList.add('mobileGeneralMenuPortal');
+    }
+
+    function restoreGeneralMenuPanelHome(){
+      const panel=$('generalMenuPanel');
+      const menu=$('generalMenu');
+      if(!panel||!menu)return;
+      panel.classList.remove('mobileGeneralMenuPortal');
+      if(panel.parentElement!==menu)menu.appendChild(panel);
+    }
+
     function toggleGeneralMenu(event){
       if(event)event.stopPropagation();
       const menu=$('generalMenu');
       const panel=$('generalMenuPanel');
       const button=$('generalMenuButton');
+      if(!menu||!panel)return;
       const willOpen=panel.classList.contains('hidden');
 
+      if(willOpen)portalGeneralMenuPanelForMobile();
       panel.classList.toggle('hidden',!willOpen);
       menu.classList.toggle('open',willOpen);
       if(button)button.setAttribute('aria-expanded',willOpen?'true':'false');
+      if(!willOpen)restoreGeneralMenuPanelHome();
     }
 
     function closeGeneralMenu(){
@@ -5237,6 +6697,7 @@ async function requestPdf(mode,sheetName,button){
       if(panel)panel.classList.add('hidden');
       if(menu)menu.classList.remove('open');
       if(button)button.setAttribute('aria-expanded','false');
+      restoreGeneralMenuPanelHome();
     }
 
     function toggleMobileStudentGeneralMenu(event){
@@ -7246,8 +8707,8 @@ async function downloadReviewedDocumentAsPdf(){
           width:320,
           height:380,
           fit:'cover',
-          zoom:1.17,
-          positionY:.17
+          zoom:1.20,
+          positionY:.16
         }),
         house:await imageElementToDataUrl(pageElement.querySelector('.pdfHouseLogoImage'),{
           width:160,
@@ -8440,4 +9901,510 @@ function corsSafeImageUrl(url){
   }catch(error){
     return value;
   }
-}function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)},AUTO_REFRESH_MS)}function escapeHtml(value){return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out}function safeName(value){return String(value||'REPORT').replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_')}
+}
+
+/* =========================================================
+   ADMIN UI — Academic Record publication
+   ========================================================= */
+function updateAdminAccessButton(){
+  const item=$('generalAdminMenuItem');
+  const title=$('generalAdminMenuTitle');
+  const description=$('generalAdminMenuText');
+  const active=AcademicPublicationControl.isAdmin();
+
+  if(item){
+    item.classList.toggle('is-authenticated',active);
+    item.setAttribute('aria-label',active?'Open administrator control':'Login as administrator');
+  }
+  if(title)title.textContent=active?'ADMIN CONTROL':'LOGIN AS ADMIN';
+  if(description)description.textContent=active
+    ?'Administrator mode active • manage Academic Records publication'
+    :'Restricted Academic Records publication control';
+  syncGeneralLogoutOption();
+}
+
+function openAdminFromGeneralMenu(){
+  closeGeneralMenu();
+  openAdminPanel(AcademicPublicationControl.isAdmin());
+}
+
+function formatAdminTimestamp(value){
+  if(!value)return 'NOT SET';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return String(value);
+  try{return new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeStyle:'short'}).format(date)}catch(error){return date.toLocaleString()}
+}
+
+function syncAdminHomePanel(){
+  updateAdminAccessButton();
+  const panel=$('adminHomePanel');
+  if(!panel)return;
+  const show=AcademicPublicationControl.isAdmin()&&document.body.classList.contains('front-mode');
+  panel.classList.toggle('hidden',!show);
+  if(!show)return;
+  refreshAdminHomeSummary(false);
+}
+
+async function refreshAdminHomeSummary(force){
+  if(!AcademicPublicationControl.isAdmin())return;
+  try{
+    await AcademicPublicationControl.ready();
+    const catalog=await AcademicPublicationControl.getCatalog(Boolean(force));
+    const latest=catalog.length?catalog[catalog.length-1]:null;
+    const settings=AcademicPublicationControl.getSettings();
+    const latestNumber=latest?Number(latest.semesterNumber):-1;
+    const published=latest?AcademicPublicationControl.isPublished(latestNumber,latestNumber):false;
+    const explicit=latest?AcademicPublicationControl.hasExplicitDecision(latestNumber):false;
+
+    text('adminNewestSemester',latest?latest.sheetName:'NOT DETECTED');
+    text('adminNewestState',latest?(published?'PUBLISHED':explicit?'UNPUBLISHED':'LOCKED • AWAITING ADMIN'):'—');
+    text('adminSettingsUpdated',settings.updatedAt?formatAdminTimestamp(settings.updatedAt):'NOT CONFIGURED');
+    text('adminStorageMode',AcademicPublicationControl.getStorageMode());
+
+    const button=$('adminQuickPublishButton');
+    if(button&&latest){
+      button.disabled=false;
+      button.textContent=published?'UNPUBLISH NEWEST ACADEMIC RECORDS':'PUBLISH NEWEST ACADEMIC RECORDS';
+      button.classList.toggle('is-unpublish',published);
+    }else if(button){
+      button.disabled=true;
+      button.textContent='NO ACADEMIC RECORD DETECTED';
+    }
+  }catch(error){
+    text('adminNewestSemester','DETECTION ERROR');
+    text('adminNewestState','CHECK CONNECTION');
+  }
+}
+
+function openAdminPanel(openControlDirectly){
+  const modal=$('adminModal');
+  if(!modal)return;
+  modal.classList.remove('hidden');
+  document.body.classList.add('admin-modal-open');
+  updateAdminAccessButton();
+
+  if(AcademicPublicationControl.isAdmin()){
+    showAdminControlView(Boolean(openControlDirectly));
+  }else{
+    $('adminLoginView').classList.remove('hidden');
+    $('adminControlView').classList.add('hidden');
+    text('adminLoginMessage','');
+    const input=$('adminPasswordInput');
+    resetPasswordVisibility('adminPasswordInput');
+    if(input){input.value='';setTimeout(()=>input.focus(),60)}
+  }
+}
+
+function closeAdminPanel(){
+  const modal=$('adminModal');
+  if(modal)modal.classList.add('hidden');
+  document.body.classList.remove('admin-modal-open');
+}
+
+async function adminLogin(event){
+  if(event)event.preventDefault();
+  const input=$('adminPasswordInput');
+  const button=$('adminLoginButton');
+  const message=$('adminLoginMessage');
+  const password=input?input.value:'';
+  if(!password){if(message)message.textContent='Enter the administrator password.';return false}
+  if(button){button.disabled=true;button.textContent='VERIFYING...'}
+  try{
+    await AcademicPublicationControl.login(password);
+    if(message)message.textContent='';
+    updateAdminAccessButton();
+    syncAdminHomePanel();
+    await showAdminControlView(true);
+  }catch(error){
+    if(message)message.textContent=error.message||'Administrator login failed.';
+  }finally{
+    if(button){button.disabled=false;button.textContent='LOGIN'}
+  }
+  return false;
+}
+
+function adminLogout(){
+  AcademicPublicationControl.logout();
+  updateAdminAccessButton();
+  closeAdminPanel();
+  const panel=$('adminHomePanel');
+  if(panel)panel.classList.add('hidden');
+  setStatus('Administrator session ended.');
+}
+
+function syncAdminSOAAccessUi(){
+  const state=SOAAccessControl.getState();
+  const stateEl=$('adminSOAAccessState');
+  const textEl=$('adminSOAAccessText');
+  const button=$('adminSOAAccessButton');
+  if(!stateEl||!textEl||!button)return;
+
+  if(!state.loaded){
+    stateEl.textContent='CHECKING...';
+    stateEl.className='adminSOAAccessState';
+    textEl.textContent='Checking global SOA access...';
+    button.textContent='CHECKING...';
+    button.disabled=true;
+    button.classList.remove('is-close','is-open');
+    return;
+  }
+
+  stateEl.textContent=state.enabled?'OPEN':'CLOSED';
+  stateEl.className='adminSOAAccessState '+(state.enabled?'is-open':'is-closed');
+  textEl.textContent=state.enabled
+    ?'Logged-in Gakusei can press APPLY SOA on eligible records.'
+    :'APPLY SOA is globally locked. Eligible buttons remain visible but cannot be pressed.';
+  button.disabled=false;
+  button.textContent=state.enabled?'CLOSE APPLY SOA ACCESS':'OPEN APPLY SOA ACCESS';
+  button.classList.toggle('is-close',state.enabled);
+  button.classList.toggle('is-open',!state.enabled);
+}
+
+async function refreshAdminSOAAccess(force){
+  syncAdminSOAAccessUi();
+  try{
+    await SOAAccessControl.refresh(Boolean(force));
+    syncAdminSOAAccessUi();
+  }catch(error){
+    const stateEl=$('adminSOAAccessState');
+    const textEl=$('adminSOAAccessText');
+    const button=$('adminSOAAccessButton');
+    if(stateEl){stateEl.textContent='CONNECTION ERROR';stateEl.className='adminSOAAccessState is-error'}
+    if(textEl)textEl.textContent=error&&error.message?error.message:'SOA access status could not be loaded.';
+    if(button)button.disabled=true;
+  }
+}
+
+async function toggleAdminSOAAccess(){
+  if(!AcademicPublicationControl.isAdmin())return;
+  const button=$('adminSOAAccessButton');
+  if(button)button.disabled=true;
+  try{
+    const state=SOAAccessControl.getState();
+    const next=!Boolean(state.enabled);
+    const approved=window.confirm(next
+      ?'OPEN APPLY SOA ACCESS?\n\nLogged-in Gakusei will be able to submit eligible SOA requests.'
+      :'CLOSE APPLY SOA ACCESS?\n\nAPPLY SOA buttons will be locked and the backend will reject new SOA submissions.');
+    if(!approved){syncAdminSOAAccessUi();return}
+    await SOAAccessControl.setEnabled(next);
+    syncAdminSOAAccessUi();
+    syncStudentAuthUi();
+    setStatus(next?'APPLY SOA access is now OPEN.':'APPLY SOA access is now CLOSED.');
+    if(currentStudentId&&StudentPortalAuth.matchesStudent(currentStudentId))fetchStudent(currentStudentId,true);
+  }catch(error){
+    setStatus('SOA access control error: '+(error&&error.message?error.message:error));
+    await refreshAdminSOAAccess(true);
+  }finally{if(button&&!button.disabled){}else syncAdminSOAAccessUi()}
+}
+
+let adminSOARecapData=null;
+let adminSOARecapFilterValue='CURRENT';
+
+function normalizeAdminSOASemester(value){
+  const text=String(value==null?'':value).normalize('NFKC').toUpperCase().trim();
+  const match=text.match(/(\d{1,3})\s*A\s*\.?\s*R\s*\.?/);
+  return match?Number(match[1])+' A.R.':text;
+}
+
+function adminSOASemesterNumber(value){
+  const normalized=normalizeAdminSOASemester(value);
+  const match=normalized.match(/^(\d{1,3})\s+A\.R\.$/);
+  return match?Number(match[1]):-1;
+}
+
+function buildAdminSOAFilterOptions(result){
+  const select=$('adminSOARecapFilter');
+  if(!select)return;
+  const current=normalizeAdminSOASemester(result&&result.currentSemester||'');
+  const semesters=Array.isArray(result&&result.availableSemesters)?result.availableSemesters.slice():[];
+  const normalized=Array.from(new Set(semesters.map(normalizeAdminSOASemester).filter(Boolean)))
+    .sort((a,b)=>adminSOASemesterNumber(b)-adminSOASemesterNumber(a));
+  const previous=adminSOARecapFilterValue;
+  select.innerHTML='';
+
+  const currentOption=document.createElement('option');
+  currentOption.value='CURRENT';
+  currentOption.textContent='CURRENT — '+(current||'NOT DETECTED');
+  select.appendChild(currentOption);
+
+  normalized.filter(item=>item!==current).forEach(semester=>{
+    const option=document.createElement('option');
+    option.value=semester;
+    option.textContent=semester;
+    select.appendChild(option);
+  });
+
+  const all=document.createElement('option');
+  all.value='ALL';all.textContent='ALL SEMESTERS';select.appendChild(all);
+
+  const valid=Array.from(select.options).some(option=>option.value===previous);
+  adminSOARecapFilterValue=valid?previous:'CURRENT';
+  select.value=adminSOARecapFilterValue;
+}
+
+function filteredAdminSOARows(){
+  const result=adminSOARecapData||{};
+  const rows=Array.isArray(result.rows)?result.rows:[];
+  if(adminSOARecapFilterValue==='ALL')return rows.slice();
+  const semester=adminSOARecapFilterValue==='CURRENT'
+    ?normalizeAdminSOASemester(result.currentSemester||'')
+    :normalizeAdminSOASemester(adminSOARecapFilterValue);
+  return rows.filter(row=>normalizeAdminSOASemester(row&&row.submittedSemester)===semester);
+}
+
+function renderAdminSOARecapRows(){
+  const content=$('adminSOARecapContent');
+  const count=$('adminSOARecapCount');
+  const current=$('adminSOARecapCurrent');
+  if(!content)return;
+  const result=adminSOARecapData||{};
+  const rows=filteredAdminSOARows();
+  if(current)current.textContent='CURRENT: '+String(result.currentSemester||'—');
+  if(count)count.textContent=rows.length+' APPLICATION'+(rows.length===1?'':'S');
+
+  if(!rows.length){
+    content.innerHTML='<div class="adminSOARecapEmpty">No SOA application is recorded for this filter.</div>';
+    return;
+  }
+
+  content.innerHTML='<div class="adminSOARecapTableWrap"><table class="adminSOARecapTable">'+
+    '<thead><tr><th>GAKUSEI</th><th>ID</th><th>APPLIED IN</th><th>SOA SEMESTER</th><th>ORIGINAL</th><th>CURRENT</th><th>SUBJECT</th><th>STATUS / ACTION</th></tr></thead><tbody>'+
+    rows.map((row,index)=>{
+      const passed=String(row&&row.status||'').toUpperCase()==='PASSED';
+      const mark=String(row&&row.currentMark||'-');
+      return '<tr class="'+(passed?'is-passed':'is-active')+'">'+
+        '<td>'+escapeHtml(row.name||'-')+'</td>'+
+        '<td>'+escapeHtml(row.studentId||'-')+'</td>'+
+        '<td>'+escapeHtml(row.submittedSemester||'-')+'</td>'+
+        '<td>'+escapeHtml(row.soaSemester||'-')+'</td>'+
+        '<td><span class="adminSOAMark">'+escapeHtml(row.originalMark||'-')+'</span></td>'+
+        '<td><span class="adminSOACurrentMark">'+escapeHtml(mark)+'</span></td>'+
+        '<td>'+escapeHtml(row.subject||'-')+'</td>'+
+        '<td>'+(passed
+          ?'<div class="adminSOAPassedText">PASSED SOA. MARK UPGRADED TO '+escapeHtml(mark)+'</div>'
+          :'<button class="adminSOAAnnulButton" type="button" data-soa-visible-index="'+index+'">ANNUL</button>')+'</td>'+
+      '</tr>';
+    }).join('')+'</tbody></table></div>';
+
+  content.querySelectorAll('[data-soa-visible-index]').forEach(button=>{
+    button.addEventListener('click',()=>{
+      const index=Number(button.getAttribute('data-soa-visible-index'));
+      const item=rows[index];
+      if(item)adminAnnulSOAApplication(item,button);
+    });
+  });
+}
+
+function changeAdminSOARecapFilter(){
+  const select=$('adminSOARecapFilter');
+  adminSOARecapFilterValue=select?String(select.value||'CURRENT'):'CURRENT';
+  renderAdminSOARecapRows();
+}
+
+function renderAdminSOARecap(result){
+  adminSOARecapData=result||{rows:[]};
+  buildAdminSOAFilterOptions(adminSOARecapData);
+  const message=$('adminSOARecapMessage');if(message)message.textContent='';
+  renderAdminSOARecapRows();
+}
+
+async function refreshAdminSOARecap(force){
+  if(!AcademicPublicationControl.isAdmin())return;
+  const content=$('adminSOARecapContent');
+  const message=$('adminSOARecapMessage');
+  const refreshButton=$('adminSOARecapRefresh');
+  if(content&&force)content.innerHTML='<div class="adminSOARecapLoading">Checking current and historical SOA applications...</div>';
+  if(message)message.textContent='';
+  if(refreshButton)refreshButton.disabled=true;
+  try{
+    const result=await AdminSOAApplications.getRecap();
+    renderAdminSOARecap(result);
+  }catch(error){
+    if(content)content.innerHTML='<div class="adminSOARecapLoading is-error">'+escapeHtml(error&&error.message?error.message:error)+'</div>';
+  }finally{if(refreshButton)refreshButton.disabled=false}
+}
+
+async function adminAnnulSOAApplication(item,button){
+  if(!AcademicPublicationControl.isAdmin()||!item)return;
+  if(String(item.status||'').toUpperCase()==='PASSED'){
+    const message=$('adminSOARecapMessage');
+    if(message)message.textContent='PASSED SOA applications cannot be annulled because the Academic Record mark is already upgraded.';
+    return;
+  }
+  if(button){button.disabled=true;button.textContent='ANNULING...'}
+  const message=$('adminSOARecapMessage');
+  if(message)message.textContent='Annulment in progress...';
+  try{
+    const result=await AdminSOAApplications.annul(item);
+    if(StudentPortalAuth.isAuthenticated()&&StudentPortalAuth.matchesStudent(item.studentId)){
+      StudentPortalAuth.unmarkSubmitted(item.soaSemester,item.subject);
+      try{await StudentPortalAuth.refreshApplications(true)}catch(error){}
+      if(currentStudentId&&StudentPortalAuth.matchesStudent(currentStudentId))fetchStudent(currentStudentId,true);
+    }
+    if(message)message.textContent=result.message||'SOA application annulled.';
+    await refreshAdminSOARecap(false);
+  }catch(error){
+    if(message)message.textContent='ANNUL error: '+(error&&error.message?error.message:error);
+    if(button){button.disabled=false;button.textContent='ANNUL'}
+  }
+}
+
+async function showAdminControlView(forceCatalog){
+  if(!AcademicPublicationControl.isAdmin())return;
+  $('adminLoginView').classList.add('hidden');
+  $('adminControlView').classList.remove('hidden');
+  await Promise.all([
+    refreshAdminSemesterCatalog(Boolean(forceCatalog)),
+    refreshAdminSOAAccess(true),
+    refreshAdminSOARecap(true)
+  ]);
+}
+
+function adminBackendNoticeText(){
+  const mode=AcademicPublicationControl.getStorageMode();
+  if(mode==='GLOBAL REMOTE MODE')return 'GLOBAL MODE • Publication settings are shared with every visitor through the configured Apps Script backend.';
+  if(mode==='OFFLINE FALLBACK')return 'OFFLINE FALLBACK • Remote publication settings could not be reached. Changes are not saved globally until the backend connection works.';
+  return 'LOCAL TEST MODE • UI and locking logic are active in this browser only. Deploy Code.gs and paste its /exec URL into ACADEMIC_PUBLICATION_CONFIG.API_URL for site-wide publication control.';
+}
+
+async function refreshAdminSemesterCatalog(force){
+  const list=$('adminSemesterList');
+  const backend=$('adminBackendNotice');
+  if(list)list.innerHTML='<div class="adminSemesterLoading">Detecting Academic Record semesters...</div>';
+  if(backend){backend.className='adminBackendNotice';backend.textContent=adminBackendNoticeText()}
+  try{
+    await AcademicPublicationControl.ready();
+    const catalog=await AcademicPublicationControl.getCatalog(Boolean(force));
+    renderAdminSemesterList(catalog);
+    if(backend){
+      backend.textContent=adminBackendNoticeText();
+      backend.classList.toggle('is-global',AcademicPublicationControl.getStorageMode()==='GLOBAL REMOTE MODE');
+      backend.classList.toggle('is-warning',AcademicPublicationControl.getStorageMode()!=='GLOBAL REMOTE MODE');
+    }
+    refreshAdminHomeSummary(false);
+  }catch(error){
+    if(list)list.innerHTML='<div class="adminSemesterLoading is-error">'+escapeHtml(error.message||error)+'</div>';
+  }
+}
+
+function renderAdminSemesterList(catalog){
+  const list=$('adminSemesterList');
+  if(!list)return;
+  const rows=Array.isArray(catalog)?catalog:[];
+  list.innerHTML='';
+  if(!rows.length){
+    list.innerHTML='<div class="adminSemesterLoading is-error">No A.R. semester could be detected.</div>';
+    return;
+  }
+  const latestNumber=Math.max(...rows.map(item=>Number(item.semesterNumber)||-1));
+  rows.slice().sort((a,b)=>Number(b.semesterNumber)-Number(a.semesterNumber)).forEach(item=>{
+    const number=Number(item.semesterNumber);
+    const published=AcademicPublicationControl.isPublished(number,latestNumber);
+    const explicit=AcademicPublicationControl.hasExplicitDecision(number);
+    const row=document.createElement('label');
+    row.className='adminSemesterRow'+(number===latestNumber?' is-latest':'');
+    row.innerHTML=
+      '<div class="adminSemesterIdentity">'+
+        '<span class="adminSemesterIndex">'+String(number).padStart(2,'0')+'</span>'+
+        '<div><strong>'+escapeHtml(item.sheetName||number+' A.R.')+'</strong><small>'+
+          escapeHtml(number===latestNumber?(explicit?'Newest detected semester':'Newest detected • Admin decision required'):(explicit?'Explicit Admin setting':'Default published'))+
+        '</small></div>'+
+      '</div>'+
+      '<div class="adminSemesterSwitchWrap">'+
+        '<span class="adminSemesterState '+(published?'published':'unpublished')+'">'+(published?'PUBLISHED':'UNPUBLISHED')+'</span>'+
+        '<input class="adminSemesterToggle" type="checkbox" data-admin-semester="'+number+'" '+(published?'checked':'')+'>'+
+        '<span class="adminSemesterSwitch" aria-hidden="true"><i></i></span>'+
+      '</div>';
+    const input=row.querySelector('.adminSemesterToggle');
+    const state=row.querySelector('.adminSemesterState');
+    input.addEventListener('change',()=>{
+      state.textContent=input.checked?'PUBLISHED':'UNPUBLISHED';
+      state.classList.toggle('published',input.checked);
+      state.classList.toggle('unpublished',!input.checked);
+    });
+    list.appendChild(row);
+  });
+}
+
+function setAllAdminSemesterToggles(published){
+  document.querySelectorAll('#adminSemesterList .adminSemesterToggle').forEach(input=>{
+    input.checked=Boolean(published);
+    input.dispatchEvent(new Event('change'));
+  });
+}
+
+async function saveAdminSemesterSettings(){
+  if(!AcademicPublicationControl.isAdmin()){openAdminPanel();return}
+  const button=$('adminSaveButton');
+  const message=$('adminSaveMessage');
+  const semesterMap={};
+  document.querySelectorAll('#adminSemesterList .adminSemesterToggle').forEach(input=>{
+    semesterMap[String(input.getAttribute('data-admin-semester'))]=Boolean(input.checked);
+  });
+  if(button){button.disabled=true;button.textContent='SAVING...'}
+  if(message){message.className='adminSaveMessage';message.textContent='Saving publication settings...'}
+  try{
+    const result=await AcademicPublicationControl.save(semesterMap);
+    if(message){
+      message.className='adminSaveMessage is-success';
+      message.textContent=result.localOnly?'Saved in LOCAL TEST MODE. Configure Code.gs for global site-wide control.':'Publication settings saved globally.';
+    }
+    await refreshAdminSemesterCatalog(false);
+    await refreshAdminHomeSummary(false);
+    if(currentStudentId)fetchStudent(currentStudentId,true);
+  }catch(error){
+    if(message){message.className='adminSaveMessage is-error';message.textContent=error.message||String(error)}
+  }finally{
+    if(button){button.disabled=false;button.textContent='SAVE PUBLICATION SETTINGS'}
+  }
+}
+
+async function toggleNewestAcademicPublication(){
+  if(!AcademicPublicationControl.isAdmin()){openAdminPanel();return}
+  const button=$('adminQuickPublishButton');
+  if(button)button.disabled=true;
+  try{
+    await AcademicPublicationControl.ready();
+    const catalog=await AcademicPublicationControl.getCatalog(false);
+    if(!catalog.length)throw new Error('No Academic Record semester detected.');
+    const latest=catalog[catalog.length-1];
+    const latestNumber=Number(latest.semesterNumber);
+    const map={...AcademicPublicationControl.getSettings().semesters};
+    map[String(latestNumber)]=!AcademicPublicationControl.isPublished(latestNumber,latestNumber);
+    const result=await AcademicPublicationControl.save(map);
+    setStatus(result.localOnly?'Newest Academic Record setting changed in local test mode.':'Newest Academic Record publication updated.');
+    await refreshAdminHomeSummary(false);
+    if(!$('adminModal').classList.contains('hidden'))await refreshAdminSemesterCatalog(false);
+  }catch(error){
+    setStatus('Admin publication error: '+(error.message||error));
+  }finally{
+    if(button)button.disabled=false;
+  }
+}
+
+function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)},AUTO_REFRESH_MS)}function escapeHtml(value){return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out}function safeName(value){return String(value||'REPORT').replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_')}
+
+
+/* =====================================================================
+   V111 — STUDENT AUTH MODAL EVENT WIRING
+   Kept separate from the legacy load handler to avoid changing existing
+   initialization order for database, swipe, ranking, admin, and documents.
+   ===================================================================== */
+window.addEventListener('load',()=>{
+  const modal=$('studentLoginModal');
+  if(modal){
+    modal.addEventListener('click',event=>{
+      if(event.target===modal)closeStudentLoginModal();
+    });
+  }
+  window.addEventListener('keydown',event=>{
+    if(event.key==='Escape'&&modal&&!modal.classList.contains('hidden'))closeStudentLoginModal();
+  });
+  Promise.allSettled([
+    StudentPortalAuth.restore(),
+    SOAAccessControl.refresh(true)
+  ]).then(()=>{
+    syncStudentAuthUi();
+    if(currentStudentId&&StudentPortalAuth.matchesStudent(currentStudentId))fetchStudent(currentStudentId,true);
+  }).catch(()=>syncStudentAuthUi());
+});

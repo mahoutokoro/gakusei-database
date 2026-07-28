@@ -13122,3 +13122,3154 @@ body:not(.front-mode) .dormMascotStage.mascot-kosei .dormMascotBody{
   #mobileAcademicMount .m90SubjectRow>b{font-size:6.2px!important}
   #mobileAcademicMount .m90SubjectRow>b.jp{font-size:6.4px!important}
 }
+
+
+/* =====================================================================
+   V99 — MOBILE POLISH: DEVOTED / GP RANKING / HOME SEARCH
+   Requested scope only. All rules below are mobile-only.
+   Desktop geometry, data service, Academic paging, Student Point Log,
+   General tables, exports and non-requested structures remain untouched.
+   ===================================================================== */
+@media (max-width:768px){
+  /* 1) DEVOTED STUDENT — balanced ceremonial composition. */
+  #mobileAcademicMount .m90DevotedCard{
+    position:relative!important;
+    isolation:isolate!important;
+    overflow:hidden!important;
+    border-color:color-mix(in srgb,var(--accent) 50%,rgba(255,255,255,.09))!important;
+    background:
+      linear-gradient(90deg,rgba(3,3,8,.96) 0%,rgba(3,3,8,.91) 42%,rgba(3,3,8,.68) 66%,rgba(3,3,8,.26) 100%),
+      linear-gradient(180deg,rgba(3,3,8,.10),rgba(3,3,8,.42) 76%,rgba(3,3,8,.78)),
+      url("https://drive.google.com/thumbnail?id=1K-2TytITfiC3OysGOO_1L5yn4iRGiAsT&sz=w2200") 88% center/auto 142% no-repeat,
+      rgba(4,4,9,.94)!important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.055),
+      inset 0 0 0 1px color-mix(in srgb,var(--accent) 9%,transparent),
+      0 14px 32px rgba(0,0,0,.26),
+      0 0 24px color-mix(in srgb,var(--accent) 9%,transparent)!important;
+  }
+  #mobileAcademicMount .m90DevotedCard::before{
+    content:""!important;
+    position:absolute!important;
+    inset:6px!important;
+    z-index:0!important;
+    border:1px solid color-mix(in srgb,var(--accent) 16%,rgba(255,255,255,.025))!important;
+    border-radius:10px!important;
+    pointer-events:none!important;
+  }
+  #mobileAcademicMount .m90DevotedCard::after{
+    content:""!important;
+    position:absolute!important;
+    inset:0!important;
+    z-index:0!important;
+    pointer-events:none!important;
+    background:
+      radial-gradient(circle at 78% 23%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 28%),
+      linear-gradient(116deg,transparent 62%,rgba(255,255,255,.025) 63%,transparent 66%)!important;
+  }
+  #mobileAcademicMount .m90DevotedCard>.m90SemesterHead,
+  #mobileAcademicMount .m90DevotedCard>.m90DevotedDetails{position:relative!important;z-index:2!important}
+  #mobileAcademicMount .m90DevotedCard .m90SemesterHead{
+    min-height:48px!important;
+    padding:9px 11px!important;
+    background:linear-gradient(90deg,rgba(3,3,8,.90),rgba(3,3,8,.62) 64%,rgba(3,3,8,.18))!important;
+    border-bottom-color:color-mix(in srgb,var(--accent) 18%,rgba(255,255,255,.035))!important;
+    text-shadow:0 1px 7px rgba(0,0,0,.92)!important;
+  }
+  #mobileAcademicMount .m90DevotedCard .m90SemesterHead>div:first-child span{
+    color:color-mix(in srgb,var(--accent) 76%,var(--muted))!important;
+    letter-spacing:.16em!important;
+  }
+  #mobileAcademicMount .m90DevotedCard .m90SemesterHead>div:first-child strong{
+    font-family:"Cinzel","League Spartan",serif!important;
+    font-size:11.4px!important;
+    letter-spacing:.055em!important;
+  }
+  #mobileAcademicMount .m90DevotedCard .m90Nensei{
+    min-height:23px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:0 8px!important;
+    background:rgba(4,4,9,.62)!important;
+    border-color:color-mix(in srgb,var(--accent) 40%,rgba(255,255,255,.07))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+  }
+  #mobileAcademicMount .m90DevotedDetails{
+    display:grid!important;
+    grid-template-columns:76px minmax(0,1fr)!important;
+    grid-template-rows:minmax(42px,auto) minmax(42px,auto) auto!important;
+    gap:7px!important;
+    padding:10px 12px 12px!important;
+    background:linear-gradient(90deg,rgba(2,2,6,.22),rgba(2,2,6,.07) 72%,transparent)!important;
+  }
+  #mobileAcademicMount .m90DevotedScore{
+    grid-column:1!important;
+    grid-row:1 / span 2!important;
+    min-height:91px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:8px 6px!important;
+    text-align:center!important;
+    border:1px solid color-mix(in srgb,var(--accent) 46%,rgba(255,255,255,.08))!important;
+    border-radius:13px!important;
+    background:
+      radial-gradient(circle at 50% 28%,color-mix(in srgb,var(--accent) 14%,transparent),transparent 48%),
+      linear-gradient(160deg,rgba(7,7,13,.88),rgba(3,3,8,.68))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 9px 20px rgba(0,0,0,.23),0 0 16px color-mix(in srgb,var(--accent) 8%,transparent)!important;
+    -webkit-backdrop-filter:blur(8px) saturate(1.06)!important;
+    backdrop-filter:blur(8px) saturate(1.06)!important;
+  }
+  #mobileAcademicMount .m90DevotedScore span{
+    max-width:58px!important;
+    color:color-mix(in srgb,var(--accent) 72%,var(--muted))!important;
+    font-size:4.55px!important;
+    line-height:1.2!important;
+    letter-spacing:.06em!important;
+    text-transform:uppercase!important;
+  }
+  #mobileAcademicMount .m90DevotedScore strong{
+    margin-top:6px!important;
+    color:var(--strong)!important;
+    font-size:25px!important;
+    line-height:.95!important;
+    letter-spacing:-.03em!important;
+    text-shadow:0 0 14px color-mix(in srgb,var(--accent) 30%,transparent),0 2px 8px rgba(0,0,0,.96)!important;
+  }
+  #mobileAcademicMount .m90DevotedField{
+    grid-column:2!important;
+    min-width:0!important;
+    min-height:42px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    padding:7px 9px!important;
+    border:1px solid rgba(255,255,255,.065)!important;
+    border-radius:10px!important;
+    background:linear-gradient(145deg,rgba(5,5,10,.76),rgba(4,4,9,.50))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+    -webkit-backdrop-filter:blur(7px) saturate(1.04)!important;
+    backdrop-filter:blur(7px) saturate(1.04)!important;
+  }
+  #mobileAcademicMount .m90DevotedField:nth-child(2){grid-row:1!important}
+  #mobileAcademicMount .m90DevotedField:nth-child(3){grid-row:2!important}
+  #mobileAcademicMount .m90DevotedField span{
+    color:color-mix(in srgb,var(--accent) 68%,var(--muted))!important;
+    font-size:4.65px!important;
+    line-height:1.1!important;
+    letter-spacing:.08em!important;
+    text-transform:uppercase!important;
+  }
+  #mobileAcademicMount .m90DevotedField strong{
+    margin-top:4px!important;
+    color:var(--strong)!important;
+    font-size:7.25px!important;
+    line-height:1.26!important;
+    text-shadow:0 1px 6px rgba(0,0,0,.96)!important;
+    overflow-wrap:anywhere!important;
+  }
+  #mobileAcademicMount .m90DevotedFile{
+    grid-column:1 / -1!important;
+    grid-row:3!important;
+    min-height:38px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    padding:6px 7px 6px 9px!important;
+    border:1px solid color-mix(in srgb,var(--accent) 18%,rgba(255,255,255,.055))!important;
+    border-radius:10px!important;
+    background:linear-gradient(90deg,rgba(4,4,9,.72),rgba(4,4,9,.38) 72%,rgba(4,4,9,.22))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+  }
+  #mobileAcademicMount .m90DevotedFile>span{
+    color:color-mix(in srgb,var(--accent) 72%,var(--muted))!important;
+    font-size:4.8px!important;
+    letter-spacing:.08em!important;
+    text-transform:uppercase!important;
+  }
+  #mobileAcademicMount .m90DevotedFile button{
+    margin:0!important;
+    min-height:27px!important;
+    padding:0 9px!important;
+    border:1px solid rgba(255,255,255,.11)!important;
+    border-radius:8px!important;
+    color:#15100d!important;
+    background:linear-gradient(135deg,var(--accent),var(--strong) 58%,var(--accent2))!important;
+    box-shadow:0 5px 12px rgba(0,0,0,.22),inset 0 1px 0 rgba(255,255,255,.18)!important;
+    font-size:5px!important;
+    font-weight:900!important;
+    letter-spacing:.045em!important;
+  }
+
+  /* 2) GP RANKING — browser-safe compact title + vertically centered rank. */
+  body.front-mode .gpRankingSection .gpRankingHeader>div:first-child{min-width:0!important;width:100%!important}
+  body.front-mode .gpRankingSection .gpRankingTitle{
+    max-width:100%!important;
+    margin:4px 0 0!important;
+    font-family:"League Spartan","Arial Narrow",Arial,sans-serif!important;
+    font-size:clamp(13.2px,3.85vw,15px)!important;
+    font-weight:900!important;
+    line-height:1.05!important;
+    letter-spacing:.055em!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+  }
+  body.front-mode .gpRankingSection .gpRankNo,
+  body.front-mode .gpRankingSection .gpArena>.gpRankCard:nth-child(-n+3) .gpRankNo,
+  body.front-mode .gpRankingSection .gpArena>.gpRankCard:nth-child(n+4) .gpRankNo{
+    width:20px!important;
+    min-width:20px!important;
+    height:20px!important;
+    min-height:20px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    padding:1px 0 0!important;
+    line-height:1!important;
+    font-size:6.3px!important;
+    font-variant-numeric:tabular-nums!important;
+    border-radius:50%!important;
+    box-sizing:border-box!important;
+  }
+
+  /* 3) NO-PHOTO RANKING — center the House crest, never hang it below. */
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankAvatarFrame{
+    position:relative!important;
+    overflow:hidden!important;
+    background:
+      radial-gradient(circle at 50% 40%,var(--gpGlow2),transparent 58%),
+      linear-gradient(145deg,rgba(8,8,13,.96),rgba(3,3,8,.90))!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankAvatarFrame>span{display:none!important}
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankHouseWatermark{
+    inset:5px!important;
+    width:38px!important;
+    height:38px!important;
+    opacity:.08!important;
+    filter:grayscale(.08) drop-shadow(0 0 10px var(--gpGlow))!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankHouseBadge{
+    left:50%!important;
+    top:50%!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:31px!important;
+    height:31px!important;
+    display:grid!important;
+    place-items:center!important;
+    transform:translate(-50%,-50%)!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankHouseBadge img{
+    width:27px!important;
+    height:27px!important;
+    object-fit:contain!important;
+    filter:drop-shadow(0 0 7px var(--gpGlow))!important;
+  }
+
+  /* 4) HOME SEARCH — same footprint as V98, redesigned surface only. */
+  body.front-mode .hero .searchBar{
+    position:relative!important;
+    width:min(252px,68vw)!important;
+    max-width:252px!important;
+    height:35px!important;
+    min-height:35px!important;
+    grid-template-columns:minmax(0,1fr) 29px!important;
+    gap:3px!important;
+    padding:3px!important;
+    overflow:hidden!important;
+    border:1px solid color-mix(in srgb,var(--accent) 38%,rgba(255,255,255,.10))!important;
+    border-radius:13px!important;
+    background:
+      radial-gradient(circle at 10% 50%,color-mix(in srgb,var(--accent) 8%,transparent),transparent 48%),
+      linear-gradient(145deg,rgba(8,8,13,.82),rgba(2,2,7,.70))!important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.055),
+      inset 0 0 18px color-mix(in srgb,var(--accent) 4%,transparent),
+      0 8px 20px rgba(0,0,0,.22)!important;
+    -webkit-backdrop-filter:blur(10px) saturate(1.08)!important;
+    backdrop-filter:blur(10px) saturate(1.08)!important;
+  }
+  body.front-mode .hero .searchBar::before{
+    content:""!important;
+    position:absolute!important;
+    left:11px!important;
+    top:50%!important;
+    width:3px!important;
+    height:3px!important;
+    border-radius:50%!important;
+    transform:translateY(-50%)!important;
+    background:var(--accent)!important;
+    box-shadow:0 0 8px color-mix(in srgb,var(--accent) 60%,transparent)!important;
+    opacity:.75!important;
+    pointer-events:none!important;
+  }
+  body.front-mode .hero .searchBar input{
+    height:29px!important;
+    min-height:29px!important;
+    padding:0 7px 0 14px!important;
+    border:0!important;
+    border-radius:9px!important;
+    outline:0!important;
+    color:var(--strong)!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    font-size:9.4px!important;
+    font-weight:700!important;
+    text-align:left!important;
+  }
+  body.front-mode .hero .searchBar input::placeholder{color:color-mix(in srgb,var(--muted) 76%,transparent)!important}
+  body.front-mode .hero .searchBar input:focus{border:0!important;box-shadow:none!important}
+  body.front-mode .hero .searchBar:focus-within{
+    border-color:color-mix(in srgb,var(--accent) 68%,rgba(255,255,255,.15))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.065),0 0 0 2px color-mix(in srgb,var(--accent) 10%,transparent),0 8px 20px rgba(0,0,0,.22)!important;
+  }
+  body.front-mode .hero .searchBar button{
+    width:29px!important;
+    min-width:29px!important;
+    height:29px!important;
+    min-height:29px!important;
+    padding:0!important;
+    display:grid!important;
+    place-items:center!important;
+    border:1px solid rgba(255,255,255,.13)!important;
+    border-radius:9px!important;
+    color:#15100d!important;
+    background:linear-gradient(145deg,var(--strong),var(--accent) 58%,var(--accent2))!important;
+    box-shadow:0 4px 10px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.22)!important;
+  }
+  body.front-mode .hero .searchBar button .mobileSearchIcon,
+  body.front-mode .hero .searchBar button .mobileSearchIcon svg{width:12px!important;height:12px!important}
+}
+
+@media (max-width:390px){
+  body.front-mode .hero .searchBar{width:min(238px,66vw)!important;max-width:238px!important}
+}
+
+@media (max-width:360px){
+  body.front-mode .gpRankingSection .gpRankingTitle{font-size:13.2px!important;letter-spacing:.04em!important}
+}
+
+
+/* =====================================================================
+   V100 — MOBILE CREST FALLBACK / NON-RECTANGULAR HEADER LOGO GLOW /
+          PREMIUM ESSENTIAL CARDS / UPPER PROFILE SWIPE
+   Scope: mobile only. Desktop layout and desktop data presentation remain
+   untouched. Student Point Log / Academic Records swipe is not repurposed.
+   ===================================================================== */
+@media (max-width:768px){
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable{
+    display:grid!important;
+    place-items:center!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankAvatarFrame,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankAvatarFrame{
+    position:relative!important;
+    overflow:hidden!important;
+    display:grid!important;
+    place-items:center!important;
+    background:
+      radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--gpGlow) 20%,transparent),transparent 58%),
+      linear-gradient(145deg,rgba(8,8,13,.97),rgba(3,3,8,.92))!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankHouseWatermark,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankHouseWatermark{
+    display:none!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankAvatarImage{
+    display:none!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankAvatarFrame>span,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankAvatarFrame>span{
+    display:none!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankHouseBadge,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankHouseBadge{
+    left:50%!important;
+    top:50%!important;
+    right:auto!important;
+    bottom:auto!important;
+    width:32px!important;
+    height:32px!important;
+    display:grid!important;
+    place-items:center!important;
+    transform:translate(-50%,-50%)!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankHouseBadge img,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankHouseBadge img{
+    width:28px!important;
+    height:28px!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    filter:drop-shadow(0 0 7px var(--gpGlow))!important;
+  }
+
+  body.front-mode .hero>.heroContent>.desktopHeroLogo,
+  body.front-mode .mobileCornerLogo,
+  body.front-mode .mobileAppBrandSeal,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal{
+    position:relative!important;
+    isolation:isolate!important;
+    border:0!important;
+    background:
+      radial-gradient(circle at 50% 50%,
+        color-mix(in srgb,var(--accent) 14%,transparent) 0%,
+        color-mix(in srgb,var(--accent) 8%,transparent) 34%,
+        transparent 70%)!important;
+    box-shadow:none!important;
+    filter:none!important;
+  }
+  body.front-mode .hero>.heroContent>.desktopHeroLogo::before,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo::after,
+  body.front-mode .mobileCornerLogo::before,
+  body.front-mode .mobileCornerLogo::after,
+  body.front-mode .mobileAppBrandSeal::before,
+  body.front-mode .mobileAppBrandSeal::after,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal::before,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal::after{
+    display:none!important;
+    content:none!important;
+    background:none!important;
+    box-shadow:none!important;
+  }
+  body.front-mode .hero>.heroContent>.desktopHeroLogo img,
+  body.front-mode .mobileCornerLogo img,
+  body.front-mode .mobileAppBrandSeal img,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal img{
+    width:100%!important;
+    height:100%!important;
+    object-fit:contain!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    mix-blend-mode:normal!important;
+    filter:brightness(1.08) contrast(1.18)!important;
+    -webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 0 58%,rgba(0,0,0,.98) 68%,rgba(0,0,0,.72) 80%,transparent 100%)!important;
+    mask-image:radial-gradient(ellipse at 50% 50%,#000 0 58%,rgba(0,0,0,.98) 68%,rgba(0,0,0,.72) 80%,transparent 100%)!important;
+    -webkit-mask-size:100% 100%!important;
+    mask-size:100% 100%!important;
+    -webkit-mask-repeat:no-repeat!important;
+    mask-repeat:no-repeat!important;
+    -webkit-mask-position:center!important;
+    mask-position:center!important;
+  }
+
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFacts{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard{
+    position:relative!important;
+    isolation:isolate!important;
+    overflow:hidden!important;
+    min-height:66px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    padding:10px 11px!important;
+    border:1px solid color-mix(in srgb,var(--accent) 25%,rgba(255,255,255,.075))!important;
+    border-radius:15px!important;
+    background:
+      linear-gradient(145deg,rgba(255,255,255,.050),rgba(255,255,255,.010) 34%,rgba(3,3,9,.18)),
+      color-mix(in srgb,var(--accent) 2.5%,rgba(4,4,10,.32))!important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.060),
+      inset 0 -1px 0 rgba(0,0,0,.22),
+      0 9px 22px rgba(0,0,0,.16)!important;
+    -webkit-backdrop-filter:blur(9px) saturate(1.04)!important;
+    backdrop-filter:blur(9px) saturate(1.04)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact::before,
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact::after,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectEssentials .mobileDirectMiniCard::before,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectEssentials .mobileDirectMiniCard::after,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectEssentials .mobileDirectMiniCard:nth-child(2)::before,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectEssentials .mobileDirectMiniCard:nth-child(2)::after,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectFinanceCard::before,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectFinanceCard::after{
+    display:none!important;
+    content:none!important;
+    width:0!important;
+    height:0!important;
+    opacity:0!important;
+    background:none!important;
+    border:0!important;
+    box-shadow:none!important;
+    -webkit-mask-image:none!important;
+    mask-image:none!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact span,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectLabel{
+    display:block!important;
+    margin:0!important;
+    color:color-mix(in srgb,var(--accent) 76%,var(--muted))!important;
+    font-size:6.2px!important;
+    font-weight:900!important;
+    line-height:1.1!important;
+    letter-spacing:.11em!important;
+    text-transform:uppercase!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact strong,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectValue{
+    display:block!important;
+    min-width:0!important;
+    margin-top:7px!important;
+    overflow:hidden!important;
+    color:var(--strong)!important;
+    font-size:10.4px!important;
+    font-weight:850!important;
+    line-height:1.12!important;
+    letter-spacing:.012em!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectXLink{
+    width:100%!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:6px!important;
+    color:inherit!important;
+    text-decoration:none!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectXLink span{
+    min-width:0!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectXLink b{
+    flex:0 0 auto!important;
+    color:var(--accent)!important;
+    font-size:10px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectFinanceCard{
+    isolation:isolate!important;
+  }
+
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipe{
+    width:100%!important;
+    min-width:0!important;
+    margin-top:8px!important;
+    padding:9px!important;
+    overflow:hidden!important;
+    border:1px solid color-mix(in srgb,var(--accent) 24%,rgba(255,255,255,.065))!important;
+    border-radius:18px!important;
+    background:
+      linear-gradient(145deg,rgba(255,255,255,.030),rgba(3,3,9,.12)),
+      color-mix(in srgb,var(--accent) 2%,rgba(3,3,9,.20))!important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.045),
+      0 12px 28px rgba(0,0,0,.14)!important;
+    -webkit-backdrop-filter:blur(8px) saturate(1.03)!important;
+    backdrop-filter:blur(8px) saturate(1.03)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeHead{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    margin-bottom:7px!important;
+    padding:0 2px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeHeading{
+    min-width:0!important;
+    display:grid!important;
+    gap:2px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeHeading span{
+    color:var(--accent)!important;
+    font-size:5.7px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    letter-spacing:.14em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeHeading strong{
+    min-width:0!important;
+    overflow:hidden!important;
+    color:var(--muted)!important;
+    font-size:6.3px!important;
+    font-weight:750!important;
+    line-height:1.2!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeCounter{
+    flex:0 0 auto!important;
+    min-width:32px!important;
+    padding:4px 6px!important;
+    border:1px solid color-mix(in srgb,var(--accent) 25%,rgba(255,255,255,.05))!important;
+    border-radius:999px!important;
+    color:var(--accent)!important;
+    background:rgba(0,0,0,.22)!important;
+    font-size:5.8px!important;
+    font-weight:900!important;
+    text-align:center!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreviewRail{
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)!important;
+    gap:5px!important;
+    align-items:stretch!important;
+    margin-bottom:8px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreview{
+    min-width:0!important;
+    min-height:45px!important;
+    display:grid!important;
+    grid-template-columns:22px minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:6px!important;
+    padding:6px 7px!important;
+    border:1px solid color-mix(in srgb,var(--accent) 16%,rgba(255,255,255,.055))!important;
+    border-radius:12px!important;
+    color:var(--muted)!important;
+    background:linear-gradient(145deg,rgba(255,255,255,.025),rgba(0,0,0,.16))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.025)!important;
+    text-align:left!important;
+    cursor:pointer!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreview.is-active{
+    border-color:color-mix(in srgb,var(--accent) 44%,rgba(255,255,255,.08))!important;
+    color:var(--strong)!important;
+    background:
+      radial-gradient(circle at 0 50%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 58%),
+      linear-gradient(145deg,rgba(255,255,255,.040),rgba(0,0,0,.15))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.045),0 0 16px color-mix(in srgb,var(--accent) 7%,transparent)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreviewIndex{
+    width:22px!important;
+    height:22px!important;
+    display:grid!important;
+    place-items:center!important;
+    border:1px solid color-mix(in srgb,var(--accent) 24%,rgba(255,255,255,.05))!important;
+    border-radius:8px!important;
+    color:var(--accent)!important;
+    background:rgba(0,0,0,.24)!important;
+    font-size:5.8px!important;
+    font-weight:900!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreviewCopy{
+    min-width:0!important;
+    display:grid!important;
+    gap:2px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreviewCopy small{
+    color:color-mix(in srgb,var(--accent) 64%,var(--muted))!important;
+    font-size:4.6px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    letter-spacing:.08em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreviewCopy strong{
+    min-width:0!important;
+    overflow:hidden!important;
+    color:inherit!important;
+    font-size:6.2px!important;
+    font-weight:850!important;
+    line-height:1.1!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeCue{
+    display:grid!important;
+    place-items:center!important;
+    align-content:center!important;
+    gap:0!important;
+    color:var(--accent)!important;
+    text-align:center!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeCue b{
+    font-size:11px!important;
+    line-height:.8!important;
+    font-weight:700!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeCue small{
+    margin-top:2px!important;
+    color:var(--muted)!important;
+    font-size:4.2px!important;
+    font-weight:900!important;
+    letter-spacing:.06em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeViewport{
+    position:relative!important;
+    width:100%!important;
+    min-width:0!important;
+    overflow:hidden!important;
+    transition:height .28s ease!important;
+    touch-action:pan-y pinch-zoom!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeTrack{
+    width:100%!important;
+    display:flex!important;
+    align-items:flex-start!important;
+    will-change:transform!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage{
+    width:100%!important;
+    min-width:100%!important;
+    flex:0 0 100%!important;
+    padding:0!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage>.mobileDirectCard{
+    width:100%!important;
+    min-width:0!important;
+    margin:0!important;
+    border-radius:14px!important;
+    background:
+      linear-gradient(145deg,rgba(255,255,255,.035),rgba(3,3,9,.16)),
+      color-mix(in srgb,var(--accent) 1.5%,rgba(3,3,9,.28))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 8px 20px rgba(0,0,0,.12)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage .mobileDirectCardHead{
+    min-height:41px!important;
+    padding:8px 9px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage .mobileDirectCardHead span{
+    font-size:4.8px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage .mobileDirectCardHead h3{
+    margin-top:2px!important;
+    font-size:8.5px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage .mobileDirectCardIcon{
+    width:25px!important;
+    height:25px!important;
+    display:grid!important;
+    place-items:center!important;
+    border-radius:9px!important;
+    font-size:9px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage .mobileDirectJourney{
+    max-height:214px!important;
+    overflow:auto!important;
+    padding-right:2px!important;
+    scrollbar-width:thin!important;
+    scrollbar-color:var(--accent) transparent!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage .mobileDirectMediaPreview{
+    min-height:145px!important;
+    max-height:205px!important;
+    display:grid!important;
+    place-items:center!important;
+    overflow:hidden!important;
+    background:rgba(0,0,0,.15)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage .mobileDirectMediaPreview img{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:205px!important;
+    object-fit:contain!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipePage .mobileDirectMediaAction{
+    padding:7px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeDots{
+    min-height:15px!important;
+    display:flex!important;
+    align-items:flex-end!important;
+    justify-content:center!important;
+    gap:5px!important;
+    padding-top:6px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeDots button{
+    width:13px!important;
+    height:3px!important;
+    min-width:13px!important;
+    min-height:3px!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:999px!important;
+    background:color-mix(in srgb,var(--muted) 38%,transparent)!important;
+    box-shadow:none!important;
+    cursor:pointer!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfileSwipeDots button.is-active{
+    width:26px!important;
+    background:linear-gradient(90deg,var(--accent),var(--strong))!important;
+    box-shadow:0 0 8px color-mix(in srgb,var(--accent) 28%,transparent)!important;
+  }
+}
+
+@media (max-width:390px){
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreviewRail{
+    grid-template-columns:minmax(0,1fr) 24px minmax(0,1fr)!important;
+    gap:4px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreview{
+    grid-template-columns:20px minmax(0,1fr)!important;
+    min-height:43px!important;
+    padding:5px 6px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileProfilePreviewIndex{
+    width:20px!important;height:20px!important;
+  }
+}
+
+
+/* =====================================================================
+   V101 — MOBILE-ONLY POLISH
+   1) Deterministic centered House crest for GP-ranking no-photo states.
+   2) Header logo glow rebuilt as a circular halo, never an image-box glow.
+   3) Current Grade / ID / X / DOB rebuilt as clean premium credential cards.
+   Desktop rules and all unrelated mobile sections remain untouched.
+   ===================================================================== */
+.gpRankMobileFallbackCrest{display:none}
+
+@media (max-width:768px){
+  /* GP RANKING: the mobile fallback crest now lives INSIDE the photo frame.
+     The legacy external House badge is hidden only when there is no usable photo. */
+  .gpRankingSection .gpRankAvatar.isFallback .gpRankHouseBadge,
+  .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankHouseBadge,
+  .gpRankingSection .gpRankAvatar.isFallback .gpRankHouseWatermark,
+  .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankHouseWatermark{
+    display:none!important;
+  }
+  .gpRankingSection .gpRankAvatar.isFallback .gpRankAvatarImage,
+  .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankAvatarImage,
+  .gpRankingSection .gpRankAvatar.isFallback .gpRankAvatarFrame>span:not(.gpRankMobileFallbackCrest),
+  .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankAvatarFrame>span:not(.gpRankMobileFallbackCrest){
+    display:none!important;
+  }
+  .gpRankingSection .gpRankAvatar.isFallback .gpRankAvatarFrame,
+  .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankAvatarFrame{
+    position:relative!important;
+    overflow:hidden!important;
+    display:grid!important;
+    place-items:center!important;
+    background:
+      radial-gradient(circle at 50% 48%,color-mix(in srgb,var(--gpGlow) 17%,transparent),transparent 58%),
+      linear-gradient(155deg,rgba(10,10,15,.96),rgba(3,3,8,.93))!important;
+  }
+  .gpRankingSection .gpRankAvatar.isFallback .gpRankMobileFallbackCrest,
+  .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankMobileFallbackCrest{
+    position:absolute!important;
+    inset:0!important;
+    z-index:8!important;
+    width:100%!important;
+    height:100%!important;
+    display:grid!important;
+    place-items:center!important;
+    transform:none!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    pointer-events:none!important;
+  }
+  .gpRankingSection .gpRankAvatar.isFallback .gpRankMobileFallbackCrest img,
+  .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankMobileFallbackCrest img{
+    width:31px!important;
+    height:31px!important;
+    max-width:64%!important;
+    max-height:64%!important;
+    display:block!important;
+    margin:0!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    transform:none!important;
+    filter:drop-shadow(0 4px 8px rgba(0,0,0,.34))!important;
+  }
+
+  /* HEADER LOGOS: remove every rectangular glow source. The halo is a
+     dedicated circular pseudo-element behind the logo, not a filter on the image box. */
+  body.front-mode .hero>.heroContent>.desktopHeroLogo,
+  body.front-mode .mobileCornerLogo,
+  body.front-mode .mobileAppBrandSeal,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal{
+    position:relative!important;
+    isolation:isolate!important;
+    overflow:visible!important;
+    border:0!important;
+    background:none!important;
+    box-shadow:none!important;
+    filter:none!important;
+  }
+  body.front-mode .hero>.heroContent>.desktopHeroLogo::after,
+  body.front-mode .mobileCornerLogo::after,
+  body.front-mode .mobileAppBrandSeal::after,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal::after{
+    display:none!important;
+    content:none!important;
+  }
+  body.front-mode .hero>.heroContent>.desktopHeroLogo::before,
+  body.front-mode .mobileCornerLogo::before,
+  body.front-mode .mobileAppBrandSeal::before,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal::before{
+    content:""!important;
+    position:absolute!important;
+    left:50%!important;
+    top:50%!important;
+    z-index:0!important;
+    width:62%!important;
+    height:62%!important;
+    display:block!important;
+    transform:translate(-50%,-50%)!important;
+    border:0!important;
+    border-radius:50%!important;
+    background:radial-gradient(circle,
+      color-mix(in srgb,var(--accent) 18%,transparent) 0%,
+      color-mix(in srgb,var(--accent) 10%,transparent) 38%,
+      transparent 72%)!important;
+    box-shadow:none!important;
+    filter:blur(8px)!important;
+    opacity:.82!important;
+    pointer-events:none!important;
+  }
+  body.front-mode .hero>.heroContent>.desktopHeroLogo img,
+  body.front-mode .mobileCornerLogo img,
+  body.front-mode .mobileAppBrandSeal img,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal img{
+    position:relative!important;
+    z-index:1!important;
+    width:100%!important;
+    height:100%!important;
+    display:block!important;
+    object-fit:contain!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    filter:none!important;
+    mix-blend-mode:normal!important;
+    -webkit-mask-image:radial-gradient(ellipse at 50% 50%,#000 0 72%,rgba(0,0,0,.96) 82%,rgba(0,0,0,.55) 91%,transparent 100%)!important;
+    mask-image:radial-gradient(ellipse at 50% 50%,#000 0 72%,rgba(0,0,0,.96) 82%,rgba(0,0,0,.55) 91%,transparent 100%)!important;
+    -webkit-mask-size:100% 100%!important;
+    mask-size:100% 100%!important;
+    -webkit-mask-repeat:no-repeat!important;
+    mask-repeat:no-repeat!important;
+    -webkit-mask-position:center!important;
+    mask-position:center!important;
+  }
+
+  /* STUDENT ESSENTIALS: a restrained 2x2 credential-card language.
+     No decorative motifs, rails, diamonds, or pseudo ornaments. */
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFacts,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectEssentials{
+    gap:8px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard{
+    position:relative!important;
+    isolation:isolate!important;
+    overflow:hidden!important;
+    min-height:60px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    justify-content:center!important;
+    padding:11px 12px!important;
+    border:1px solid color-mix(in srgb,var(--accent) 31%,rgba(255,255,255,.095))!important;
+    border-radius:13px!important;
+    background:
+      linear-gradient(180deg,
+        color-mix(in srgb,var(--accent) 4%,rgba(255,255,255,.055)) 0%,
+        rgba(8,8,14,.42) 48%,
+        rgba(3,3,8,.52) 100%)!important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.075),
+      inset 0 0 0 1px rgba(255,255,255,.012),
+      0 8px 20px rgba(0,0,0,.14)!important;
+    -webkit-backdrop-filter:blur(11px) saturate(1.04)!important;
+    backdrop-filter:blur(11px) saturate(1.04)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact::before,
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact::after,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard::before,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard::after{
+    display:none!important;
+    content:none!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact span,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectLabel{
+    display:block!important;
+    margin:0!important;
+    color:color-mix(in srgb,var(--accent) 82%,var(--muted))!important;
+    font-size:6.2px!important;
+    font-weight:900!important;
+    line-height:1.05!important;
+    letter-spacing:.13em!important;
+    text-transform:uppercase!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact strong,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectValue{
+    width:100%!important;
+    min-width:0!important;
+    display:block!important;
+    margin:7px 0 0!important;
+    overflow:hidden!important;
+    color:var(--strong)!important;
+    font-size:10.8px!important;
+    font-weight:850!important;
+    line-height:1.08!important;
+    letter-spacing:.01em!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-variant-numeric:tabular-nums!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileSummaryId{
+    font-size:9.7px!important;
+    letter-spacing:.025em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileSummaryGrade{
+    font-size:11.4px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileDirectDob{
+    font-size:10.5px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectXLink{
+    width:100%!important;
+    min-width:0!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:7px!important;
+    color:inherit!important;
+    text-decoration:none!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectXLink span{
+    min-width:0!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectXLink b{
+    width:20px!important;
+    height:20px!important;
+    flex:0 0 20px!important;
+    display:grid!important;
+    place-items:center!important;
+    border:1px solid color-mix(in srgb,var(--accent) 28%,rgba(255,255,255,.08))!important;
+    border-radius:7px!important;
+    color:var(--accent)!important;
+    background:rgba(0,0,0,.20)!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+    font-size:8.5px!important;
+    line-height:1!important;
+  }
+}
+
+@media (max-width:390px){
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard{
+    min-height:58px!important;
+    padding:10px 11px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact strong,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectValue{
+    font-size:10.2px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileSummaryId{font-size:9.2px!important}
+  body:not(.front-mode) .mobileStudentDossier #mobileSummaryGrade{font-size:10.9px!important}
+}
+
+
+/* =====================================================================
+   V102 — MOBILE-ONLY REFINEMENT
+   1) Ranking no-photo crest is structurally centred inside the avatar frame.
+   2) Header logos use an intentional faceted medallion instead of box-like glow.
+   3) Profile swipe starts with official media, then activity.
+   4) Grade / ID / X / DOB use premium credential tiles.
+   5) Record swipe exposes both destinations before the gesture.
+   6) GP Ranking heading is browser-safe and balanced.
+   7) Home masthead is shorter; Japanese eyebrow is smaller.
+   ===================================================================== */
+@media (max-width:768px){
+  /* 1 — GP ranking no-photo crest: absolute centring within the 48px frame. */
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable{
+    overflow:visible!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback > .gpRankHouseBadge,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable > .gpRankHouseBadge,
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback > .gpRankHouseWatermark,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable > .gpRankHouseWatermark{
+    display:none!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankAvatarFrame,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankAvatarFrame{
+    position:relative!important;
+    overflow:hidden!important;
+    display:block!important;
+    width:48px!important;
+    height:48px!important;
+    min-width:48px!important;
+    min-height:48px!important;
+    background:linear-gradient(155deg,rgba(11,11,18,.98),rgba(3,3,8,.98))!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankMobileFallbackCrest,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankMobileFallbackCrest{
+    position:absolute!important;
+    inset:0!important;
+    z-index:20!important;
+    width:48px!important;
+    height:48px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    transform:none!important;
+    writing-mode:horizontal-tb!important;
+    pointer-events:none!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankMobileFallbackCrest img,
+  body.front-mode .gpRankingSection .gpRankAvatar.isPhotoUnavailable .gpRankMobileFallbackCrest img{
+    position:static!important;
+    width:30px!important;
+    height:30px!important;
+    max-width:30px!important;
+    max-height:30px!important;
+    display:block!important;
+    margin:0!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    transform:none!important;
+    filter:drop-shadow(0 0 6px color-mix(in srgb,var(--gpGlow) 42%,transparent))!important;
+  }
+  body.front-mode .gpRankingSection .gpRankAvatar.isFallback .gpRankFallbackInitial{
+    position:absolute!important;
+    inset:0!important;
+    width:48px!important;
+    height:48px!important;
+    display:grid!important;
+    place-items:center!important;
+    margin:0!important;
+    padding:0!important;
+    color:var(--strong)!important;
+    background:transparent!important;
+    border:0!important;
+    font-size:15px!important;
+    line-height:1!important;
+    writing-mode:horizontal-tb!important;
+    transform:none!important;
+  }
+
+  /* 2 — All mobile header seals become a deliberate faceted medallion.
+     The shape makes the glow intentional and prevents a square luminous plate. */
+  body.front-mode .hero>.heroContent>.desktopHeroLogo,
+  body.front-mode .mobileCornerLogo,
+  body.front-mode .mobileAppBrandSeal,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal{
+    position:relative!important;
+    isolation:isolate!important;
+    overflow:hidden!important;
+    padding:5px!important;
+    border:0!important;
+    clip-path:polygon(50% 0,84% 10%,100% 38%,96% 72%,72% 96%,36% 100%,7% 82%,0 48%,14% 16%)!important;
+    background:
+      radial-gradient(circle at 50% 40%,color-mix(in srgb,var(--accent) 18%,rgba(255,255,255,.055)),transparent 58%),
+      linear-gradient(145deg,rgba(18,18,27,.96),color-mix(in srgb,var(--accent) 10%,rgba(3,3,8,.96)))!important;
+    box-shadow:none!important;
+    filter:drop-shadow(0 5px 8px rgba(0,0,0,.32)) drop-shadow(0 0 7px color-mix(in srgb,var(--accent) 24%,transparent))!important;
+  }
+  body.front-mode .hero>.heroContent>.desktopHeroLogo::before,
+  body.front-mode .mobileCornerLogo::before,
+  body.front-mode .mobileAppBrandSeal::before,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal::before{
+    content:""!important;
+    position:absolute!important;
+    inset:2px!important;
+    z-index:0!important;
+    display:block!important;
+    border:1px solid color-mix(in srgb,var(--accent) 42%,rgba(255,255,255,.10))!important;
+    clip-path:inherit!important;
+    background:linear-gradient(135deg,rgba(255,255,255,.07),transparent 38%,color-mix(in srgb,var(--accent) 8%,transparent))!important;
+    opacity:1!important;
+    filter:none!important;
+    transform:none!important;
+    pointer-events:none!important;
+  }
+  body.front-mode .hero>.heroContent>.desktopHeroLogo::after,
+  body.front-mode .mobileCornerLogo::after,
+  body.front-mode .mobileAppBrandSeal::after,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal::after{
+    content:""!important;
+    position:absolute!important;
+    left:18%!important;
+    right:18%!important;
+    top:5px!important;
+    height:1px!important;
+    display:block!important;
+    background:linear-gradient(90deg,transparent,var(--strong),transparent)!important;
+    opacity:.42!important;
+    pointer-events:none!important;
+  }
+  body.front-mode .hero>.heroContent>.desktopHeroLogo img,
+  body.front-mode .mobileCornerLogo img,
+  body.front-mode .mobileAppBrandSeal img,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal img{
+    position:relative!important;
+    z-index:2!important;
+    width:100%!important;
+    height:100%!important;
+    display:block!important;
+    object-fit:contain!important;
+    object-position:center!important;
+    padding:2px!important;
+    clip-path:circle(48% at 50% 50%)!important;
+    -webkit-mask-image:none!important;
+    mask-image:none!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    filter:none!important;
+  }
+
+  /* 4 — Credential tiles: premium through material, hierarchy and a small
+     functional code tag instead of decorative ornaments. */
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFacts,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectEssentials{
+    gap:9px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard{
+    position:relative!important;
+    isolation:isolate!important;
+    overflow:hidden!important;
+    min-height:70px!important;
+    padding:13px 13px 11px!important;
+    justify-content:flex-end!important;
+    border:1px solid transparent!important;
+    border-radius:16px!important;
+    background:
+      linear-gradient(155deg,rgba(13,13,21,.78),rgba(4,4,10,.62)) padding-box,
+      linear-gradient(135deg,color-mix(in srgb,var(--strong) 26%,transparent),color-mix(in srgb,var(--accent) 58%,transparent) 44%,rgba(255,255,255,.07) 100%) border-box!important;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.075),
+      inset 0 -18px 34px rgba(0,0,0,.16),
+      0 9px 22px rgba(0,0,0,.18)!important;
+    -webkit-backdrop-filter:blur(13px) saturate(1.08)!important;
+    backdrop-filter:blur(13px) saturate(1.08)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact::before,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard::before{
+    content:""!important;
+    position:absolute!important;
+    left:11px!important;
+    right:11px!important;
+    top:9px!important;
+    height:1px!important;
+    display:block!important;
+    background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 48%,transparent),rgba(255,255,255,.13),transparent 78%)!important;
+    opacity:.68!important;
+    pointer-events:none!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact::after,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard::after{
+    position:absolute!important;
+    right:10px!important;
+    top:10px!important;
+    z-index:2!important;
+    display:inline-flex!important;
+    align-items:center!important;
+    justify-content:center!important;
+    min-width:25px!important;
+    height:14px!important;
+    padding:0 5px!important;
+    border:1px solid color-mix(in srgb,var(--accent) 30%,rgba(255,255,255,.08))!important;
+    border-radius:999px!important;
+    color:color-mix(in srgb,var(--accent) 80%,var(--strong))!important;
+    background:rgba(0,0,0,.24)!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.04)!important;
+    font-size:4.5px!important;
+    font-weight:900!important;
+    line-height:1!important;
+    letter-spacing:.10em!important;
+    text-transform:uppercase!important;
+    pointer-events:none!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact:nth-child(1)::after{content:"GRADE"!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact:nth-child(2)::after{content:"ID"!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard:nth-child(1)::after{content:"X"!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard:nth-child(2)::after{content:"DOB"!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact span,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectLabel{
+    position:relative!important;
+    z-index:2!important;
+    margin:0!important;
+    padding-right:34px!important;
+    color:color-mix(in srgb,var(--accent) 84%,var(--muted))!important;
+    font-size:5.8px!important;
+    line-height:1.05!important;
+    letter-spacing:.13em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact strong,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectValue{
+    position:relative!important;
+    z-index:2!important;
+    margin:9px 0 0!important;
+    color:var(--strong)!important;
+    font-family:"Cinzel","League Spartan",serif!important;
+    font-size:12px!important;
+    font-weight:800!important;
+    line-height:1.05!important;
+    letter-spacing:.018em!important;
+    text-shadow:0 0 11px color-mix(in srgb,var(--accent) 12%,transparent)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileSummaryGrade{font-size:12.6px!important}
+  body:not(.front-mode) .mobileStudentDossier #mobileSummaryId{font-size:9.6px!important;letter-spacing:.035em!important}
+  body:not(.front-mode) .mobileStudentDossier #mobileDirectDob{font-size:10.5px!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectXLink b{
+    width:18px!important;height:18px!important;flex:0 0 18px!important;border-radius:50%!important;font-size:7.6px!important;
+  }
+
+  /* 5 — Pre-swipe previews for Student Point Log / Academic Records. */
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewRail{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 28px minmax(0,1fr)!important;
+    align-items:stretch!important;
+    gap:5px!important;
+    margin:7px 0 8px!important;
+    padding:0!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreview{
+    min-width:0!important;
+    min-height:43px!important;
+    display:grid!important;
+    grid-template-columns:22px minmax(0,1fr)!important;
+    align-items:center!important;
+    gap:6px!important;
+    padding:6px 7px!important;
+    border:1px solid color-mix(in srgb,var(--accent) 18%,rgba(255,255,255,.055))!important;
+    border-radius:12px!important;
+    color:var(--muted)!important;
+    text-align:left!important;
+    background:linear-gradient(145deg,rgba(255,255,255,.025),rgba(3,3,8,.22))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035)!important;
+    cursor:pointer!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreview.is-active{
+    border-color:color-mix(in srgb,var(--accent) 52%,rgba(255,255,255,.08))!important;
+    color:var(--strong)!important;
+    background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 9%,rgba(255,255,255,.035)),rgba(3,3,8,.30))!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.055),0 0 14px color-mix(in srgb,var(--accent) 7%,transparent)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewIndex{
+    width:22px!important;height:22px!important;display:grid!important;place-items:center!important;
+    border:1px solid color-mix(in srgb,var(--accent) 27%,rgba(255,255,255,.05))!important;border-radius:7px!important;
+    color:var(--accent)!important;background:rgba(0,0,0,.20)!important;font-size:5px!important;font-weight:900!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCopy{min-width:0!important;display:grid!important;gap:2px!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCopy small{font-size:4.7px!important;font-weight:900!important;letter-spacing:.10em!important;color:var(--accent)!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCopy strong{min-width:0!important;overflow:hidden!important;text-overflow:ellipsis!important;white-space:nowrap!important;font-size:5.6px!important;line-height:1.08!important;font-weight:750!important;color:inherit!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCue{display:grid!important;place-items:center!important;align-content:center!important;gap:1px!important;color:var(--accent)!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCue b{font-size:11px!important;line-height:1!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCue small{font-size:3.8px!important;font-weight:900!important;letter-spacing:.08em!important}
+
+  /* 6 — Browser-safe mobile GP heading. */
+  body.front-mode .gpRankingSection .gpRankingHeader{
+    min-height:0!important;
+    display:grid!important;
+    grid-template-columns:1fr!important;
+    justify-items:center!important;
+    gap:6px!important;
+    padding:11px 12px 9px!important;
+    text-align:center!important;
+  }
+  body.front-mode .gpRankingSection .gpRankingHeader>div:first-child{width:100%!important;min-width:0!important}
+  body.front-mode .gpRankingSection .gpRankingEyebrow{
+    margin:0!important;font-size:5px!important;line-height:1!important;letter-spacing:.18em!important;text-align:center!important;white-space:nowrap!important;
+  }
+  body.front-mode .gpRankingSection .gpRankingTitle{
+    width:100%!important;max-width:100%!important;margin:4px auto 0!important;padding:0 4px!important;
+    overflow:visible!important;color:var(--strong)!important;font-family:"Cinzel","League Spartan",serif!important;
+    font-size:13.4px!important;font-weight:800!important;line-height:1.08!important;letter-spacing:.08em!important;
+    text-align:center!important;white-space:nowrap!important;text-overflow:clip!important;
+  }
+  body.front-mode .gpRankingSection .gpRankingDisclaimer{
+    max-width:310px!important;margin:5px auto 0!important;font-size:4.8px!important;line-height:1.32!important;text-align:center!important;
+  }
+  body.front-mode .gpRankingSection .gpRankingMeta{
+    width:auto!important;min-width:0!important;display:flex!important;align-items:center!important;justify-content:center!important;gap:7px!important;text-align:center!important;
+  }
+  body.front-mode .gpRankingSection .gpRankingSemester{min-height:19px!important;padding:4px 8px!important;font-size:4.8px!important}
+  body.front-mode .gpRankingSection .gpRankingUpdated{margin:0!important;font-size:4.5px!important;line-height:1.15!important}
+
+  /* 7 — Shorter HOME header, smaller Japanese title; search dimensions stay unchanged. */
+  body.front-mode .hero{
+    min-height:238px!important;
+    padding:10px 12px 8px!important;
+  }
+  body.front-mode .heroContent{padding:6px 0 3px!important}
+  body.front-mode .hero>.heroContent>.logo,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo{
+    width:58px!important;height:58px!important;min-width:58px!important;min-height:58px!important;margin:0 auto 0!important;
+  }
+  body.front-mode .eyebrow{
+    margin:1px auto 3px!important;font-size:8px!important;line-height:1!important;letter-spacing:.13em!important;
+  }
+  body.front-mode .mainTitle{
+    margin:0 auto 8px!important;font-size:24px!important;line-height:1!important;letter-spacing:.35px!important;
+  }
+  body.front-mode .heroNote{margin-top:6px!important;font-size:6.2px!important}
+  body.front-mode .statusLine{min-height:9px!important;margin-top:2px!important}
+}
+
+@media (max-width:390px){
+  body.front-mode .hero{min-height:232px!important;padding-top:9px!important}
+  body.front-mode .hero>.heroContent>.logo,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo{width:56px!important;height:56px!important;min-width:56px!important;min-height:56px!important}
+  body.front-mode .eyebrow{font-size:7.6px!important}
+  body.front-mode .mainTitle{font-size:23px!important}
+  body.front-mode .gpRankingSection .gpRankingTitle{font-size:12.8px!important;letter-spacing:.075em!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard{min-height:67px!important;padding:12px 12px 10px!important}
+}
+
+/* =====================================================================
+   MOBILE REVISION PATCH — v103 (final, wins over all earlier iterations)
+   Scope: MOBILE ONLY (<=768px). Nothing here touches desktop selectors,
+   so the desktop layout (width >768px) is completely unaffected.
+   Fixes requested:
+     1) Broken/mismatched logo shape (double clip-path + mask conflict)
+     2) Grade / ID / X Username / DOB tiles were oversized -> compacted
+     3) Point Log / Academic Records preview boxes were too wide ->
+        narrowed to line up with the title box above them
+     4) Point Log / Academic Records title box (swipe callout) tidied
+     5) Home header area (logo, title, search) spacing tidied
+   ===================================================================== */
+
+@media (max-width:768px){
+
+  /* ---------- 1) LOGO — single clean circular frame, no more ----------
+     conflicting clip-path polygon + circular mask fighting each other. */
+  body.front-mode .hero>.heroContent>.logo,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo,
+  body.front-mode .mobileCornerLogo,
+  body.front-mode .mobileAppBrandSeal,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    position:relative!important;
+    left:auto!important;
+    top:auto!important;
+    isolation:isolate!important;
+    overflow:hidden!important;
+    padding:0!important;
+    border:1px solid color-mix(in srgb,var(--accent) 46%,rgba(255,255,255,.16))!important;
+    border-radius:50%!important;
+    clip-path:none!important;
+    background:radial-gradient(circle at 50% 36%,color-mix(in srgb,var(--accent) 20%,rgba(255,255,255,.06)),rgba(6,6,10,.94) 74%)!important;
+    box-shadow:0 8px 16px rgba(0,0,0,.34),inset 0 0 0 1px rgba(255,255,255,.05)!important;
+    filter:none!important;
+    pointer-events:none!important;
+  }
+  body.front-mode .hero>.heroContent>.logo,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo{
+    width:60px!important;height:60px!important;min-width:60px!important;min-height:60px!important;
+    margin:0 auto 8px!important;
+  }
+  body.front-mode .hero>.heroContent>.logo::before,
+  body.front-mode .hero>.heroContent>.logo::after,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo::before,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo::after,
+  body.front-mode .mobileCornerLogo::before,
+  body.front-mode .mobileCornerLogo::after,
+  body.front-mode .mobileAppBrandSeal::before,
+  body.front-mode .mobileAppBrandSeal::after,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal::before,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal::after{
+    display:none!important;
+    content:none!important;
+  }
+  body.front-mode .hero>.heroContent>.logo img,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo img,
+  body.front-mode .mobileCornerLogo img,
+  body.front-mode .mobileAppBrandSeal img,
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal img{
+    position:relative!important;
+    z-index:2!important;
+    display:block!important;
+    width:100%!important;
+    height:100%!important;
+    object-fit:cover!important;
+    object-position:center!important;
+    padding:0!important;
+    margin:0!important;
+    border-radius:50%!important;
+    clip-path:none!important;
+    -webkit-mask-image:none!important;
+    mask-image:none!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    filter:drop-shadow(0 0 6px color-mix(in srgb,var(--accent) 26%,transparent))!important;
+  }
+  body.front-mode .mobileCornerLogo,
+  body.front-mode .mobileAppBrandSeal{display:none!important} /* the centered logo above already covers this spot on HOME */
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal{
+    width:38px!important;height:38px!important;flex:0 0 38px!important;
+  }
+
+  /* ---------- 2) Compact GRADE / ID / X USERNAME / DOB tiles ---------- */
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFacts,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectEssentials{
+    gap:7px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard{
+    min-height:0!important;
+    height:auto!important;
+    padding:7px 9px 6px!important;
+    justify-content:flex-start!important;
+    border-radius:12px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact::after,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard::after{
+    position:static!important;
+    display:none!important; /* the label text already says GRADE/ID/X/DOB — the extra corner tag was redundant clutter */
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact::before,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard::before{
+    left:9px!important;right:9px!important;top:7px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact span,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectLabel{
+    padding-right:0!important;
+    font-size:5.6px!important;
+    letter-spacing:.09em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact strong,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectValue{
+    margin:4px 0 0!important;
+    font-size:10.5px!important;
+    line-height:1.15!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileSummaryGrade{font-size:10.5px!important}
+  body:not(.front-mode) .mobileStudentDossier #mobileSummaryId{font-size:9px!important;letter-spacing:.02em!important}
+  body:not(.front-mode) .mobileStudentDossier #mobileDirectDob{font-size:9.5px!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectXLink{gap:5px!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard .mobileDirectXLink b{
+    width:16px!important;height:16px!important;flex:0 0 16px!important;font-size:6.8px!important;
+  }
+
+  /* ---------- 3) Point Log / Academic Records preview boxes ---------- *
+     Inset them to match the padding of the title box above (12px each
+     side) instead of stretching edge-to-edge, and shrink them down.   */
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewRail{
+    width:auto!important;
+    grid-template-columns:minmax(0,1fr) 20px minmax(0,1fr)!important;
+    gap:6px!important;
+    margin:8px 12px 10px!important;
+    padding:0!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreview{
+    min-height:36px!important;
+    grid-template-columns:18px minmax(0,1fr)!important;
+    gap:5px!important;
+    padding:5px 8px!important;
+    border-radius:10px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewIndex{
+    width:18px!important;height:18px!important;border-radius:6px!important;font-size:4.6px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCopy small{font-size:4.4px!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCopy strong{font-size:5.2px!important;line-height:1.1!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCue b{font-size:9px!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewCue small{font-size:3.4px!important}
+
+  /* ---------- 4) Point Log / Academic Records title box (tidied) ---------- */
+  body:not(.front-mode) .mobileStudentDossier .mobileSwipeCallout{
+    grid-template-columns:38px minmax(0,1fr) 38px!important;
+    gap:8px!important;
+    padding:10px 12px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSwipeArrow{
+    width:38px!important;height:38px!important;border-radius:12px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSwipeArrow span{font-size:24px!important}
+  body:not(.front-mode) .mobileStudentDossier .mobileSwipeCalloutCopy{
+    display:grid!important;
+    justify-items:center!important;
+    gap:2px!important;
+    min-width:0!important;
+    width:100%!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSwipeCalloutCopy strong{
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    font-size:12.5px!important;
+    letter-spacing:.01em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileSwipeCalloutCopy small{
+    max-width:100%!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    white-space:nowrap!important;
+    margin-top:2px!important;
+    font-size:6.6px!important;
+    letter-spacing:.04em!important;
+  }
+
+  /* ---------- 5) Home header — tidied spacing/alignment ---------- */
+  body.front-mode .hero{
+    padding:16px 14px 10px!important;
+  }
+  body.front-mode .heroContent{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:center!important;
+    padding:0!important;
+  }
+  body.front-mode .eyebrow{
+    margin:0 0 4px!important;
+    font-size:8px!important;
+    line-height:1!important;
+  }
+  body.front-mode .mainTitle{
+    margin:0 0 10px!important;
+    font-size:23px!important;
+    line-height:1.02!important;
+  }
+  body.front-mode .searchBar{
+    width:100%!important;
+    max-width:340px!important;
+    margin:0 auto!important;
+  }
+  body.front-mode .heroNote{
+    max-width:300px!important;
+    margin:8px auto 0!important;
+    font-size:6.4px!important;
+    line-height:1.5!important;
+  }
+  body.front-mode .statusLine{
+    width:100%!important;
+    min-height:9px!important;
+    margin-top:3px!important;
+    text-align:center!important;
+  }
+}
+
+@media (max-width:390px){
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryFact,
+  body:not(.front-mode) .mobileStudentDossier .mobileDirectMiniCard{
+    padding:6px 8px 5px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPreviewRail{
+    margin:8px 10px 9px!important;
+  }
+  body.front-mode .mainTitle{font-size:21px!important}
+}
+
+/* =====================================================================
+   MOBILE REVISION PATCH — v104 (final, wins over all earlier iterations)
+   Scope: MOBILE ONLY (<=768px). No desktop selectors touched below, so
+   the desktop layout (>768px) is completely unaffected.
+   Fixes requested:
+     1) Student-database header logo was squashed/oval (a leftover
+        min-width:49px from an older rule fought the new 38px box) ->
+        every box dimension is now pinned so it can't stretch.
+     2) HOME header logo shrunk down further.
+     3) Breathing room restored between the kanji eyebrow and main title.
+     4) HOME header section shortened (less vertical padding overall).
+     5) Student-database header area given a cleaner, tidier look.
+     6) Student Point Log / Academic Records columns re-aligned and
+        polished (consistent 12px insets, tidier headers & rows).
+   ===================================================================== */
+
+@media (max-width:768px){
+
+  /* ---------- 1) Student-database header logo: fix the squash ---------- *
+     Every sizing property is pinned to the same value so no legacy
+     min-width/min-height from an earlier pass can distort the circle. */
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal{
+    width:40px!important;height:40px!important;
+    min-width:40px!important;min-height:40px!important;
+    max-width:40px!important;max-height:40px!important;
+    flex:0 0 40px!important;
+    box-sizing:border-box!important;
+    display:block!important;
+    position:relative!important;
+    isolation:isolate!important;
+    overflow:hidden!important;
+    padding:0!important;
+    border:1px solid color-mix(in srgb,var(--accent) 46%,rgba(255,255,255,.16))!important;
+    border-radius:50%!important;
+    clip-path:none!important;
+    -webkit-clip-path:none!important;
+    background:radial-gradient(circle at 50% 36%,color-mix(in srgb,var(--accent) 20%,rgba(255,255,255,.06)),rgba(6,6,10,.94) 74%)!important;
+    box-shadow:0 6px 14px rgba(0,0,0,.34),inset 0 0 0 1px rgba(255,255,255,.05)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderSeal img{
+    position:relative!important;
+    z-index:2!important;
+    display:block!important;
+    width:100%!important;height:100%!important;
+    max-width:none!important;max-height:none!important;
+    object-fit:cover!important;
+    object-position:center!important;
+    padding:0!important;margin:0!important;
+    border-radius:50%!important;
+    clip-path:none!important;
+    -webkit-mask-image:none!important;mask-image:none!important;
+    background:transparent!important;
+    box-shadow:none!important;
+    filter:drop-shadow(0 0 5px color-mix(in srgb,var(--accent) 24%,transparent))!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderBrand{
+    gap:11px!important;
+  }
+
+  /* ---------- 2) HOME header logo — smaller ---------- */
+  body.front-mode .hero>.heroContent>.logo,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo{
+    width:44px!important;height:44px!important;
+    min-width:44px!important;min-height:44px!important;
+    max-width:44px!important;max-height:44px!important;
+    margin:0 auto 6px!important;
+  }
+
+  /* ---------- 3) Space out the kanji eyebrow from the main title ---------- */
+  body.front-mode .eyebrow{
+    margin:0 0 10px!important;
+  }
+  body.front-mode .mainTitle{
+    margin-top:0!important;
+  }
+
+  /* ---------- 4) Shorten the HOME header section ---------- */
+  body.front-mode .hero{
+    padding:12px 14px 8px!important;
+  }
+  body.front-mode .mainTitle{
+    margin-bottom:8px!important;
+    font-size:21px!important;
+  }
+  body.front-mode .heroNote{
+    margin-top:5px!important;
+  }
+  body.front-mode .statusLine{
+    min-height:7px!important;
+    margin-top:2px!important;
+  }
+
+  /* ---------- 5) Student-database header — tidied look ---------- */
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader{
+    border-radius:20px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderTop.m95BrandOnly{
+    padding:0 14px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderTitle{
+    gap:3px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderTitle>span{
+    letter-spacing:.19em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderTitle h2{
+    font-size:14.5px!important;
+    letter-spacing:.05em!important;
+  }
+
+  /* ---------- 6) Student Point Log / Academic Records — re-aligned ---------- *
+     Everything below lines up on the same 12px left/right rhythm used
+     by the title box and preview tabs, instead of the old mixed
+     9px/10px/11px insets, and gets a slightly tidier card treatment.  */
+  body:not(.front-mode) .mobileStudentDossier .mobileRecordPageScroll{
+    padding:10px 12px 14px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74PointsApp{
+    padding:12px!important;
+    border-radius:15px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74RecordHead{
+    display:flex!important;
+    flex-direction:column!important;
+    gap:6px!important;
+    padding:9px 10px 11px!important;
+    border-radius:12px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74RecordHead>div{
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:8px!important;
+    width:100%!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74RecordHead h3{
+    margin:0!important;
+    color:var(--strong)!important;
+    font-family:"Cinzel","League Spartan",serif!important;
+    font-size:11.5px!important;
+    letter-spacing:.02em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74RecordHead p{
+    margin:0!important;
+    color:var(--muted)!important;
+    font-size:6.4px!important;
+    line-height:1.35!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74PointTotals{
+    border-radius:13px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74PointActivity{
+    border-radius:13px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74PointRow:nth-child(even){
+    background:rgba(255,255,255,.014)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74PointRow time{
+    color:var(--accent)!important;
+    font-size:6.6px!important;
+    font-weight:800!important;
+    letter-spacing:.03em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier .m74PointRowBody p{
+    margin:0!important;
+    color:var(--text)!important;
+    font-size:8px!important;
+    line-height:1.3!important;
+  }
+
+  /* Academic Records — same 12px rhythm + tidier header/rows */
+  body:not(.front-mode) .mobileStudentDossier #mobileAcademicMount .m90AcademicHead{
+    padding:9px 10px 11px!important;
+    border-radius:12px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileAcademicMount .m90AcademicHeading span{
+    color:var(--accent)!important;
+    font-size:6px!important;
+    font-weight:900!important;
+    letter-spacing:.14em!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileAcademicMount .m90AcademicHeading h3{
+    margin:3px 0 0!important;
+    color:var(--strong)!important;
+    font-family:"Cinzel","League Spartan",serif!important;
+    font-size:11.5px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileAcademicMount .m90AcademicHeading p{
+    margin:4px 0 0!important;
+    color:var(--muted)!important;
+    font-size:6.2px!important;
+    line-height:1.35!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileAcademicMount .m90SemesterCard{
+    border-radius:13px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileAcademicMount .m90Participation,
+  body:not(.front-mode) .mobileStudentDossier #mobileAcademicMount .m90Subjects{
+    margin-left:0!important;
+    margin-right:0!important;
+    border-radius:11px!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileAcademicMount .m90SubjectRow:nth-child(even){
+    background:rgba(255,255,255,.014)!important;
+  }
+  body:not(.front-mode) .mobileStudentDossier #mobileAcademicMount .m90SemesterFoot{
+    padding:9px 11px 11px!important;
+  }
+}
+
+@media (max-width:390px){
+  body.front-mode .mainTitle{font-size:19.5px!important}
+  body:not(.front-mode) .mobileStudentDossier>.mobileStudentHeader .m74HeaderTitle h2{font-size:13.5px!important}
+}
+
+
+/* =====================================================================
+   V106 — ADMIN ACADEMIC PUBLICATION CONTROL
+   IMPORTANT: appended to the ORIGINAL style(152).css only.
+   No existing mobile/student selectors are overridden here.
+   ===================================================================== */
+body:not(.front-mode) .adminGateway,
+body:not(.front-mode) .adminHomePanel{display:none!important}
+
+.adminGateway{position:relative;isolation:isolate;overflow:hidden;margin-top:12px;min-height:58px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:10px 14px 10px 16px;border:1px solid color-mix(in srgb,var(--accent) 36%,transparent);border-radius:18px;background:linear-gradient(135deg,rgba(6,6,9,.88),color-mix(in srgb,var(--accent) 7%,rgba(7,7,10,.92)));box-shadow:0 12px 34px rgba(0,0,0,.28),inset 0 0 24px color-mix(in srgb,var(--accent) 5%,transparent)}
+.adminGateway::before{content:'';position:absolute;inset:auto -80px -120px auto;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 13%,transparent),transparent 68%);pointer-events:none}
+.adminGatewayCopy{position:relative;z-index:1;display:flex;align-items:center;gap:11px;min-width:0}.adminGatewayIcon{width:32px;height:32px;display:grid;place-items:center;flex:0 0 32px;border:1px solid var(--border);border-radius:11px;color:#111;background:linear-gradient(135deg,var(--accent),var(--strong));font-size:14px;font-weight:900}.adminGatewayCopy strong{display:block;color:var(--strong);font-size:10px;font-weight:900;letter-spacing:.09em}.adminGatewayCopy small{display:block;margin-top:3px;color:var(--muted);font-size:8px;letter-spacing:.025em}.adminAccessButton{position:relative;z-index:1;min-height:36px;display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:8px 14px;border:1px solid color-mix(in srgb,var(--accent) 52%,transparent);border-radius:999px;color:#111;background:linear-gradient(135deg,var(--accent),var(--strong) 58%,var(--accent2));box-shadow:0 8px 20px rgba(0,0,0,.3),0 0 18px color-mix(in srgb,var(--accent) 10%,transparent);font-size:9px;font-weight:900;letter-spacing:.075em;cursor:pointer;white-space:nowrap}.adminAccessButton b{font-size:13px;line-height:1}.adminAccessButton:hover{transform:translateY(-1px);filter:brightness(1.06)}.adminGateway.is-authenticated{border-color:rgba(86,186,128,.4);background:linear-gradient(135deg,rgba(8,46,31,.78),rgba(6,8,8,.93))}.adminGateway.is-authenticated .adminGatewayIcon{background:linear-gradient(135deg,#61c98c,#dff7e8)}.adminGateway.is-authenticated .adminAccessButton{background:linear-gradient(135deg,#62c88e,#dff7e8 60%,#8cd6ac)}
+
+.adminHomePanel{position:relative;isolation:isolate;overflow:hidden;margin-top:12px;display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:24px;padding:24px 26px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:26px;background:radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 16%,transparent),transparent 38%),linear-gradient(145deg,rgba(14,14,18,.93),rgba(4,4,7,.96));box-shadow:0 20px 64px rgba(0,0,0,.38),inset 0 0 50px color-mix(in srgb,var(--accent) 5%,transparent);backdrop-filter:blur(10px)}
+.adminHomeGlow{position:absolute;right:-100px;top:-140px;width:360px;height:360px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 16%,transparent),transparent 68%);filter:blur(10px);pointer-events:none}.adminHomeCopy,.adminHomeActions{position:relative;z-index:1}.adminHomeEyebrow{color:var(--accent);font-size:9px;font-weight:900;letter-spacing:.17em}.adminHomeTitleRow{display:flex;align-items:flex-start;justify-content:space-between;gap:20px;margin-top:7px}.adminHomeTitleRow h2{margin:0;color:var(--strong);font-family:"Cinzel",Georgia,serif;font-size:20px;letter-spacing:.035em}.adminHomeTitleRow p{max-width:650px;margin:7px 0 0;color:var(--muted);font-size:10px;line-height:1.45}.adminStorageMode{flex:0 0 auto;padding:7px 10px;border:1px solid var(--border);border-radius:999px;color:var(--accent);background:rgba(0,0,0,.38);font-size:8px;font-weight:900;white-space:nowrap}.adminHomeStatusGrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:18px}.adminHomeStatusCard{min-height:70px;display:grid;align-content:center;padding:11px 13px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.025)}.adminHomeStatusCard span{color:var(--muted);font-size:7px;font-weight:900;letter-spacing:.11em}.adminHomeStatusCard strong{margin-top:6px;color:var(--strong);font-size:12px;font-weight:900}.adminHomeActions{display:grid;align-content:center;gap:9px}.adminHomeActions button{min-height:42px;padding:10px 13px;border:1px solid var(--border);border-radius:13px;font-size:9px;font-weight:900;letter-spacing:.055em;cursor:pointer}.adminQuickPublishButton{color:#111;background:linear-gradient(135deg,#62c88e,var(--strong) 60%,var(--accent))}.adminQuickPublishButton.is-unpublish{color:#fff1f2;background:linear-gradient(135deg,#721923,#b83b46 60%,#4b0b12)}.adminManageButton{color:var(--strong);background:color-mix(in srgb,var(--accent) 10%,rgba(255,255,255,.035))}.adminLogoutButton{color:var(--muted);background:rgba(255,255,255,.025)}
+
+body.admin-modal-open{overflow:hidden}.adminModal{position:fixed;inset:0;z-index:15500;display:grid;place-items:center;padding:24px;background:rgba(0,0,0,.86);backdrop-filter:blur(13px)}.adminModalCard{width:min(980px,calc(100vw - 48px));max-height:min(92vh,920px);overflow:hidden;display:grid;grid-template-rows:auto minmax(0,1fr);border:1px solid color-mix(in srgb,var(--accent) 48%,transparent);border-radius:26px;background:radial-gradient(circle at 100% 0,color-mix(in srgb,var(--accent) 10%,transparent),transparent 36%),linear-gradient(145deg,#111013,#050507);box-shadow:0 30px 110px rgba(0,0,0,.72),0 0 40px color-mix(in srgb,var(--accent) 10%,transparent)}.adminModalHeader{display:flex;align-items:center;justify-content:space-between;gap:22px;padding:18px 22px;border-bottom:1px solid var(--border);background:rgba(4,4,7,.66)}.adminModalEyebrow{color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.18em}.adminModalTitle{margin:4px 0 0;color:var(--strong);font-family:"Cinzel",Georgia,serif;font-size:21px;letter-spacing:.04em}.adminModalSubtitle{margin:4px 0 0;color:var(--muted);font-size:9px}.adminModalClose{min-height:38px;padding:8px 14px;border:1px solid var(--border);border-radius:12px;color:var(--strong);background:rgba(255,255,255,.04);font-size:9px;font-weight:900;cursor:pointer}.adminLoginView{overflow:auto;display:grid;grid-template-columns:110px minmax(0,1fr);gap:18px 22px;align-items:center;padding:34px}.adminLoginSigil{grid-row:1/3;width:96px;height:96px;display:grid;place-items:center;border:1px solid var(--border);border-radius:26px;color:var(--accent);background:radial-gradient(circle,color-mix(in srgb,var(--accent) 15%,transparent),rgba(0,0,0,.48));box-shadow:inset 0 0 28px color-mix(in srgb,var(--accent) 9%,transparent),0 0 24px color-mix(in srgb,var(--accent) 10%,transparent);font-family:"Noto Sans JP",sans-serif;font-size:42px;font-weight:900}.adminLoginCopy span{color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.16em}.adminLoginCopy h3{margin:5px 0 0;color:var(--strong);font-size:24px}.adminLoginCopy p{margin:7px 0 0;color:var(--muted);font-size:10px;line-height:1.5}.adminLoginForm{grid-column:2;display:grid;gap:7px}.adminLoginForm label{color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.11em}.adminPasswordRow{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:8px}.adminPasswordRow input{height:48px;padding:0 15px;border:1px solid var(--border);border-radius:13px;outline:none;color:var(--strong);background:rgba(0,0,0,.55);font-size:11px}.adminPasswordRow input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 12%,transparent)}.adminPasswordRow button{border:1px solid rgba(255,255,255,.12);border-radius:13px;color:#111;background:linear-gradient(135deg,var(--accent),var(--strong) 60%,var(--accent2));font-size:9px;font-weight:900;cursor:pointer}.adminLoginMessage{min-height:18px;color:#ffb3bb;font-size:9px;font-weight:700}
+.adminControlView{min-height:0;overflow:hidden;display:grid;grid-template-rows:auto auto minmax(0,1fr) auto}.adminControlIntro{display:flex;align-items:flex-start;justify-content:space-between;gap:22px;padding:18px 22px 14px}.adminControlIntro>div:first-child>span{color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.14em}.adminControlIntro h3{margin:5px 0 0;color:var(--strong);font-size:18px}.adminControlIntro p{max-width:560px;margin:5px 0 0;color:var(--muted);font-size:9px;line-height:1.4}.adminControlToolbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.adminControlToolbar button{min-height:32px;padding:7px 9px;border:1px solid var(--border);border-radius:10px;color:var(--accent);background:rgba(255,255,255,.035);font-size:7px;font-weight:900;cursor:pointer}.adminBackendNotice{margin:0 22px 10px;padding:10px 12px;border:1px solid var(--border);border-radius:11px;color:var(--muted);background:rgba(255,255,255,.025);font-size:8px;line-height:1.4}.adminBackendNotice.is-global{color:#bff4d5;border-color:rgba(86,186,128,.36);background:rgba(29,95,59,.16)}.adminBackendNotice.is-warning{color:#f4cf9d;border-color:rgba(218,166,91,.34);background:rgba(106,71,24,.15)}.adminSemesterList{min-height:0;overflow:auto;display:grid;align-content:start;gap:7px;padding:0 22px 18px;scrollbar-width:thin;scrollbar-color:var(--accent) #111}.adminSemesterLoading{padding:24px;border:1px dashed var(--border);border-radius:13px;color:var(--muted);text-align:center;font-size:10px}.adminSemesterLoading.is-error{color:#ffb3bb}.adminSemesterRow{min-height:62px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:10px 12px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.024);cursor:pointer;transition:border-color .16s ease,background .16s ease}.adminSemesterRow:hover{border-color:color-mix(in srgb,var(--accent) 65%,transparent);background:color-mix(in srgb,var(--accent) 7%,rgba(255,255,255,.025))}.adminSemesterRow.is-latest{border-color:color-mix(in srgb,var(--accent) 58%,transparent);background:radial-gradient(circle at 0 50%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 34%),rgba(255,255,255,.025)}.adminSemesterIdentity{min-width:0;display:flex;align-items:center;gap:12px}.adminSemesterIndex{width:34px;height:34px;display:grid;place-items:center;flex:0 0 34px;border:1px solid var(--border);border-radius:11px;color:var(--accent);background:rgba(0,0,0,.4);font-size:9px;font-weight:900}.adminSemesterIdentity strong{display:block;color:var(--strong);font-size:12px}.adminSemesterIdentity small{display:block;margin-top:3px;color:var(--muted);font-size:7px}.adminSemesterSwitchWrap{display:flex;align-items:center;gap:10px}.adminSemesterState{min-width:92px;text-align:right;font-size:7px;font-weight:900;letter-spacing:.07em}.adminSemesterState.published{color:#9fe4bf}.adminSemesterState.unpublished{color:#f1aeb5}.adminSemesterToggle{position:absolute;opacity:0;pointer-events:none}.adminSemesterSwitch{position:relative;width:46px;height:25px;display:block;flex:0 0 46px;border:1px solid rgba(255,255,255,.1);border-radius:999px;background:rgba(125,37,48,.52);box-shadow:inset 0 0 10px rgba(0,0,0,.4)}.adminSemesterSwitch i{position:absolute;left:3px;top:3px;width:17px;height:17px;border-radius:50%;background:#f6e9e1;box-shadow:0 2px 8px rgba(0,0,0,.45);transition:transform .18s ease}.adminSemesterToggle:checked+.adminSemesterSwitch{background:rgba(48,130,84,.58)}.adminSemesterToggle:checked+.adminSemesterSwitch i{transform:translateX(21px);background:#d9f3e4}.adminSemesterToggle:focus-visible+.adminSemesterSwitch{outline:2px solid var(--accent);outline-offset:2px}.adminControlFooter{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:13px 22px 18px;border-top:1px solid var(--border);background:rgba(0,0,0,.2)}.adminSaveMessage{min-height:16px;color:var(--muted);font-size:8px;line-height:1.35}.adminSaveMessage.is-success{color:#a8e8c4}.adminSaveMessage.is-error{color:#ffb3bb}.adminControlFooterButtons{display:flex;gap:8px;flex:0 0 auto}.adminControlFooterButtons button{min-height:38px;padding:8px 12px;border:1px solid var(--border);border-radius:11px;font-size:8px;font-weight:900;cursor:pointer}.adminCancelButton{color:var(--muted);background:rgba(255,255,255,.025)}.adminSaveButton{color:#111;background:linear-gradient(135deg,var(--accent),var(--strong) 60%,var(--accent2))}
+.academicPublicationNotice{display:flex;align-items:center;gap:11px;margin-bottom:10px;padding:10px 12px;border:1px solid color-mix(in srgb,var(--accent) 35%,transparent);border-radius:13px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 7%,rgba(255,255,255,.02)),rgba(0,0,0,.25))}.academicPublicationLock{flex:0 0 auto;padding:5px 7px;border:1px solid var(--border);border-radius:999px;color:#f4cf9d;background:rgba(116,70,21,.22);font-size:7px;font-weight:900;letter-spacing:.08em}.academicPublicationNotice strong{display:block;color:var(--strong);font-size:8px;letter-spacing:.07em}.academicPublicationNotice p{margin:3px 0 0;color:var(--muted);font-size:8px;line-height:1.35}.m90PublicationNotice{display:flex;align-items:center;gap:8px;margin:0 0 9px;padding:8px 9px;border:1px solid color-mix(in srgb,var(--accent) 34%,transparent);border-radius:11px;background:rgba(0,0,0,.24)}.m90PublicationNotice>span{flex:0 0 auto;padding:4px 6px;border:1px solid var(--border);border-radius:999px;color:#f4cf9d;font-size:5px;font-weight:900}.m90PublicationNotice strong{display:block;color:var(--strong);font-size:6.4px;letter-spacing:.05em}.m90PublicationNotice p{margin:2px 0 0;color:var(--muted);font-size:5.5px;line-height:1.25}
+
+@media (max-width:768px){
+  .adminGateway{margin:8px 8px 0!important;min-height:46px!important;padding:7px 8px 7px 10px!important;border-radius:14px!important;gap:8px!important}.adminGatewayCopy{gap:8px!important}.adminGatewayIcon{width:27px!important;height:27px!important;flex-basis:27px!important;border-radius:9px!important;font-size:12px!important}.adminGatewayCopy strong{font-size:7.2px!important;letter-spacing:.07em!important}.adminGatewayCopy small{font-size:6px!important;margin-top:2px!important}.adminAccessButton{min-height:31px!important;padding:6px 9px!important;gap:6px!important;font-size:6.5px!important;letter-spacing:.055em!important}.adminAccessButton b{font-size:10px!important}
+  .adminHomePanel{margin:8px 8px 0!important;grid-template-columns:1fr!important;gap:10px!important;padding:12px!important;border-radius:16px!important}.adminHomeEyebrow{font-size:5.5px!important}.adminHomeTitleRow{display:grid!important;gap:6px!important}.adminHomeTitleRow h2{font-size:12px!important}.adminHomeTitleRow p{margin-top:4px!important;font-size:6.5px!important;line-height:1.4!important}.adminStorageMode{justify-self:start;padding:4px 6px!important;font-size:5.5px!important}.adminHomeStatusGrid{gap:5px!important;margin-top:9px!important}.adminHomeStatusCard{min-height:49px!important;padding:7px!important;border-radius:9px!important}.adminHomeStatusCard span{font-size:4.8px!important}.adminHomeStatusCard strong{font-size:6.8px!important;margin-top:4px!important}.adminHomeActions{grid-template-columns:1fr 1fr!important;gap:6px!important}.adminHomeActions .adminQuickPublishButton{grid-column:1/-1!important}.adminHomeActions button{min-height:31px!important;padding:6px 7px!important;border-radius:9px!important;font-size:5.5px!important}
+  .adminModal{padding:9px!important}.adminModalCard{width:calc(100vw - 18px)!important;max-height:94vh!important;border-radius:17px!important}.adminModalHeader{padding:12px!important;gap:8px!important}.adminModalEyebrow{font-size:5px!important}.adminModalTitle{font-size:13px!important}.adminModalSubtitle{font-size:6px!important}.adminModalClose{min-height:29px!important;padding:5px 8px!important;border-radius:8px!important;font-size:5.5px!important}.adminLoginView{grid-template-columns:58px minmax(0,1fr)!important;gap:10px!important;padding:17px 13px!important}.adminLoginSigil{width:55px!important;height:55px!important;border-radius:16px!important;font-size:24px!important}.adminLoginCopy span{font-size:5px!important}.adminLoginCopy h3{font-size:14px!important}.adminLoginCopy p{font-size:6.2px!important}.adminLoginForm{grid-column:1/-1!important}.adminLoginForm label{font-size:5.2px!important}.adminPasswordRow{grid-template-columns:minmax(0,1fr) 78px!important}.adminPasswordRow input{height:37px!important;padding:0 9px!important;border-radius:9px!important;font-size:7px!important}.adminPasswordRow button{border-radius:9px!important;font-size:5.8px!important}.adminLoginMessage{font-size:5.8px!important}.adminControlIntro{display:grid!important;gap:8px!important;padding:11px 12px 8px!important}.adminControlIntro>div:first-child>span{font-size:5px!important}.adminControlIntro h3{font-size:11px!important}.adminControlIntro p{font-size:5.8px!important}.adminControlToolbar{justify-content:flex-start!important}.adminControlToolbar button{min-height:26px!important;padding:5px 6px!important;border-radius:7px!important;font-size:4.8px!important}.adminBackendNotice{margin:0 12px 7px!important;padding:7px 8px!important;border-radius:8px!important;font-size:5.2px!important}.adminSemesterList{gap:5px!important;padding:0 12px 9px!important}.adminSemesterRow{min-height:49px!important;padding:7px 8px!important;border-radius:10px!important}.adminSemesterIdentity{gap:7px!important}.adminSemesterIndex{width:26px!important;height:26px!important;flex-basis:26px!important;border-radius:8px!important;font-size:6px!important}.adminSemesterIdentity strong{font-size:7.5px!important}.adminSemesterIdentity small{font-size:4.7px!important}.adminSemesterSwitchWrap{gap:5px!important}.adminSemesterState{min-width:58px!important;font-size:4.6px!important}.adminSemesterSwitch{width:36px!important;height:20px!important;flex-basis:36px!important}.adminSemesterSwitch i{left:3px!important;top:3px!important;width:12px!important;height:12px!important}.adminSemesterToggle:checked+.adminSemesterSwitch i{transform:translateX(16px)!important}.adminControlFooter{display:grid!important;gap:7px!important;padding:9px 12px 11px!important}.adminSaveMessage{font-size:5.2px!important}.adminControlFooterButtons{justify-content:flex-end!important}.adminControlFooterButtons button{min-height:29px!important;padding:6px 8px!important;border-radius:8px!important;font-size:4.9px!important}
+  .academicPublicationNotice{gap:7px!important;margin-bottom:8px!important;padding:7px 8px!important;border-radius:10px!important}.academicPublicationLock{font-size:4.7px!important}.academicPublicationNotice strong{font-size:5.7px!important}.academicPublicationNotice p{font-size:5.2px!important}
+}
+@media (max-width:390px){.adminGatewayCopy small{display:none!important}.adminHomeStatusGrid{grid-template-columns:1fr!important}.adminHomeStatusCard{min-height:42px!important}.adminSemesterState{display:none!important}}
+
+
+/* =====================================================================
+   V107 — MOBILE HOME REFINEMENT + ADMIN INSIDE GENERAL
+   Scope: HOME + mobile only where noted. Existing student database UI,
+   desktop layout, swipe navigation, cards and records remain untouched.
+   ===================================================================== */
+
+/* Admin access now lives inside the existing GENERAL dropdown. */
+.generalAdminMenuItem{
+  position:relative;
+}
+.generalAdminMenuItem::before{
+  content:'';
+  position:absolute;
+  left:14px;
+  right:14px;
+  top:-3px;
+  height:1px;
+  background:color-mix(in srgb,var(--accent) 20%,transparent);
+}
+.generalAdminMenuItem.is-authenticated .generalMenuItemTitle{
+  color:#bff4d5;
+}
+.generalAdminMenuItem.is-authenticated{
+  background:rgba(38,122,76,.08);
+}
+
+/* The old standalone login gateway is retired. Defensive hide in case an
+   older cached HTML copy is briefly paired with this stylesheet. */
+#adminGateway{display:none!important}
+
+@media (max-width:768px){
+  /* HOME only: create breathing room between crest/logo and Kanji title. */
+  body.front-mode .hero>.heroContent>.logo,
+  body.front-mode .hero>.heroContent>.desktopHeroLogo{
+    margin-bottom:12px!important;
+  }
+
+  /* HOME only: remove the decorative glowing dot at the left of search. */
+  body.front-mode .hero .searchBar::before{
+    display:none!important;
+    content:none!important;
+  }
+  body.front-mode .hero .searchBar input{
+    padding-left:8px!important;
+  }
+
+  /* HOME only: more space between search field and Japanese note. */
+  body.front-mode .heroNote{
+    margin-top:11px!important;
+  }
+
+  /* The Admin submenu uses the same native GENERAL menu dimensions. */
+  body.front-mode .generalAdminMenuItem::before{
+    left:12px;
+    right:12px;
+  }
+}
+
+/* =====================================================================
+   V108 — MOBILE UI SURGICAL ALIGNMENT
+   Scope is deliberately narrow:
+   1) HOME mobile GENERAL dropdown stacking/clipping only.
+   2) HOME mobile Admin panel spacing from GP Ranking only.
+   3) Student mobile House crest horizontal alignment only.
+   No desktop geometry, data cards, ranking cards, swipe UI, academic UI,
+   or JavaScript behavior is changed by this patch.
+   ===================================================================== */
+@media (max-width:768px){
+  /* HOME: escape the Hero's overflow clipping and sit above the ranking. */
+  body.front-mode .generalMenu{
+    z-index:40000!important;
+  }
+  body.front-mode .generalMenuPanel{
+    position:fixed!important;
+    top:calc(env(safe-area-inset-top) + 55px)!important;
+    right:max(14px,calc((100vw - 480px)/2 + 14px))!important;
+    left:auto!important;
+    z-index:40001!important;
+  }
+
+  /* ADMIN MODE: keep a deliberate visual gap before Student GP Ranking. */
+  body.front-mode .adminHomePanel:not(.hidden){
+    margin:8px 8px 15px!important;
+  }
+
+  /* STUDENT DATABASE: nudge only the House crest group left so its visual
+     right boundary aligns with the Gakusei ID tile below. */
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryHouse{
+    transform:translateX(-4px)!important;
+  }
+}
+
+@media (max-width:390px){
+  body:not(.front-mode) .mobileStudentDossier .mobileSummaryHouse{
+    transform:translateX(-3px)!important;
+  }
+}
+
+
+/* =====================================================================
+   V109 — ACADEMIC DOCUMENT PHOTO CROP MATCH
+   Scope: student photo inside Academic Record / Academic Transcript only.
+   Match the CURRENT mobile Student Data portrait crop without changing any
+   document frame size, identity layout, tables, typography, or page geometry.
+   ===================================================================== */
+.pdfPage .academicIdentityPhoto,
+.pdfPage .pdfPhoto,
+.pdfPage .transcriptCompactPhoto{
+  overflow:hidden!important;
+}
+.pdfPage .academicIdentityPhoto .academicIdentityPhotoImage,
+.pdfPage .pdfPhotoImage,
+.pdfPage .pdfPhoto img,
+.pdfPage .transcriptCompactPhoto img{
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  object-position:50% 16%!important;
+  transform:scale(1.20)!important;
+  transform-origin:50% 16%!important;
+}
+
+/* =====================================================================
+   V110 — MOBILE STUDENT POINT LOG ARTWORK CONTAINMENT
+   Scope: Student Point Log artwork on the student MOBILE dossier only.
+   The artwork is moved off the outer card background and clipped inside
+   the established 12px content inset, so it follows the inner card radius
+   instead of visually spilling into the outer padding/border area.
+   No point data, timeline, scrolling, sizing, swipe, Academic Records,
+   desktop UI, or JavaScript behavior is changed.
+   ===================================================================== */
+@media (max-width:768px){
+  body:not(.front-mode) .mobileStudentDossier .m74PointsApp{
+    /* Preserve the existing dark/glass treatment on the complete container,
+       but keep the actual illustration out of the outer padding area. */
+    background-image:
+      linear-gradient(180deg,rgba(4,4,8,.28) 0%,rgba(4,4,8,.53) 34%,rgba(4,4,8,.86) 72%,rgba(4,4,8,.96) 100%),
+      linear-gradient(90deg,color-mix(in srgb,var(--accent) 10%,rgba(4,4,8,.68)),rgba(4,4,8,.48) 58%,rgba(4,4,8,.78))!important;
+  }
+
+  body:not(.front-mode) .mobileStudentDossier .m74PointsApp::after{
+    content:""!important;
+    position:absolute!important;
+    inset:12px!important;
+    z-index:0!important;
+    border-radius:12px!important;
+    pointer-events:none!important;
+    overflow:hidden!important;
+    background-image:
+      linear-gradient(180deg,rgba(4,4,8,.13) 0%,rgba(4,4,8,.28) 38%,rgba(4,4,8,.69) 73%,rgba(4,4,8,.90) 100%),
+      linear-gradient(90deg,rgba(4,4,8,.45),transparent 48%,rgba(4,4,8,.50)),
+      url("https://drive.google.com/thumbnail?id=1Zjh2vTq4QhYOOv3LvWkz7T3JeAfrI7-q&sz=w1800")!important;
+    background-size:cover,cover,cover!important;
+    background-position:center,center,center top!important;
+    background-repeat:no-repeat!important;
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb,var(--accent) 9%,transparent),
+      inset 0 0 24px rgba(0,0,0,.30)!important;
+    opacity:.82!important;
+  }
+
+  /* Keep all established content above the newly-contained artwork. */
+  body:not(.front-mode) .mobileStudentDossier .m74PointsApp>*{
+    position:relative!important;
+    z-index:1!important;
+  }
+}
+
+
+/* =====================================================================
+   V111 — GAKUSEI LOGIN + SOA
+   Scope is additive only. Existing card geometry remains unchanged unless
+   the authenticated student's Academic Record needs the fourth SOA column.
+   ===================================================================== */
+body.student-login-open{overflow:hidden}
+
+.generalStudentLoginItem{position:relative}
+.generalStudentLoginItem::before{
+  content:"";position:absolute;left:14px;right:14px;top:-3px;height:1px;
+  background:linear-gradient(90deg,transparent,color-mix(in srgb,var(--accent) 38%,transparent),transparent)
+}
+.generalStudentLoginItem.is-authenticated .generalMenuItemTitle{color:#bff4d5}
+.generalStudentLoginItem.is-authenticated{background:color-mix(in srgb,#2d9b63 9%,transparent)!important}
+
+.studentLoginModal{
+  position:fixed;inset:0;z-index:15500;display:grid;place-items:center;padding:24px;
+  background:rgba(0,0,0,.84);backdrop-filter:blur(13px)
+}
+.studentLoginCard{
+  position:relative;isolation:isolate;width:min(520px,calc(100vw - 38px));overflow:hidden;
+  border:1px solid var(--border);border-radius:25px;
+  background:linear-gradient(145deg,rgba(17,16,19,.985),rgba(4,4,7,.99));
+  box-shadow:0 30px 95px rgba(0,0,0,.72),0 0 38px color-mix(in srgb,var(--accent) 12%,transparent)
+}
+.studentLoginGlow{position:absolute;inset:-35% -20% auto;height:270px;z-index:-1;pointer-events:none;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 20%,transparent),transparent 68%)}
+.studentLoginHeader{display:flex;align-items:flex-start;justify-content:space-between;gap:22px;padding:23px 24px 18px;border-bottom:1px solid var(--border)}
+.studentLoginEyebrow{color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.15em}
+.studentLoginHeader h2{margin:6px 0 0;color:var(--strong);font-family:"Cinzel",Georgia,serif;font-size:23px;letter-spacing:.035em}
+.studentLoginHeader p{max-width:390px;margin:8px 0 0;color:var(--muted);font-size:10px;line-height:1.5}
+.studentLoginClose{flex:0 0 auto;padding:8px 10px;border:1px solid var(--border);border-radius:10px;color:var(--muted);background:rgba(255,255,255,.035);font-size:8px;font-weight:900;cursor:pointer}
+.studentLoginForm{display:grid;gap:8px;padding:22px 24px 25px}
+.studentLoginForm label{margin-top:3px;color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.11em}
+.studentLoginForm input{width:100%;height:46px;padding:0 14px;border:1px solid var(--border);border-radius:12px;outline:0;color:var(--strong);background:rgba(0,0,0,.58);font-size:12px;font-weight:700}
+.studentLoginForm input:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent)}
+.studentLoginSubmitButton{height:45px;margin-top:8px;border:0;border-radius:12px;color:#130e0b;background:linear-gradient(135deg,var(--accent),var(--strong) 56%,var(--accent2));font-size:9px;font-weight:900;letter-spacing:.08em;cursor:pointer}
+.studentLoginMessage{min-height:17px;margin-top:2px;color:var(--muted);font-size:9px;line-height:1.4}
+.studentLoginMessage.error{color:#ffadb6}.studentLoginMessage.success{color:#bff4d5}
+.studentSessionView{display:grid;grid-template-columns:62px minmax(0,1fr);gap:15px;align-items:center;padding:23px 24px 25px}
+.studentSessionSeal{width:58px;height:58px;display:grid;place-items:center;border:1px solid color-mix(in srgb,#63ca92 45%,var(--border));border-radius:17px;color:#c8f7dc;background:rgba(40,122,76,.18);font-family:"Noto Sans JP",sans-serif;font-size:25px;box-shadow:inset 0 0 20px rgba(60,165,109,.12)}
+.studentSessionCopy{min-width:0}.studentSessionCopy>span{color:#8fd8b1;font-size:7px;font-weight:900;letter-spacing:.11em}.studentSessionCopy>strong{display:block;margin-top:5px;color:var(--strong);font-size:17px;font-weight:900}.studentSessionCopy>small{display:block;margin-top:3px;color:var(--accent);font-size:9px}.studentSessionCopy>p{margin:8px 0 0;color:var(--muted);font-size:9px;line-height:1.42}
+.studentLogoutButton{grid-column:1/-1;min-height:40px;border:1px solid rgba(205,83,93,.32);border-radius:11px;color:#ffc7cc;background:rgba(139,35,45,.20);font-size:8px;font-weight:900;cursor:pointer}
+
+/* Desktop Academic Records: fourth column exists only for own authenticated record. */
+.subjectHeader.soaEnabled,.subjectRow.soaEnabled{grid-template-columns:minmax(0,1fr) 86px 118px 98px!important}
+.subjectHeader.soaEnabled .soaHeader{text-align:center}
+.soaActionCell{min-width:0;display:grid;place-items:center}
+.soaButton{
+  width:100%;min-height:30px;padding:5px 7px;border:1px solid color-mix(in srgb,var(--accent) 45%,transparent);border-radius:9px;
+  color:#140f0c;background:linear-gradient(135deg,var(--accent),var(--strong) 58%,var(--accent2));
+  font-size:7px;font-weight:900;line-height:1.15;letter-spacing:.025em;cursor:pointer;white-space:normal
+}
+.soaButton:hover:not(:disabled){transform:translateY(-1px);filter:brightness(1.06)}
+.soaButton.is-loading{opacity:.66;cursor:wait}
+.soaButton.is-submitted,.soaButton:disabled:not(.is-loading){color:#bff4d5;border-color:rgba(94,196,139,.31);background:rgba(38,122,76,.20);cursor:default}
+
+@media (max-width:768px){
+  .studentLoginModal{padding:14px}
+  .studentLoginCard{width:min(430px,calc(100vw - 20px));border-radius:21px}
+  .studentLoginHeader{padding:18px 17px 14px;gap:12px}.studentLoginHeader h2{font-size:19px}.studentLoginHeader p{font-size:8.4px}.studentLoginEyebrow{font-size:6.4px}.studentLoginClose{padding:7px 8px;font-size:6.5px}
+  .studentLoginForm{padding:17px 17px 19px}.studentLoginForm label{font-size:6.7px}.studentLoginForm input{height:42px;font-size:10px}.studentLoginSubmitButton{height:42px;font-size:7.5px}.studentLoginMessage{font-size:7.5px}
+  .studentSessionView{grid-template-columns:52px minmax(0,1fr);padding:18px 17px 19px;gap:12px}.studentSessionSeal{width:50px;height:50px;border-radius:14px;font-size:21px}.studentSessionCopy>strong{font-size:14px}.studentSessionCopy>small,.studentSessionCopy>p{font-size:7.4px}.studentLogoutButton{min-height:37px;font-size:7px}
+
+  /* Native m90 Academic Records: retain subject readability while adding SOA. */
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled,
+  #mobileAcademicMount .m90SubjectRow.soaEnabled{
+    grid-template-columns:minmax(0,1fr) 43px 47px 68px!important;
+    gap:3px!important
+  }
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled .m111SoaHeader{text-align:center!important}
+  #mobileAcademicMount .m111SoaActionCell{min-width:0;display:grid;place-items:center;border-left:1px solid color-mix(in srgb,var(--accent) 13%,rgba(255,255,255,.035))}
+  #mobileAcademicMount .m111SoaButton{
+    width:62px;max-width:100%;min-height:25px;padding:3px 4px;border:1px solid color-mix(in srgb,var(--accent) 38%,transparent);border-radius:7px;
+    color:#140f0c;background:linear-gradient(135deg,var(--accent),var(--strong) 58%,var(--accent2));
+    font-size:5.6px;font-weight:900;line-height:1.08;letter-spacing:.01em;white-space:normal;cursor:pointer
+  }
+  #mobileAcademicMount .m111SoaButton.is-loading{opacity:.62;cursor:wait}
+  #mobileAcademicMount .m111SoaButton.is-submitted,
+  #mobileAcademicMount .m111SoaButton:disabled:not(.is-loading){color:#bff4d5;border-color:rgba(94,196,139,.30);background:rgba(38,122,76,.21)}
+
+  /* Legacy academic source node is normally hidden by the mobile app, but if
+     it is surfaced by an existing fallback, keep its authenticated layout safe. */
+  body:not(.front-mode) .subjectHeader.soaEnabled,
+  body:not(.front-mode) .subjectRow.soaEnabled{grid-template-columns:minmax(0,1fr) 48px 48px 67px!important;gap:4px!important}
+  body:not(.front-mode) .soaButton{min-height:26px;padding:3px;font-size:5.5px!important}
+}
+
+@media (max-width:390px){
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled,
+  #mobileAcademicMount .m90SubjectRow.soaEnabled{grid-template-columns:minmax(0,1fr) 40px 44px 64px!important}
+  #mobileAcademicMount .m111SoaButton{width:58px;font-size:5.2px}
+}
+
+/* =====================================================================
+   V112 — SOA PROMOTED RULE + GENERAL LOGOUT + PASSWORD VISIBILITY
+   Surgical override only. Existing layout/data styling remains intact.
+   ===================================================================== */
+
+/* GENERAL: a single logout action always sits at the very bottom. */
+.generalLogoutItem{
+  position:relative!important;
+  margin-top:8px!important;
+  border-top:1px solid color-mix(in srgb,var(--accent) 24%,transparent)!important;
+  border-radius:10px!important;
+}
+.generalLogoutItem .generalMenuItemTitle{color:#ffc0c7!important}
+.generalLogoutItem .generalMenuItemText{color:color-mix(in srgb,#ffc0c7 64%,var(--muted))!important}
+.generalLogoutItem:hover,
+.generalLogoutItem:focus-visible{
+  border-color:rgba(207,78,91,.34)!important;
+  background:rgba(139,35,45,.16)!important;
+}
+
+/* Password eye — shared by Admin and Gakusei login. */
+.passwordVisibilityButton{
+  display:grid!important;
+  place-items:center!important;
+  padding:0!important;
+  border:1px solid var(--border)!important;
+  color:var(--accent)!important;
+  background:rgba(0,0,0,.56)!important;
+  cursor:pointer!important;
+  box-shadow:none!important;
+}
+.passwordVisibilityButton svg{
+  grid-area:1/1;
+  width:18px;
+  height:18px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.passwordVisibilityButton .passwordEyeClosed{display:none}
+.passwordVisibilityButton.is-visible .passwordEyeOpen{display:none}
+.passwordVisibilityButton.is-visible .passwordEyeClosed{display:block}
+.passwordVisibilityButton:hover,
+.passwordVisibilityButton:focus-visible{
+  outline:none;
+  color:var(--strong)!important;
+  border-color:var(--accent)!important;
+  background:color-mix(in srgb,var(--accent) 10%,rgba(0,0,0,.66))!important;
+}
+
+/* Admin password row keeps its existing login button while inserting the eye. */
+.adminPasswordRow{
+  grid-template-columns:minmax(0,1fr) 44px 120px!important;
+}
+.adminPasswordVisibilityButton{
+  width:44px!important;
+  height:48px!important;
+  border-radius:13px!important;
+}
+
+/* Gakusei password input gets the same eye without changing the form order. */
+.studentPasswordField{
+  position:relative;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 44px;
+  gap:7px;
+}
+.studentPasswordField .studentLoginPasswordInput,
+.studentPasswordField input{
+  min-width:0;
+}
+.studentPasswordVisibilityButton{
+  width:44px!important;
+  height:46px!important;
+  border-radius:12px!important;
+}
+
+/* Academic header labels remain on one line when the SOA column is present. */
+.subjectHeader.soaEnabled>span{
+  min-width:0!important;
+  white-space:nowrap!important;
+  overflow:visible!important;
+  text-overflow:clip!important;
+  letter-spacing:.01em!important;
+}
+.subjectHeader.soaEnabled>span:nth-child(2),
+.subjectHeader.soaEnabled>span:nth-child(3){
+  font-size:7px!important;
+}
+.subjectHeader.soaEnabled .soaHeader{
+  font-size:7px!important;
+  white-space:nowrap!important;
+}
+.soaButton{white-space:nowrap!important}
+
+/* Retained semesters intentionally have no SOA column/button. */
+.soaRetainedNotice{
+  margin:10px 14px 2px;
+  padding:9px 11px;
+  border:1px solid rgba(205,83,93,.26);
+  border-radius:11px;
+  color:#ffc0c7;
+  background:rgba(139,35,45,.13);
+  font-size:8.5px;
+  font-weight:750;
+  line-height:1.4;
+  text-align:center;
+}
+
+@media (max-width:768px){
+  .adminPasswordRow{
+    grid-template-columns:minmax(0,1fr) 34px 78px!important;
+    gap:6px!important;
+  }
+  .adminPasswordVisibilityButton{
+    width:34px!important;
+    height:37px!important;
+    border-radius:9px!important;
+  }
+  .passwordVisibilityButton svg{width:14px;height:14px}
+
+  .studentPasswordField{
+    grid-template-columns:minmax(0,1fr) 39px;
+    gap:6px;
+  }
+  .studentPasswordVisibilityButton{
+    width:39px!important;
+    height:42px!important;
+    border-radius:10px!important;
+  }
+
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled>span{
+    min-width:0!important;
+    white-space:nowrap!important;
+    overflow:visible!important;
+    text-overflow:clip!important;
+    letter-spacing:0!important;
+  }
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled>span:nth-child(2),
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled>span:nth-child(3),
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled .m111SoaHeader{
+    font-size:5.3px!important;
+  }
+  #mobileAcademicMount .m111SoaButton{
+    white-space:nowrap!important;
+  }
+  #mobileAcademicMount .m112SoaRetainedNotice{
+    margin:8px 8px 2px!important;
+    padding:7px 8px!important;
+    border:1px solid rgba(205,83,93,.25)!important;
+    border-radius:9px!important;
+    color:#ffc0c7!important;
+    background:rgba(139,35,45,.14)!important;
+    font-size:6.3px!important;
+    font-weight:760!important;
+    line-height:1.4!important;
+    text-align:center!important;
+  }
+}
+
+@media (max-width:390px){
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled>span:nth-child(2),
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled>span:nth-child(3),
+  #mobileAcademicMount .m90SubjectHeader.soaEnabled .m111SoaHeader{
+    font-size:5px!important;
+  }
+}
+
+/* V112: logout is centralized in GENERAL dropdown as requested. */
+.adminHomeActions .adminLogoutButton,
+.studentSessionView .studentLogoutButton{
+  display:none!important;
+}
+
+
+/* =====================================================================
+   V113 — GLOBAL SOA ACCESS GATE + CANCEL APPLY
+   Surgical additions only. No existing layout/data styling is replaced.
+   ===================================================================== */
+.adminSOAAccessControl{
+  display:flex;align-items:center;justify-content:space-between;gap:22px;
+  margin:0 0 14px;padding:16px 17px;border:1px solid var(--border);border-radius:16px;
+  background:radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 46%),rgba(255,255,255,.025)
+}
+.adminSOAAccessCopy{min-width:0}.adminSOAAccessCopy>span{color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.13em}.adminSOAAccessCopy h3{margin:5px 0 0;color:var(--strong);font-size:15px;font-weight:900}.adminSOAAccessCopy p{max-width:560px;margin:6px 0 0;color:var(--muted);font-size:9px;line-height:1.45}
+.adminSOAAccessAction{flex:0 0 218px;display:grid;justify-items:stretch;gap:7px}
+.adminSOAAccessState{display:grid;place-items:center;min-height:28px;border:1px solid var(--border);border-radius:999px;color:var(--muted);background:rgba(0,0,0,.38);font-size:8px;font-weight:900;letter-spacing:.1em}
+.adminSOAAccessState.is-open{color:#bff4d5;border-color:rgba(94,196,139,.32);background:rgba(38,122,76,.18)}
+.adminSOAAccessState.is-closed{color:#ffc0c7;border-color:rgba(207,78,91,.34);background:rgba(139,35,45,.17)}
+.adminSOAAccessState.is-error{color:#ffd49e;border-color:rgba(218,157,73,.34);background:rgba(135,83,25,.18)}
+.adminSOAAccessButton{min-height:38px;padding:8px 11px;border:1px solid var(--border);border-radius:11px;font-size:8px;font-weight:900;letter-spacing:.035em;cursor:pointer}
+.adminSOAAccessButton.is-close{color:#ffc0c7;border-color:rgba(207,78,91,.34);background:rgba(139,35,45,.18)}
+.adminSOAAccessButton.is-open{color:#bff4d5;border-color:rgba(94,196,139,.34);background:rgba(38,122,76,.19)}
+.adminSOAAccessButton:hover:not(:disabled){filter:brightness(1.12);transform:translateY(-1px)}
+
+/* Closed access is visibly different, but the eligible SOA column stays present. */
+.soaButton.is-closed,
+#mobileAcademicMount .m111SoaButton.is-closed{
+  color:color-mix(in srgb,var(--muted) 88%,#fff)!important;
+  border-color:color-mix(in srgb,var(--muted) 25%,transparent)!important;
+  background:linear-gradient(135deg,rgba(88,88,96,.19),rgba(20,20,24,.68))!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025)!important;
+  opacity:.72!important;
+  cursor:not-allowed!important
+}
+
+/* A successful application changes into a real cancellation action. */
+.soaButton.is-cancel,
+#mobileAcademicMount .m111SoaButton.is-cancel{
+  color:#ffc0c7!important;
+  border-color:rgba(207,78,91,.34)!important;
+  background:rgba(139,35,45,.19)!important;
+  cursor:pointer!important;
+  opacity:1!important
+}
+.soaButton.is-cancel:hover,
+#mobileAcademicMount .m111SoaButton.is-cancel:hover{filter:brightness(1.12)}
+
+@media (max-width:768px){
+  .adminSOAAccessControl{display:grid;grid-template-columns:minmax(0,1fr);gap:11px;margin-bottom:11px;padding:12px}
+  .adminSOAAccessCopy>span{font-size:6.5px}.adminSOAAccessCopy h3{font-size:12px}.adminSOAAccessCopy p{font-size:7.2px}
+  .adminSOAAccessAction{width:100%;display:grid;grid-template-columns:92px minmax(0,1fr);align-items:center;gap:7px}
+  .adminSOAAccessState{min-height:30px;font-size:6.5px}.adminSOAAccessButton{min-height:34px;font-size:6.5px}
+  #mobileAcademicMount .m111SoaButton.is-cancel{font-size:5.1px!important}
+}
+
+
+/* =====================================================================
+   V115 — HISTORICAL SOA RECAP + LIVE PASSED RESULT
+   Additive only; existing desktop/mobile layout rules are untouched.
+   ===================================================================== */
+.adminSOARecapPanel{
+  margin:0 0 14px;padding:16px 17px;border:1px solid var(--border);border-radius:16px;
+  background:radial-gradient(circle at 0 0,color-mix(in srgb,var(--accent) 10%,transparent),transparent 44%),rgba(255,255,255,.018)
+}
+.adminSOARecapHead{display:flex;align-items:flex-end;justify-content:space-between;gap:18px}
+.adminSOARecapCopy{min-width:0}.adminSOARecapCopy>span{color:var(--accent);font-size:8px;font-weight:900;letter-spacing:.13em}.adminSOARecapCopy h3{margin:5px 0 0;color:var(--strong);font-size:15px;font-weight:900}.adminSOARecapCopy p{max-width:620px;margin:6px 0 0;color:var(--muted);font-size:9px;line-height:1.45}
+.adminSOARecapTools{flex:0 0 260px;display:grid;grid-template-columns:1fr auto;gap:6px 7px;align-items:end}.adminSOARecapTools label{grid-column:1/-1;color:var(--muted);font-size:7px;font-weight:900;letter-spacing:.1em}.adminSOARecapTools select{min-width:0;height:36px;padding:0 9px;border:1px solid var(--border);border-radius:10px;color:var(--strong);background:#09090c;font-size:8px;font-weight:850;outline:none}.adminSOARecapTools button{height:36px;padding:0 10px;border:1px solid var(--border);border-radius:10px;color:#111;background:linear-gradient(135deg,var(--accent),var(--strong));font-size:7px;font-weight:900;cursor:pointer;white-space:nowrap}
+.adminSOARecapMeta{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:12px;padding:8px 10px;border:1px solid color-mix(in srgb,var(--border) 70%,transparent);border-radius:10px;background:rgba(0,0,0,.25);color:var(--muted);font-size:8px}.adminSOARecapMeta strong{color:var(--accent);font-size:8px;letter-spacing:.06em}
+.adminSOARecapContent{margin-top:10px}.adminSOARecapLoading,.adminSOARecapEmpty{padding:18px;border:1px dashed var(--border);border-radius:11px;color:var(--muted);font-size:9px;text-align:center}.adminSOARecapLoading.is-error{color:#ffc0c7;border-color:rgba(207,78,91,.34)}
+.adminSOARecapTableWrap{max-height:310px;overflow:auto;border:1px solid var(--border);border-radius:12px;scrollbar-width:thin;scrollbar-color:var(--accent) rgba(0,0,0,.55)}
+.adminSOARecapTable{width:100%;border-collapse:collapse;table-layout:fixed;color:var(--text);font-size:8px}.adminSOARecapTable th{position:sticky;top:0;z-index:2;padding:9px 7px;color:var(--strong);background:#171316;font-size:6.7px;font-weight:900;letter-spacing:.035em;white-space:nowrap}.adminSOARecapTable td{padding:8px 7px;border-top:1px solid color-mix(in srgb,var(--border) 55%,transparent);vertical-align:middle;overflow-wrap:anywhere}.adminSOARecapTable tr.is-passed td{background:rgba(38,122,76,.055)}
+.adminSOARecapTable th:nth-child(1){width:13%}.adminSOARecapTable th:nth-child(2){width:11%}.adminSOARecapTable th:nth-child(3){width:9%}.adminSOARecapTable th:nth-child(4){width:9%}.adminSOARecapTable th:nth-child(5){width:7%}.adminSOARecapTable th:nth-child(6){width:8%}.adminSOARecapTable th:nth-child(7){width:22%}.adminSOARecapTable th:nth-child(8){width:21%}
+.adminSOAMark,.adminSOACurrentMark{display:inline-grid;place-items:center;min-width:32px;min-height:24px;padding:4px 6px;border:1px solid var(--border);border-radius:8px;color:var(--accent);background:rgba(0,0,0,.38);font-weight:900;white-space:nowrap}.adminSOACurrentMark{color:var(--strong)}
+.adminSOAAnnulButton{min-width:70px;min-height:28px;padding:5px 8px;border:1px solid rgba(207,78,91,.34);border-radius:9px;color:#ffc0c7;background:rgba(139,35,45,.18);font-size:7px;font-weight:900;cursor:pointer}.adminSOAAnnulButton:hover:not(:disabled){filter:brightness(1.13)}
+.adminSOAPassedText{padding:6px 7px;border:1px solid rgba(94,196,139,.30);border-radius:9px;color:#bff4d5;background:rgba(38,122,76,.14);font-size:6.8px;font-weight:900;line-height:1.35;text-align:center}
+.adminSOARecapMessage{min-height:15px;margin-top:7px;color:var(--accent);font-size:8px;line-height:1.35}
+
+.soaPassedStatus{
+  min-height:30px;display:grid;place-items:center;padding:5px 6px;border:1px solid rgba(94,196,139,.34);border-radius:9px;
+  color:#bff4d5;background:rgba(38,122,76,.16);font-size:6.3px;font-weight:900;line-height:1.2;text-align:center
+}
+
+@media (max-width:768px){
+  .adminSOARecapPanel{padding:12px;margin-bottom:11px}.adminSOARecapHead{display:grid;gap:10px}.adminSOARecapCopy>span{font-size:6.4px}.adminSOARecapCopy h3{font-size:12px}.adminSOARecapCopy p{font-size:7.2px}.adminSOARecapTools{width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto}.adminSOARecapTools label{font-size:5.8px}.adminSOARecapTools select,.adminSOARecapTools button{height:32px;font-size:6.2px}.adminSOARecapMeta{font-size:6.3px}.adminSOARecapMeta strong{font-size:6.3px}.adminSOARecapTableWrap{max-height:330px}.adminSOARecapTable{min-width:760px;font-size:7px}.adminSOARecapTable th{font-size:5.8px}.adminSOAPassedText{font-size:5.8px}
+  #mobileAcademicMount .m115SoaPassedStatus{min-height:28px;display:grid;place-items:center;padding:4px 5px;border:1px solid rgba(94,196,139,.34);border-radius:8px;color:#bff4d5;background:rgba(38,122,76,.16);font-size:4.9px;font-weight:900;line-height:1.18;text-align:center}
+}
+/* V115 adds one recap row between SOA access and backend notice. */
+.adminControlView{grid-template-rows:auto auto auto auto minmax(0,1fr) auto!important}
+
+
+/* =====================================================================
+   V116 — MOBILE GENERAL DROPDOWN STACK FIX
+   Scope: HOME mobile only. Lift the Hero stacking context only while
+   GENERAL is open so its dropdown renders above Student GP Ranking.
+   ===================================================================== */
+@media (max-width:768px){
+  body.front-mode .hero:has(#generalMenu.open){
+    z-index:8000!important;
+  }
+  body.front-mode .hero:has(#generalMenu.open) .generalMenu{
+    z-index:8001!important;
+  }
+  body.front-mode .hero:has(#generalMenu.open) .generalMenuPanel{
+    z-index:8002!important;
+  }
+}
+
+
+/* =====================================================================
+   V117 — MOBILE GENERAL DROPDOWN PORTAL FIX
+   Scope: HOME mobile GENERAL dropdown only.
+   The panel is temporarily mounted directly under <body> while open,
+   escaping Hero overflow/stacking so Student GP Ranking cannot cover it.
+   ===================================================================== */
+@media (max-width:768px){
+  body.front-mode > .generalMenuPanel.mobileGeneralMenuPortal{
+    position:fixed!important;
+    top:calc(env(safe-area-inset-top) + 55px)!important;
+    left:12px!important;
+    right:12px!important;
+    width:auto!important;
+    max-height:calc(100dvh - env(safe-area-inset-top) - 72px)!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    z-index:2147483000!important;
+    isolation:isolate!important;
+    transform:translateZ(0)!important;
+    -webkit-transform:translateZ(0)!important;
+    pointer-events:auto!important;
+  }
+}
+
+
+/* =====================================================================
+   V118 — MOBILE ADMIN SCROLL + COMPACT CONTROL
+   Scope: Administrator modal on mobile only.
+   Makes the whole Admin control surface vertically scrollable and keeps
+   wide SOA recap data horizontally swipeable without touching desktop.
+   ===================================================================== */
+@media (max-width:768px){
+  .adminModal{
+    padding:8px!important;
+    place-items:stretch!important;
+    overflow:hidden!important;
+  }
+  .adminModalCard{
+    width:calc(100vw - 16px)!important;
+    height:calc(100dvh - 16px)!important;
+    max-height:calc(100dvh - 16px)!important;
+    min-height:0!important;
+    grid-template-rows:auto minmax(0,1fr)!important;
+    border-radius:15px!important;
+    overflow:hidden!important;
+  }
+  .adminModalHeader{
+    position:relative!important;
+    z-index:4!important;
+    padding:10px 11px!important;
+    flex:0 0 auto!important;
+  }
+  .adminControlView{
+    display:block!important;
+    min-height:0!important;
+    height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    touch-action:pan-y!important;
+    scrollbar-width:thin!important;
+    scrollbar-color:var(--accent) rgba(0,0,0,.55)!important;
+    padding-bottom:max(10px,env(safe-area-inset-bottom))!important;
+  }
+  .adminLoginView{
+    min-height:0!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+  }
+  .adminControlIntro{
+    padding:10px 10px 7px!important;
+    gap:7px!important;
+  }
+  .adminControlToolbar{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+  }
+  .adminControlToolbar button{
+    width:100%!important;
+    min-width:0!important;
+    min-height:28px!important;
+    padding:5px 4px!important;
+    white-space:normal!important;
+    line-height:1.15!important;
+  }
+  .adminSOAAccessControl,
+  .adminSOARecapPanel{
+    margin-left:10px!important;
+    margin-right:10px!important;
+    padding:10px!important;
+    border-radius:12px!important;
+  }
+  .adminSOAAccessControl{
+    margin-bottom:8px!important;
+  }
+  .adminSOARecapPanel{
+    margin-bottom:8px!important;
+  }
+  .adminSOARecapHead{
+    gap:7px!important;
+  }
+  .adminSOARecapCopy p{
+    margin-top:4px!important;
+    line-height:1.32!important;
+  }
+  .adminSOARecapTools{
+    gap:5px!important;
+  }
+  .adminSOARecapTools select,
+  .adminSOARecapTools button{
+    height:30px!important;
+    min-height:30px!important;
+  }
+  .adminSOARecapMeta{
+    margin-top:8px!important;
+    padding:7px 8px!important;
+  }
+  .adminSOARecapContent{
+    margin-top:7px!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+  }
+  .adminSOARecapTableWrap{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:290px!important;
+    overflow:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    touch-action:pan-x pan-y!important;
+    scrollbar-gutter:stable!important;
+  }
+  .adminSOARecapTable{
+    min-width:660px!important;
+  }
+  .adminBackendNotice{
+    margin:0 10px 7px!important;
+  }
+  .adminSemesterList{
+    min-height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    padding:0 10px 8px!important;
+  }
+  .adminSemesterRow{
+    min-height:46px!important;
+    padding:6px 7px!important;
+  }
+  .adminControlFooter{
+    position:relative!important;
+    display:grid!important;
+    gap:6px!important;
+    margin-top:2px!important;
+    padding:8px 10px 10px!important;
+  }
+  .adminControlFooterButtons{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    gap:6px!important;
+  }
+  .adminControlFooterButtons button{
+    width:100%!important;
+    min-height:31px!important;
+  }
+}
+
+@media (max-width:390px){
+  .adminSOAAccessControl,
+  .adminSOARecapPanel{
+    margin-left:8px!important;
+    margin-right:8px!important;
+  }
+  .adminSOARecapTable{
+    min-width:620px!important;
+  }
+}
+
+
+/* =====================================================================
+   V121 — MOBILE ADMIN AUTH VISIBILITY + ORDERED CONTROL LAYOUT
+   Scope: Administrator modal on mobile only.
+   1) Preserve the login gate: hidden Admin controls stay truly hidden.
+   2) Order the authenticated Admin workspace as Publication first, SOA second.
+   3) Keep one smooth vertical scroll with horizontally swipeable SOA recap.
+   Desktop is intentionally untouched.
+   ===================================================================== */
+@media (max-width:768px){
+  /* V118 used display:block!important on the control view. Without this
+     stronger hidden rule it overrode the global .hidden utility on mobile. */
+  #adminControlView.hidden{
+    display:none!important;
+  }
+  #adminLoginView.hidden{
+    display:none!important;
+  }
+
+  .adminModal{
+    padding:7px!important;
+    place-items:stretch!important;
+    overflow:hidden!important;
+  }
+  .adminModalCard{
+    width:calc(100vw - 14px)!important;
+    height:calc(100dvh - 14px)!important;
+    max-height:calc(100dvh - 14px)!important;
+    min-height:0!important;
+    grid-template-rows:auto minmax(0,1fr)!important;
+    border-radius:17px!important;
+    overflow:hidden!important;
+  }
+  .adminModalHeader{
+    position:sticky!important;
+    top:0!important;
+    z-index:8!important;
+    min-height:58px!important;
+    padding:10px 11px!important;
+    gap:9px!important;
+    background:linear-gradient(180deg,rgba(10,9,12,.99),rgba(6,6,9,.96))!important;
+    backdrop-filter:blur(16px)!important;
+  }
+  .adminModalEyebrow{font-size:6.3px!important;letter-spacing:.13em!important}
+  .adminModalTitle{font-size:14px!important;line-height:1.08!important}
+  .adminModalSubtitle{font-size:6.6px!important;line-height:1.25!important}
+  .adminModalClose{
+    min-height:32px!important;
+    padding:6px 9px!important;
+    border-radius:9px!important;
+    font-size:6.5px!important;
+    flex:0 0 auto!important;
+  }
+
+  /* Login stays as the only visible content until authentication succeeds. */
+  .adminLoginView:not(.hidden){
+    display:grid!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    padding:18px 14px 22px!important;
+  }
+
+  /* One authenticated scroll surface. Flex order changes mobile presentation
+     only; desktop keeps the original DOM/layout order. */
+  #adminControlView:not(.hidden){
+    display:flex!important;
+    flex-direction:column!important;
+    min-height:0!important;
+    height:100%!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior-y:contain!important;
+    touch-action:pan-y!important;
+    padding:10px 0 max(18px,env(safe-area-inset-bottom))!important;
+    scrollbar-width:thin!important;
+    scrollbar-color:var(--accent) rgba(0,0,0,.5)!important;
+  }
+
+  /* 01 — Academic publication */
+  #adminControlView .adminControlIntro{
+    order:10!important;
+    margin:0 10px 8px!important;
+    padding:13px!important;
+    gap:10px!important;
+    border:1px solid color-mix(in srgb,var(--accent) 28%,transparent)!important;
+    border-radius:14px!important;
+    background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 8%,rgba(255,255,255,.025)),rgba(0,0,0,.22))!important;
+    box-shadow:inset 0 0 24px color-mix(in srgb,var(--accent) 5%,transparent)!important;
+  }
+  #adminControlView .adminControlIntro>div:first-child>span{
+    font-size:6.5px!important;
+    letter-spacing:.13em!important;
+  }
+  #adminControlView .adminControlIntro h3{
+    margin-top:5px!important;
+    font-size:14px!important;
+    line-height:1.12!important;
+  }
+  #adminControlView .adminControlIntro p{
+    margin-top:6px!important;
+    font-size:7.5px!important;
+    line-height:1.42!important;
+  }
+  #adminControlView .adminControlToolbar{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:6px!important;
+  }
+  #adminControlView .adminControlToolbar button{
+    width:100%!important;
+    min-width:0!important;
+    min-height:33px!important;
+    padding:6px 5px!important;
+    border-radius:9px!important;
+    font-size:6.1px!important;
+    line-height:1.15!important;
+    white-space:normal!important;
+  }
+  #adminControlView .adminBackendNotice{
+    order:20!important;
+    margin:0 10px 8px!important;
+    padding:8px 9px!important;
+    border-radius:10px!important;
+    font-size:6.5px!important;
+    line-height:1.35!important;
+  }
+  #adminControlView .adminSemesterList{
+    order:30!important;
+    display:grid!important;
+    gap:6px!important;
+    min-height:auto!important;
+    max-height:none!important;
+    overflow:visible!important;
+    padding:0 10px 8px!important;
+  }
+  #adminControlView .adminSemesterRow{
+    min-height:52px!important;
+    padding:8px 9px!important;
+    border-radius:11px!important;
+  }
+  #adminControlView .adminSemesterIdentity{gap:8px!important}
+  #adminControlView .adminSemesterIndex{
+    width:30px!important;
+    height:30px!important;
+    flex-basis:30px!important;
+    border-radius:9px!important;
+    font-size:7px!important;
+  }
+  #adminControlView .adminSemesterIdentity strong{font-size:8.7px!important;line-height:1.1!important}
+  #adminControlView .adminSemesterIdentity small{font-size:6.1px!important;line-height:1.2!important}
+  #adminControlView .adminSemesterSwitchWrap{gap:7px!important}
+  #adminControlView .adminSemesterState{min-width:65px!important;font-size:5.7px!important}
+  #adminControlView .adminSemesterSwitch{width:40px!important;height:22px!important;flex-basis:40px!important}
+  #adminControlView .adminSemesterSwitch i{left:3px!important;top:3px!important;width:14px!important;height:14px!important}
+  #adminControlView .adminSemesterToggle:checked+.adminSemesterSwitch i{transform:translateX(18px)!important}
+
+  /* Save publication settings closes the first visual group before SOA. */
+  #adminControlView .adminControlFooter{
+    order:40!important;
+    position:relative!important;
+    display:grid!important;
+    gap:7px!important;
+    margin:0 10px 14px!important;
+    padding:10px!important;
+    border:1px solid color-mix(in srgb,var(--border) 72%,transparent)!important;
+    border-radius:12px!important;
+    background:rgba(0,0,0,.22)!important;
+  }
+  #adminControlView .adminSaveMessage{font-size:6.2px!important;line-height:1.3!important}
+  #adminControlView .adminControlFooterButtons{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:84px minmax(0,1fr)!important;
+    gap:7px!important;
+  }
+  #adminControlView .adminControlFooterButtons button{
+    width:100%!important;
+    min-height:34px!important;
+    padding:7px 8px!important;
+    border-radius:9px!important;
+    font-size:6px!important;
+    line-height:1.15!important;
+  }
+
+  /* 02 — SOA management */
+  #adminControlView .adminSOAAccessControl{
+    order:50!important;
+    margin:0 10px 8px!important;
+    padding:13px!important;
+    border-radius:14px!important;
+    border-color:color-mix(in srgb,var(--accent) 34%,transparent)!important;
+    background:linear-gradient(145deg,color-mix(in srgb,var(--accent2) 7%,rgba(255,255,255,.02)),rgba(0,0,0,.25))!important;
+  }
+  #adminControlView .adminSOAAccessCopy>span{font-size:6.5px!important}
+  #adminControlView .adminSOAAccessCopy h3{font-size:13px!important;line-height:1.12!important}
+  #adminControlView .adminSOAAccessCopy p{font-size:7.3px!important;line-height:1.4!important}
+  #adminControlView .adminSOAAccessAction{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:92px minmax(0,1fr)!important;
+    gap:7px!important;
+  }
+  #adminControlView .adminSOAAccessState{min-height:32px!important;font-size:6.4px!important}
+  #adminControlView .adminSOAAccessButton{min-height:34px!important;font-size:6.2px!important}
+
+  #adminControlView .adminSOARecapPanel{
+    order:60!important;
+    margin:0 10px!important;
+    padding:13px!important;
+    border-radius:14px!important;
+  }
+  #adminControlView .adminSOARecapHead{display:grid!important;gap:8px!important}
+  #adminControlView .adminSOARecapCopy>span{font-size:6.4px!important}
+  #adminControlView .adminSOARecapCopy h3{font-size:13px!important;line-height:1.12!important}
+  #adminControlView .adminSOARecapCopy p{margin-top:5px!important;font-size:7.2px!important;line-height:1.4!important}
+  #adminControlView .adminSOARecapTools{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:5px 6px!important;
+  }
+  #adminControlView .adminSOARecapTools label{font-size:5.8px!important}
+  #adminControlView .adminSOARecapTools select,
+  #adminControlView .adminSOARecapTools button{
+    height:32px!important;
+    min-height:32px!important;
+    font-size:6.2px!important;
+    border-radius:9px!important;
+  }
+  #adminControlView .adminSOARecapMeta{
+    margin-top:8px!important;
+    padding:7px 8px!important;
+    font-size:6.2px!important;
+  }
+  #adminControlView .adminSOARecapMeta strong{font-size:6.2px!important}
+  #adminControlView .adminSOARecapContent{
+    margin-top:7px!important;
+    max-width:100%!important;
+    overflow:hidden!important;
+  }
+  #adminControlView .adminSOARecapTableWrap{
+    width:100%!important;
+    max-width:100%!important;
+    max-height:320px!important;
+    overflow:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+    touch-action:pan-x pan-y!important;
+    scrollbar-gutter:stable!important;
+  }
+  #adminControlView .adminSOARecapTable{
+    min-width:660px!important;
+    font-size:7px!important;
+  }
+  #adminControlView .adminSOARecapTable th{font-size:5.8px!important}
+  #adminControlView .adminSOAPassedText{font-size:5.8px!important}
+}
+
+@media (max-width:390px){
+  #adminControlView .adminControlIntro,
+  #adminControlView .adminBackendNotice,
+  #adminControlView .adminSemesterList,
+  #adminControlView .adminControlFooter,
+  #adminControlView .adminSOAAccessControl,
+  #adminControlView .adminSOARecapPanel{
+    margin-left:8px!important;
+    margin-right:8px!important;
+  }
+  #adminControlView .adminSOARecapTable{min-width:620px!important}
+}
+
+
+/* =====================================================================
+   V122 — ADMIN LOGIN CLEANUP + ORDERED ADMIN WORKSPACE + INNER SEMESTER SCROLL
+   Scope: Administrator UI only.
+   - Mobile Admin login: clean single-column authentication layout.
+   - Mobile + desktop Admin workspace order:
+     Publication controls -> semester list -> save -> SOA access -> SOA recap.
+   - Semester list uses its own bounded inner scroll so the Admin page stays compact.
+   All non-Admin UI and JavaScript behavior are intentionally untouched.
+   ===================================================================== */
+
+/* Keep the authentication gate authoritative at every viewport. */
+#adminControlView.hidden,
+#adminLoginView.hidden{
+  display:none!important;
+}
+
+/* Consistent visual order for authenticated Admin on desktop and mobile. */
+#adminControlView:not(.hidden){
+  display:flex!important;
+  flex-direction:column!important;
+  min-height:0!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  -webkit-overflow-scrolling:touch!important;
+  overscroll-behavior-y:contain!important;
+}
+#adminControlView .adminControlIntro{order:10!important}
+#adminControlView .adminBackendNotice{order:20!important}
+#adminControlView .adminSemesterList{order:30!important}
+#adminControlView .adminControlFooter{order:40!important}
+#adminControlView .adminSOAAccessControl{order:50!important}
+#adminControlView .adminSOARecapPanel{order:60!important}
+
+/* Semester publication list is now a real inner-scroll panel. */
+#adminControlView .adminSemesterList{
+  min-height:0!important;
+  max-height:310px!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch!important;
+  scrollbar-gutter:stable!important;
+  margin:0 22px 10px!important;
+  padding:8px!important;
+  border:1px solid color-mix(in srgb,var(--border) 78%,transparent)!important;
+  border-radius:14px!important;
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 42%),
+    rgba(0,0,0,.22)!important;
+  box-shadow:inset 0 0 22px rgba(0,0,0,.18)!important;
+  scrollbar-width:thin!important;
+  scrollbar-color:var(--accent) color-mix(in srgb,var(--panel2) 90%,#000)!important;
+}
+#adminControlView .adminSemesterList::-webkit-scrollbar{
+  width:8px;
+}
+#adminControlView .adminSemesterList::-webkit-scrollbar-track{
+  border-radius:999px;
+  background:color-mix(in srgb,var(--panel2) 92%,#000);
+}
+#adminControlView .adminSemesterList::-webkit-scrollbar-thumb{
+  border:2px solid color-mix(in srgb,var(--panel2) 88%,#000);
+  border-radius:999px;
+  background:linear-gradient(180deg,var(--strong),var(--accent),var(--accent2));
+}
+
+/* Desktop: publication group first, SOA group second, with balanced margins. */
+@media (min-width:769px){
+  #adminControlView:not(.hidden){
+    padding-bottom:18px!important;
+  }
+  #adminControlView .adminControlFooter{
+    margin:0 22px 16px!important;
+    border:1px solid color-mix(in srgb,var(--border) 70%,transparent)!important;
+    border-radius:13px!important;
+    background:rgba(0,0,0,.20)!important;
+  }
+  #adminControlView .adminSOAAccessControl,
+  #adminControlView .adminSOARecapPanel{
+    margin-left:22px!important;
+    margin-right:22px!important;
+  }
+  #adminControlView .adminSOARecapPanel{
+    margin-bottom:0!important;
+  }
+}
+
+/* Mobile Admin login: no squeezed 3-column password row. */
+@media (max-width:768px){
+  .adminLoginView:not(.hidden){
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:stretch!important;
+    justify-content:flex-start!important;
+    gap:0!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    padding:16px 12px 20px!important;
+  }
+
+  .adminLoginSigil{
+    grid-row:auto!important;
+    width:62px!important;
+    height:62px!important;
+    flex:0 0 62px!important;
+    margin:5px auto 12px!important;
+    border-radius:18px!important;
+    font-size:27px!important;
+  }
+
+  .adminLoginCopy{
+    width:100%!important;
+    max-width:340px!important;
+    margin:0 auto 15px!important;
+    text-align:center!important;
+  }
+  .adminLoginCopy span{
+    font-size:6.8px!important;
+    letter-spacing:.15em!important;
+  }
+  .adminLoginCopy h3{
+    margin:6px 0 0!important;
+    font-size:18px!important;
+    line-height:1.08!important;
+  }
+  .adminLoginCopy p{
+    margin:7px auto 0!important;
+    max-width:300px!important;
+    font-size:8.2px!important;
+    line-height:1.45!important;
+  }
+
+  .adminLoginForm{
+    grid-column:auto!important;
+    width:100%!important;
+    max-width:360px!important;
+    margin:0 auto!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:7px!important;
+  }
+  .adminLoginForm label{
+    font-size:6.8px!important;
+    letter-spacing:.11em!important;
+  }
+
+  .adminPasswordRow{
+    width:100%!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) 42px!important;
+    gap:7px!important;
+    align-items:stretch!important;
+  }
+  .adminPasswordRow input{
+    width:100%!important;
+    min-width:0!important;
+    height:44px!important;
+    padding:0 11px!important;
+    border-radius:11px!important;
+    font-size:9px!important;
+  }
+  .adminPasswordVisibilityButton{
+    width:42px!important;
+    height:44px!important;
+    min-width:42px!important;
+    min-height:44px!important;
+    padding:0!important;
+    border-radius:11px!important;
+  }
+  .adminPasswordVisibilityButton svg{
+    width:16px!important;
+    height:16px!important;
+  }
+  #adminLoginButton{
+    grid-column:1/-1!important;
+    width:100%!important;
+    min-height:42px!important;
+    margin-top:1px!important;
+    border-radius:11px!important;
+    font-size:7.5px!important;
+    letter-spacing:.07em!important;
+  }
+  .adminLoginMessage{
+    min-height:18px!important;
+    font-size:7px!important;
+    line-height:1.35!important;
+    text-align:center!important;
+  }
+
+  /* Mobile semester list stays compact and scrolls inside itself. */
+  #adminControlView .adminSemesterList{
+    display:grid!important;
+    align-content:start!important;
+    gap:6px!important;
+    max-height:255px!important;
+    overflow-x:hidden!important;
+    overflow-y:auto!important;
+    margin:0 10px 9px!important;
+    padding:7px!important;
+    border-radius:12px!important;
+  }
+  #adminControlView .adminSemesterRow{
+    flex:0 0 auto!important;
+  }
+}
+
+@media (max-width:390px){
+  .adminLoginView:not(.hidden){
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+  .adminLoginCopy h3{font-size:17px!important}
+  #adminControlView .adminSemesterList{
+    max-height:235px!important;
+    margin-left:8px!important;
+    margin-right:8px!important;
+  }
+}
+
+
+/* =====================================================================
+   V124 — ADMIN SEMESTER INNER SCROLL: TALL + NON-SHRINKING
+   Scope: ONLY the visible height of the existing Admin semester list.
+   Fix: use explicit height/min-height/max-height + flex:0 0 auto so the
+   list cannot be compressed by the Admin flex layout.
+   ===================================================================== */
+
+/* Desktop */
+#adminControlView .adminSemesterList{
+  height:700px!important;
+  min-height:700px!important;
+  max-height:700px!important;
+  flex:0 0 700px!important;
+  overflow-y:auto!important;
+}
+
+/* Mobile */
+@media (max-width:768px){
+  #adminControlView .adminSemesterList{
+    height:620px!important;
+    min-height:620px!important;
+    max-height:620px!important;
+    flex:0 0 620px!important;
+    overflow-y:auto!important;
+  }
+}
+
+/* Small mobile */
+@media (max-width:390px){
+  #adminControlView .adminSemesterList{
+    height:560px!important;
+    min-height:560px!important;
+    max-height:560px!important;
+    flex:0 0 560px!important;
+  }
+}

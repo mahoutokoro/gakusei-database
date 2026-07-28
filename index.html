@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=20260722-v98-mobile-ui-precision">
+    <link rel="stylesheet" href="./style.css?v=20260728-v124-admin-semester-scroll-tall">
 
 </head>
 <body class="front-mode">
@@ -46,6 +46,18 @@
             <span class="generalMenuItemTitle">NENSEI PROMOTION RECAP</span>
             <span class="generalMenuItemText">Latest promotion and retention results</span>
           </button>
+          <button id="generalStudentLoginItem" class="generalStudentLoginItem" type="button" role="menuitem" onclick="openStudentLoginFromGeneralMenu()">
+            <span id="generalStudentLoginTitle" class="generalMenuItemTitle">LOGIN AS GAKUSEI</span>
+            <span id="generalStudentLoginText" class="generalMenuItemText">Authenticate your ID to access eligible SOA requests</span>
+          </button>
+          <button id="generalAdminMenuItem" class="generalAdminMenuItem" type="button" role="menuitem" onclick="openAdminFromGeneralMenu()">
+            <span id="generalAdminMenuTitle" class="generalMenuItemTitle">LOGIN AS ADMIN</span>
+            <span id="generalAdminMenuText" class="generalMenuItemText">Restricted Academic Records publication control</span>
+          </button>
+          <button id="generalLogoutItem" class="generalLogoutItem hidden" type="button" role="menuitem" onclick="logoutFromGeneralMenu()">
+            <span id="generalLogoutTitle" class="generalMenuItemTitle">LOG OUT</span>
+            <span id="generalLogoutText" class="generalMenuItemText">End the active authenticated session</span>
+          </button>
         </div>
       </div>
       <div class="heroContent">
@@ -54,7 +66,7 @@
           <div class="eyebrow jp">魔法所's</div>
           <h1 class="mainTitle"><span>GAKUSEI</span> <span>DATABASE</span></h1>
           <div class="searchBar">
-            <input id="idInput" placeholder="Type your Gakusei ID number..." autocomplete="off">
+            <input id="idInput" placeholder="Type your Gakusei ID number" autocomplete="off">
             <button id="searchButton" type="button" onclick="searchGakusei()" aria-label="Search Gakusei data">
               <span class="desktopSearchText">SEARCH DATA</span>
               <span class="mobileSearchIcon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="5.8"></circle><path d="m14.9 14.9 4.6 4.6"></path></svg></span>
@@ -68,6 +80,30 @@
             <span><b>SECURE</b><small>ID access</small></span>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section id="adminHomePanel" class="adminHomePanel hidden" aria-label="Administrator academic publication control">
+      <div class="adminHomeGlow" aria-hidden="true"></div>
+      <div class="adminHomeCopy">
+        <div class="adminHomeEyebrow">ADMINISTRATOR MODE • ACADEMIC PUBLICATION</div>
+        <div class="adminHomeTitleRow">
+          <div>
+            <h2>ACADEMIC RECORD RELEASE CONTROL</h2>
+            <p>Choose which detected A.R. semesters are visible to students. A newly detected latest semester stays locked until an administrator publishes it.</p>
+          </div>
+          <span id="adminStorageMode" class="adminStorageMode">CHECKING MODE...</span>
+        </div>
+        <div class="adminHomeStatusGrid">
+          <div class="adminHomeStatusCard"><span>NEWEST DETECTED</span><strong id="adminNewestSemester">—</strong></div>
+          <div class="adminHomeStatusCard"><span>PUBLICATION STATUS</span><strong id="adminNewestState">—</strong></div>
+          <div class="adminHomeStatusCard"><span>LAST SETTINGS UPDATE</span><strong id="adminSettingsUpdated">—</strong></div>
+        </div>
+      </div>
+      <div class="adminHomeActions">
+        <button id="adminQuickPublishButton" class="adminQuickPublishButton" type="button" onclick="toggleNewestAcademicPublication()">PUBLISH NEWEST ACADEMIC RECORDS</button>
+        <button class="adminManageButton" type="button" onclick="openAdminPanel(true)">MANAGE ALL SEMESTERS</button>
+        <button class="adminLogoutButton" type="button" onclick="adminLogout()">LOG OUT</button>
       </div>
     </section>
 
@@ -132,22 +168,63 @@
         </article>
       </div>
 
-      <article id="mobileDirectJourneyCard" class="mobileDirectCard">
-        <div class="mobileDirectCardHead">
-          <div><span id="mobileDirectJourneyEyebrow">STUDENT ACTIVITY</span><h3 id="mobileDirectJourneyTitle">Side Occupations</h3></div>
-          <span class="mobileDirectCardIcon" aria-hidden="true">✦</span>
+      <section id="mobileProfileSwipe" class="mobileProfileSwipe" aria-label="Swipe additional student data">
+        <div class="mobileProfileSwipeHead">
+          <div class="mobileProfileSwipeHeading">
+            <span>PROFILE EXTRAS</span>
+            <strong>Swipe from official media to student activity</strong>
+          </div>
+          <span id="mobileProfileSwipeCounter" class="mobileProfileSwipeCounter">1 / 2</span>
         </div>
-        <div id="mobileDirectJourney" class="mobileDirectJourney"></div>
-      </article>
 
-      <article id="mobileDirectMediaCard" class="mobileDirectCard mobileDirectMediaCard">
-        <div class="mobileDirectCardHead">
-          <div><span>OFFICIAL MEDIA</span><h3 id="mobileDirectMediaTitle">Gakusei ID Card / Nametag</h3></div>
-          <span class="mobileDirectCardIcon" aria-hidden="true">▣</span>
+        <div class="mobileProfilePreviewRail" aria-label="Available profile swipe views">
+          <button class="mobileProfilePreview is-active" type="button" data-profile-swipe-to="media" aria-label="Show official media">
+            <span class="mobileProfilePreviewIndex">01</span>
+            <span class="mobileProfilePreviewCopy">
+              <small>OFFICIAL MEDIA</small>
+              <strong id="mobileProfileMediaPreviewTitle">ID Card / Nametag</strong>
+            </span>
+          </button>
+          <span class="mobileProfileSwipeCue" aria-hidden="true"><b>↔</b><small>SWIPE</small></span>
+          <button class="mobileProfilePreview" type="button" data-profile-swipe-to="journey" aria-label="Show student activity">
+            <span class="mobileProfilePreviewIndex">02</span>
+            <span class="mobileProfilePreviewCopy">
+              <small>ACTIVITY</small>
+              <strong id="mobileProfileJourneyPreviewTitle">Side Occupations</strong>
+            </span>
+          </button>
         </div>
-        <div id="mobileDirectMediaPreview" class="mobileDirectMediaPreview"><div class="mobileDirectEmpty">ID CARD UNAVAILABLE</div></div>
-        <div id="mobileDirectMediaAction" class="mobileDirectMediaAction"></div>
-      </article>
+
+        <div id="mobileProfileSwipeViewport" class="mobileProfileSwipeViewport">
+          <div id="mobileProfileSwipeTrack" class="mobileProfileSwipeTrack">
+            <section class="mobileProfileSwipePage" data-profile-swipe-page="media" data-title="ID Card / Nametag">
+              <article id="mobileDirectMediaCard" class="mobileDirectCard mobileDirectMediaCard">
+                <div class="mobileDirectCardHead">
+                  <div><span>OFFICIAL MEDIA</span><h3 id="mobileDirectMediaTitle">Gakusei ID Card / Nametag</h3></div>
+                  <span class="mobileDirectCardIcon" aria-hidden="true">▣</span>
+                </div>
+                <div id="mobileDirectMediaPreview" class="mobileDirectMediaPreview"><div class="mobileDirectEmpty">ID CARD UNAVAILABLE</div></div>
+                <div id="mobileDirectMediaAction" class="mobileDirectMediaAction"></div>
+              </article>
+            </section>
+
+            <section class="mobileProfileSwipePage" data-profile-swipe-page="journey" data-title="Side Occupations">
+              <article id="mobileDirectJourneyCard" class="mobileDirectCard">
+                <div class="mobileDirectCardHead">
+                  <div><span id="mobileDirectJourneyEyebrow">STUDENT ACTIVITY</span><h3 id="mobileDirectJourneyTitle">Side Occupations</h3></div>
+                  <span class="mobileDirectCardIcon" aria-hidden="true">✦</span>
+                </div>
+                <div id="mobileDirectJourney" class="mobileDirectJourney"></div>
+              </article>
+            </section>
+          </div>
+        </div>
+
+        <div id="mobileProfileSwipeDots" class="mobileProfileSwipeDots" aria-label="Profile swipe page indicators">
+          <button class="is-active" type="button" data-profile-swipe-to="media" aria-label="Show official media view"></button>
+          <button type="button" data-profile-swipe-to="journey" aria-label="Show activity view"></button>
+        </div>
+      </section>
     </section>
 
     <section id="mobileRecordSwipe" class="mobileRecordSwipe hidden" aria-label="Swipe student records">
@@ -158,6 +235,17 @@
           <small id="mobileSwipeCounter">1 / 2</small>
         </div>
         <button id="mobileSwipeNext" class="mobileSwipeArrow mobileSwipeNext" type="button" aria-label="Next student record"><span>›</span></button>
+      </div>
+      <div class="mobileRecordPreviewRail" aria-label="Available student record swipe views">
+        <button class="mobileRecordPreview is-active" type="button" data-mobile-record-preview="points" aria-label="Show Student Point Log">
+          <span class="mobileRecordPreviewIndex">01</span>
+          <span class="mobileRecordPreviewCopy"><small>POINT LOG</small><strong>Current semester activity</strong></span>
+        </button>
+        <span class="mobileRecordPreviewCue" aria-hidden="true"><b>↔</b><small>SWIPE</small></span>
+        <button class="mobileRecordPreview" type="button" data-mobile-record-preview="academic" aria-label="Show Academic Records">
+          <span class="mobileRecordPreviewIndex">02</span>
+          <span class="mobileRecordPreviewCopy"><small>ACADEMIC</small><strong>Semester records & marks</strong></span>
+        </button>
       </div>
       <div id="mobileRecordSwipeTrack" class="mobileRecordSwipeTrack">
         <section class="mobileRecordPage" data-mobile-record="points" aria-label="Student Point Log">
@@ -285,6 +373,141 @@
       <div id="promotionContent"><div class="empty">Loading...</div></div>
     </div>
   </div>
+  <div id="adminModal" class="adminModal hidden" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle">
+    <div class="adminModalCard">
+      <div class="adminModalHeader">
+        <div>
+          <div class="adminModalEyebrow">MAHOUTOKORO • RESTRICTED ACCESS</div>
+          <h2 id="adminModalTitle" class="adminModalTitle">ADMINISTRATOR CONTROL</h2>
+          <p id="adminModalSubtitle" class="adminModalSubtitle">Academic Records publication management</p>
+        </div>
+        <button class="adminModalClose" type="button" onclick="closeAdminPanel()">CLOSE</button>
+      </div>
+
+      <div id="adminLoginView" class="adminLoginView">
+        <div class="adminLoginSigil" aria-hidden="true">管</div>
+        <div class="adminLoginCopy">
+          <span>ADMIN AUTHENTICATION</span>
+          <h3>Login as Admin</h3>
+          <p>Enter the administrator password to manage Academic Records publication.</p>
+        </div>
+        <form class="adminLoginForm" onsubmit="adminLogin(event)">
+          <label for="adminPasswordInput">ADMIN PASSWORD</label>
+          <div class="adminPasswordRow">
+            <input id="adminPasswordInput" type="password" autocomplete="current-password" placeholder="Enter administrator password" aria-label="Administrator password">
+            <button class="passwordVisibilityButton adminPasswordVisibilityButton" type="button" onclick="togglePasswordVisibility('adminPasswordInput',this)" aria-label="Show password" aria-pressed="false">
+              <svg class="passwordEyeOpen" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>
+              <svg class="passwordEyeClosed" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 6.1A10.8 10.8 0 0 1 12 6c6 0 9.5 6 9.5 6a15.4 15.4 0 0 1-2.7 3.3M6.1 6.2C3.7 8 2.5 12 2.5 12s3.5 6 9.5 6c1.3 0 2.5-.3 3.5-.7"></path></svg>
+            </button>
+            <button type="submit" id="adminLoginButton">LOGIN</button>
+          </div>
+          <div id="adminLoginMessage" class="adminLoginMessage" aria-live="polite"></div>
+        </form>
+      </div>
+
+      <div id="adminControlView" class="adminControlView hidden">
+        <div class="adminControlIntro">
+          <div>
+            <span>ACADEMIC RECORD RELEASE MATRIX</span>
+            <h3>Publish / Unpublish Detected Semesters</h3>
+            <p>The newest detected A.R. is unpublished by default until explicitly set by Admin.</p>
+          </div>
+          <div class="adminControlToolbar">
+            <button type="button" onclick="setAllAdminSemesterToggles(true)">PUBLISH ALL</button>
+            <button type="button" onclick="setAllAdminSemesterToggles(false)">UNPUBLISH ALL</button>
+            <button type="button" onclick="refreshAdminSemesterCatalog(true)">REFRESH DETECTION</button>
+          </div>
+        </div>
+
+        <section id="adminSOAAccessControl" class="adminSOAAccessControl" aria-label="SOA application access control">
+          <div class="adminSOAAccessCopy">
+            <span>SOA APPLICATION ACCESS</span>
+            <h3>Open / Close APPLY SOA</h3>
+            <p id="adminSOAAccessText">Checking global SOA access...</p>
+          </div>
+          <div class="adminSOAAccessAction">
+            <strong id="adminSOAAccessState" class="adminSOAAccessState">CHECKING...</strong>
+            <button id="adminSOAAccessButton" class="adminSOAAccessButton" type="button" onclick="toggleAdminSOAAccess()" disabled>CHECKING...</button>
+          </div>
+        </section>
+
+        <section id="adminSOARecapPanel" class="adminSOARecapPanel" aria-label="SOA application recap">
+          <div class="adminSOARecapHead">
+            <div class="adminSOARecapCopy">
+              <span>SOA APPLICATION RECAP</span>
+              <h3>Current & Historical Applications</h3>
+              <p>Review applications from the current or previous submission semesters. Passed SOA results are detected from the latest Academic Record mark.</p>
+            </div>
+            <div class="adminSOARecapTools">
+              <label for="adminSOARecapFilter">APPLIED IN</label>
+              <select id="adminSOARecapFilter" onchange="changeAdminSOARecapFilter()" aria-label="Filter SOA applications by submitted semester">
+                <option value="CURRENT">CURRENT SEMESTER</option>
+                <option value="ALL">ALL SEMESTERS</option>
+              </select>
+              <button id="adminSOARecapRefresh" type="button" onclick="refreshAdminSOARecap(true)">REFRESH RECAP</button>
+            </div>
+          </div>
+          <div class="adminSOARecapMeta">
+            <span id="adminSOARecapCurrent">CURRENT: —</span>
+            <strong id="adminSOARecapCount">0 APPLICATIONS</strong>
+          </div>
+          <div id="adminSOARecapContent" class="adminSOARecapContent"><div class="adminSOARecapLoading">SOA recap will load after Admin authentication.</div></div>
+          <div id="adminSOARecapMessage" class="adminSOARecapMessage" aria-live="polite"></div>
+        </section>
+
+        <div id="adminBackendNotice" class="adminBackendNotice"></div>
+        <div id="adminSemesterList" class="adminSemesterList"><div class="adminSemesterLoading">Detecting Academic Record semesters...</div></div>
+        <div class="adminControlFooter">
+          <div id="adminSaveMessage" class="adminSaveMessage" aria-live="polite"></div>
+          <div class="adminControlFooterButtons">
+            <button class="adminCancelButton" type="button" onclick="closeAdminPanel()">CANCEL</button>
+            <button id="adminSaveButton" class="adminSaveButton" type="button" onclick="saveAdminSemesterSettings()">SAVE PUBLICATION SETTINGS</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="studentLoginModal" class="studentLoginModal hidden" role="dialog" aria-modal="true" aria-labelledby="studentLoginModalTitle">
+    <div class="studentLoginCard">
+      <div class="studentLoginGlow" aria-hidden="true"></div>
+      <div class="studentLoginHeader">
+        <div>
+          <div class="studentLoginEyebrow">MAHOUTOKORO • GAKUSEI AUTHENTICATION</div>
+          <h2 id="studentLoginModalTitle">GAKUSEI LOGIN</h2>
+          <p>Login with the ID and password registered in the school system. SOA access is available only on your own student record.</p>
+        </div>
+        <button class="studentLoginClose" type="button" onclick="closeStudentLoginModal()" aria-label="Close student login">CLOSE</button>
+      </div>
+
+      <form id="studentLoginForm" class="studentLoginForm" onsubmit="studentLogin(event)">
+        <label for="studentLoginIdInput">GAKUSEI ID</label>
+        <input id="studentLoginIdInput" type="text" autocomplete="username" placeholder="Enter your Gakusei ID" aria-label="Gakusei ID">
+        <label for="studentLoginPasswordInput">PASSWORD</label>
+        <div class="studentPasswordField">
+          <input id="studentLoginPasswordInput" type="password" autocomplete="current-password" placeholder="Enter your password" aria-label="Gakusei password">
+          <button class="passwordVisibilityButton studentPasswordVisibilityButton" type="button" onclick="togglePasswordVisibility('studentLoginPasswordInput',this)" aria-label="Show password" aria-pressed="false">
+            <svg class="passwordEyeOpen" viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12s3.5-6 9.5-6 9.5 6 9.5 6-3.5 6-9.5 6-9.5-6-9.5-6Z"></path><circle cx="12" cy="12" r="2.6"></circle></svg>
+            <svg class="passwordEyeClosed" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3l18 18"></path><path d="M10.6 6.1A10.8 10.8 0 0 1 12 6c6 0 9.5 6 9.5 6a15.4 15.4 0 0 1-2.7 3.3M6.1 6.2C3.7 8 2.5 12 2.5 12s3.5 6 9.5 6c1.3 0 2.5-.3 3.5-.7"></path></svg>
+          </button>
+        </div>
+        <button id="studentLoginSubmitButton" class="studentLoginSubmitButton" type="submit">LOGIN</button>
+        <div id="studentLoginMessage" class="studentLoginMessage" aria-live="polite"></div>
+      </form>
+
+      <div id="studentSessionView" class="studentSessionView hidden">
+        <div class="studentSessionSeal" aria-hidden="true">認</div>
+        <div class="studentSessionCopy">
+          <span>AUTHENTICATED GAKUSEI SESSION</span>
+          <strong id="studentSessionName">—</strong>
+          <small id="studentSessionId">—</small>
+          <p>SOA is available only on this exact student record, for PROMOTED semesters with C / 良 (Ryō) or D / 可 (Ka).</p>
+        </div>
+        <button id="studentLogoutButton" class="studentLogoutButton" type="button" onclick="studentLogout()">LOG OUT</button>
+      </div>
+    </div>
+  </div>
+
   <div id="documentReviewModal" class="documentReviewModal hidden" role="dialog" aria-modal="true" aria-labelledby="documentReviewTitle">
     <div class="documentReviewCard">
       <div class="documentReviewHeader">
@@ -321,7 +544,7 @@
 
   <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING DOCUMENT</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
 
-    <script src="./script.js?v=20260722-v98-mobile-ui-precision" defer></script>
+    <script src="./script.js?v=20260728-v125-smooth-soa-direct-student-login" defer></script>
 
 </body>
 </html>
