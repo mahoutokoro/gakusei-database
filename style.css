@@ -16426,3 +16426,57 @@ body.student-login-open{overflow:hidden}
     grid-template-columns:repeat(4,38px)!important;
   }
 }
+
+
+/* =====================================================================
+   V129 — MOBILE GP RANKING NOTE
+   Scope: only the existing GP Ranking disclaimer on mobile Home.
+   Re-shows the existing disclaimer that older mobile overrides hid and
+   presents it as a compact, readable note card.
+   ===================================================================== */
+@media (max-width:768px){
+  body.front-mode .gpRankingSection .gpRankingDisclaimer{
+    display:block!important;
+    visibility:visible!important;
+    opacity:1!important;
+    width:100%!important;
+    max-width:100%!important;
+    margin:9px 0 0!important;
+    padding:9px 10px 9px 12px!important;
+    border:1px solid color-mix(in srgb,var(--accent) 30%,transparent)!important;
+    border-left:3px solid var(--accent)!important;
+    border-radius:11px!important;
+    color:color-mix(in srgb,var(--text) 76%,var(--muted))!important;
+    background:
+      linear-gradient(135deg,
+        color-mix(in srgb,var(--accent) 9%,rgba(255,255,255,.025)),
+        rgba(0,0,0,.22))!important;
+    box-shadow:
+      inset 0 0 16px color-mix(in srgb,var(--accent) 5%,transparent),
+      0 6px 18px rgba(0,0,0,.14)!important;
+    font-size:7.8px!important;
+    font-weight:600!important;
+    line-height:1.48!important;
+    letter-spacing:.01em!important;
+    text-align:left!important;
+  }
+
+  body.front-mode .gpRankingSection .gpRankingDisclaimer::before{
+    content:'RANKING NOTE';
+    display:block;
+    margin:0 0 4px;
+    color:var(--accent);
+    font-size:6px;
+    font-weight:900;
+    line-height:1;
+    letter-spacing:.15em;
+  }
+}
+
+@media (max-width:390px){
+  body.front-mode .gpRankingSection .gpRankingDisclaimer{
+    padding:8px 9px 8px 11px!important;
+    font-size:7.4px!important;
+    line-height:1.45!important;
+  }
+}

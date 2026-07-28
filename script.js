@@ -1137,12 +1137,17 @@ function getDormById(id, fallbackDormName) {
           a.nomorId.localeCompare(b.nomorId)
         );
 
-      /* Competition ranking: 1, 1, 3. Nilai GP yang sama mendapat rank sama. */
+      /*
+       * V129 — Dense GP ranking.
+       * Nilai GP yang sama mendapat rank yang sama, tetapi rank berikutnya
+       * naik satu tingkat berdasarkan nilai GP unik, bukan jumlah siswa.
+       * Contoh: 1, 2, 2, 3 (bukan 1, 2, 2, 4).
+       */
       let previousGp = null;
       let currentRank = 0;
-      rows.forEach((row, index) => {
+      rows.forEach(row => {
         if (previousGp === null || row.totalGp !== previousGp) {
-          currentRank = index + 1;
+          currentRank += 1;
           previousGp = row.totalGp;
         }
         row.rank = currentRank;
