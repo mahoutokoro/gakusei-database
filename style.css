@@ -16480,3 +16480,364 @@ body.student-login-open{overflow:hidden}
     line-height:1.45!important;
   }
 }
+
+
+/* =====================================================================
+   V130 — PUBLISHED-SEMESTER PROMOTION RECAP SELECTOR
+   Scope: NENSEI PROMOTION RECAP only.
+   Publication source is the existing AcademicPublicationControl state.
+   ===================================================================== */
+
+#promotionModal .promotionModalCard{
+  display:grid;
+  grid-template-rows:auto auto minmax(0,1fr);
+}
+
+#promotionModal .promotionSemesterControl{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 285px 245px;
+  gap:14px;
+  align-items:center;
+  padding:15px 24px;
+  border-bottom:1px solid var(--border);
+  background:
+    radial-gradient(circle at 0 50%,color-mix(in srgb,var(--accent) 11%,transparent),transparent 34%),
+    linear-gradient(135deg,rgba(255,255,255,.035),rgba(0,0,0,.20));
+}
+
+#promotionModal .promotionSemesterCopy{
+  min-width:0;
+}
+#promotionModal .promotionSemesterCopy>span{
+  display:block;
+  color:var(--accent);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.15em;
+}
+#promotionModal .promotionSemesterCopy>strong{
+  display:block;
+  margin-top:4px;
+  color:var(--strong);
+  font-size:15px;
+  font-weight:900;
+  letter-spacing:.025em;
+}
+#promotionModal .promotionSemesterCopy>small{
+  display:block;
+  max-width:460px;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.38;
+}
+
+#promotionModal .promotionSemesterField{
+  min-width:0;
+  display:grid;
+  gap:6px;
+}
+#promotionModal .promotionSemesterField>span{
+  color:var(--muted);
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.13em;
+}
+#promotionModal .promotionSemesterSelectShell{
+  position:relative;
+  min-width:0;
+}
+#promotionModal .promotionSemesterSelectShell select{
+  width:100%;
+  height:42px;
+  padding:0 42px 0 13px;
+  border:1px solid color-mix(in srgb,var(--accent) 48%,var(--border));
+  border-radius:12px;
+  outline:0;
+  appearance:none;
+  -webkit-appearance:none;
+  color:var(--strong);
+  background:
+    linear-gradient(135deg,color-mix(in srgb,var(--accent) 9%,rgba(0,0,0,.74)),rgba(5,5,8,.94));
+  box-shadow:
+    inset 0 0 18px color-mix(in srgb,var(--accent) 6%,transparent),
+    0 8px 20px rgba(0,0,0,.18);
+  font-size:10px;
+  font-weight:900;
+  letter-spacing:.045em;
+  cursor:pointer;
+}
+#promotionModal .promotionSemesterSelectShell select:focus{
+  border-color:var(--accent);
+  box-shadow:
+    0 0 0 3px color-mix(in srgb,var(--accent) 13%,transparent),
+    inset 0 0 18px color-mix(in srgb,var(--accent) 9%,transparent);
+}
+#promotionModal .promotionSemesterSelectShell select:disabled{
+  cursor:wait;
+  opacity:.6;
+}
+#promotionModal .promotionSemesterSelectShell option{
+  color:#f4eadc;
+  background:#111014;
+}
+#promotionModal .promotionSemesterSelectShell i{
+  position:absolute;
+  top:50%;
+  right:13px;
+  width:22px;
+  height:22px;
+  display:grid;
+  place-items:center;
+  transform:translateY(-50%);
+  border-radius:50%;
+  color:#15110c;
+  background:linear-gradient(135deg,var(--accent),var(--strong));
+  font-style:normal;
+  font-size:12px;
+  pointer-events:none;
+}
+
+#promotionModal .promotionPublicationState{
+  min-width:0;
+  min-height:48px;
+  display:grid;
+  grid-template-columns:10px minmax(0,1fr);
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
+  border:1px solid var(--border);
+  border-radius:12px;
+  background:rgba(0,0,0,.28);
+}
+#promotionModal .promotionPublicationDot{
+  width:9px;
+  height:9px;
+  border-radius:50%;
+  background:#736d67;
+  box-shadow:0 0 0 4px rgba(115,109,103,.10);
+}
+#promotionModal .promotionPublicationState small{
+  display:block;
+  color:var(--muted);
+  font-size:6.5px;
+  font-weight:900;
+  letter-spacing:.11em;
+}
+#promotionModal .promotionPublicationState strong{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:8px;
+  font-weight:900;
+  line-height:1.25;
+}
+#promotionModal .promotionPublicationState.is-published{
+  border-color:rgba(73,178,119,.34);
+  background:linear-gradient(135deg,rgba(36,113,71,.15),rgba(0,0,0,.28));
+}
+#promotionModal .promotionPublicationState.is-published .promotionPublicationDot{
+  background:#73e0a0;
+  box-shadow:0 0 0 4px rgba(115,224,160,.10),0 0 12px rgba(115,224,160,.34);
+}
+#promotionModal .promotionPublicationState.is-published strong{
+  color:#bff4d5;
+}
+
+#promotionModal #promotionContent{
+  min-height:0;
+  overflow:hidden;
+}
+#promotionModal .promotionRecapLoading{
+  min-height:150px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  padding:24px;
+  color:var(--muted);
+}
+#promotionModal .promotionRecapLoading span{
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:var(--accent);
+  animation:promotionRecapPulse 1.05s ease-in-out infinite;
+}
+#promotionModal .promotionRecapLoading span:nth-child(2){animation-delay:.13s}
+#promotionModal .promotionRecapLoading span:nth-child(3){animation-delay:.26s}
+#promotionModal .promotionRecapLoading strong{
+  margin-left:5px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+}
+@keyframes promotionRecapPulse{
+  0%,100%{opacity:.25;transform:translateY(0)}
+  50%{opacity:1;transform:translateY(-4px)}
+}
+
+#promotionModal .promotionUnavailable{
+  min-height:190px;
+  display:grid;
+  place-items:center;
+  align-content:center;
+  gap:7px;
+  margin:18px 24px 24px;
+  padding:28px;
+  border:1px dashed color-mix(in srgb,var(--accent) 42%,var(--border));
+  border-radius:17px;
+  text-align:center;
+  background:
+    radial-gradient(circle at 50% 20%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 48%),
+    rgba(0,0,0,.24);
+}
+#promotionModal .promotionUnavailable>span{
+  color:var(--accent);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.15em;
+}
+#promotionModal .promotionUnavailable>strong{
+  color:var(--strong);
+  font-size:16px;
+  font-weight:900;
+}
+#promotionModal .promotionUnavailable>p{
+  max-width:520px;
+  margin:0;
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.45;
+}
+
+#promotionModal #promotionDetailButton:disabled{
+  cursor:not-allowed!important;
+  opacity:.42!important;
+  filter:grayscale(.35)!important;
+}
+
+/* Desktop keeps the recap table as the existing table layout. */
+@media (min-width:769px){
+  #promotionModal .promotionModalCard{
+    width:1120px;
+    max-height:90vh;
+  }
+  #promotionModal #promotionContent{
+    overflow-y:auto;
+    scrollbar-width:thin;
+    scrollbar-color:var(--accent) color-mix(in srgb,var(--panel2) 92%,#000);
+  }
+}
+
+/* Mobile: selector becomes a clean vertical control, table behavior is untouched. */
+@media (max-width:768px){
+  #promotionModal .promotionModalCard{
+    display:grid!important;
+    grid-template-rows:auto auto minmax(0,1fr)!important;
+    width:100%!important;
+    max-width:100%!important;
+    max-height:92dvh!important;
+  }
+
+  #promotionModal .promotionSemesterControl{
+    grid-template-columns:minmax(0,1fr)!important;
+    gap:8px!important;
+    padding:10px!important;
+  }
+
+  #promotionModal .promotionSemesterCopy{
+    padding:1px 2px 3px!important;
+  }
+  #promotionModal .promotionSemesterCopy>span{
+    font-size:5.6px!important;
+    letter-spacing:.13em!important;
+  }
+  #promotionModal .promotionSemesterCopy>strong{
+    margin-top:3px!important;
+    font-size:10px!important;
+  }
+  #promotionModal .promotionSemesterCopy>small{
+    margin-top:4px!important;
+    font-size:6.2px!important;
+    line-height:1.35!important;
+  }
+
+  #promotionModal .promotionSemesterField{
+    gap:4px!important;
+  }
+  #promotionModal .promotionSemesterField>span{
+    font-size:5.3px!important;
+  }
+  #promotionModal .promotionSemesterSelectShell select{
+    height:36px!important;
+    padding:0 36px 0 10px!important;
+    border-radius:9px!important;
+    font-size:7.2px!important;
+  }
+  #promotionModal .promotionSemesterSelectShell i{
+    right:9px!important;
+    width:18px!important;
+    height:18px!important;
+    font-size:9px!important;
+  }
+
+  #promotionModal .promotionPublicationState{
+    min-height:39px!important;
+    grid-template-columns:8px minmax(0,1fr)!important;
+    gap:8px!important;
+    padding:7px 9px!important;
+    border-radius:9px!important;
+  }
+  #promotionModal .promotionPublicationDot{
+    width:7px!important;
+    height:7px!important;
+  }
+  #promotionModal .promotionPublicationState small{
+    font-size:4.8px!important;
+  }
+  #promotionModal .promotionPublicationState strong{
+    margin-top:2px!important;
+    font-size:5.8px!important;
+    line-height:1.2!important;
+  }
+
+  #promotionModal #promotionContent{
+    min-height:0!important;
+    overflow:auto!important;
+    -webkit-overflow-scrolling:touch!important;
+    overscroll-behavior:contain!important;
+  }
+
+  #promotionModal .promotionRecapLoading{
+    min-height:110px!important;
+    padding:15px 10px!important;
+    gap:5px!important;
+  }
+  #promotionModal .promotionRecapLoading span{
+    width:5px!important;
+    height:5px!important;
+  }
+  #promotionModal .promotionRecapLoading strong{
+    margin-left:3px!important;
+    font-size:6px!important;
+  }
+
+  #promotionModal .promotionUnavailable{
+    min-height:140px!important;
+    margin:10px!important;
+    padding:18px 13px!important;
+    border-radius:11px!important;
+  }
+  #promotionModal .promotionUnavailable>span{
+    font-size:5px!important;
+  }
+  #promotionModal .promotionUnavailable>strong{
+    font-size:10px!important;
+    line-height:1.2!important;
+  }
+  #promotionModal .promotionUnavailable>p{
+    font-size:6px!important;
+    line-height:1.4!important;
+  }
+}

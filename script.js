@@ -558,18 +558,31 @@ const GakuseiDataService = (() => {
     return map;
   }
 
-  async function getLatestPromotionRecap() {
+  async function getPromotionRecap(requestedSheetName = '') {
     try {
-      const sheets = await discoverAcademicSheets(true);
+      const sheets = await discoverAcademicSheets(false);
       if (!sheets.length) {
         throw new Error('Tidak ada sheet A.R. yang ditemukan melalui gviz.');
       }
 
-      const latestSheet = sheets[sheets.length - 1];
+      const requestedNumber = extractSemesterNumber(requestedSheetName);
+      let selectedSheet = '';
+
+      if (requestedNumber >= 0) {
+        selectedSheet = sheets.find(
+          sheetName => extractSemesterNumber(sheetName) === requestedNumber
+        ) || '';
+        if (!selectedSheet) {
+          throw new Error('Semester A.R. yang dipilih tidak ditemukan.');
+        }
+      } else {
+        selectedSheet = sheets[sheets.length - 1];
+      }
+
       const [{ display }, masterMap] = await Promise.all([
         fetchTable({
           spreadsheetId: CONFIG.ACADEMIC_SPREADSHEET_ID,
-          sheet: latestSheet,
+          sheet: selectedSheet,
           range: 'A:AJ'
         }),
         getMasterStudentMap()
@@ -617,7 +630,8 @@ const GakuseiDataService = (() => {
 
       return {
         success: true,
-        semesterTitle: latestSheet,
+        semesterTitle: selectedSheet,
+        semesterNumber: extractSemesterNumber(selectedSheet),
         generatedAt: formatDateTime(new Date()),
         summary,
         rows
@@ -628,6 +642,10 @@ const GakuseiDataService = (() => {
         message: `Rekap promotion tidak dapat dimuat: ${error.message || error}`
       };
     }
+  }
+
+  async function getLatestPromotionRecap() {
+    return getPromotionRecap('');
   }
 
   async function getMasterStudentById(inputId) {
@@ -3195,6 +3213,7 @@ function detectTaNenseiFromAcademicBlock(displayValues, studentRowIndex, semeste
     getAcademicPdfPayload,
     getCurrentNenseiRecap,
     getCurrentGpRanking,
+    getPromotionRecap,
     getLatestPromotionRecap,
     getDetectedAcademicSheets
   };
@@ -3589,7 +3608,7 @@ const AcademicPublicationControl=(()=>{
 })();
 
 
-const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingTimer=null,gpRankingLoadToken=0,pdfBusy=false,promotionData=null,nenseiData=null,currentTheme='front',currentDocumentReview=null,academicLoadToken=0,currentAcademicReady=false,academicLoadPromise=null;
+const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingTimer=null,gpRankingLoadToken=0,pdfBusy=false,promotionData=null,promotionPublishedCatalog=[],promotionCatalogLatestNumber=-1,promotionLoadToken=0,nenseiData=null,currentTheme='front',currentDocumentReview=null,academicLoadToken=0,currentAcademicReady=false,academicLoadPromise=null;
 
 /* =========================================================
    V111 — GAKUSEI LOGIN + SOA FRONTEND BRIDGE
@@ -6980,25 +6999,268 @@ async function requestPdf(mode,sheetName,button){
       return pages;
     }
 
+    function setPromotionDetailEnabled(enabled){
+      const button=$('promotionDetailButton');
+      if(button)button.disabled=!enabled;
+    }
+
+    function renderPromotionPublicationState(item){
+      const state=$('promotionPublicationState');
+      if(!state)return;
+
+      if(!item){
+        state.classList.remove('is-published');
+        state.innerHTML=
+          '<span class="promotionPublicationDot" aria-hidden="true"></span>'+
+          '<div><small>PUBLICATION STATUS</small><strong>NO PUBLISHED SEMESTER</strong></div>';
+        return;
+      }
+
+      const number=Number(item.semesterNumber);
+      const reason=AcademicPublicationControl.publicationReason(
+        number,
+        promotionCatalogLatestNumber
+      );
+      state.classList.add('is-published');
+      state.innerHTML=
+        '<span class="promotionPublicationDot" aria-hidden="true"></span>'+
+        '<div><small>PUBLICATION STATUS</small><strong>PUBLISHED • '+
+        escapeHtml(reason)+'</strong></div>';
+    }
+
+    function populatePromotionSemesterSelect(){
+      const select=$('promotionSemesterSelect');
+      if(!select)return;
+
+      if(!promotionPublishedCatalog.length){
+        select.innerHTML='<option value="">NO PUBLISHED SEMESTER AVAILABLE</option>';
+        select.disabled=true;
+        renderPromotionPublicationState(null);
+        return;
+      }
+
+      select.innerHTML=promotionPublishedCatalog
+        .slice()
+        .sort((a,b)=>Number(b.semesterNumber)-Number(a.semesterNumber))
+        .map(item=>
+          '<option value="'+escapeHtml(item.sheetName)+'">'+
+          escapeHtml(item.sheetName)+
+          '</option>'
+        )
+        .join('');
+      select.disabled=false;
+    }
+
+    async function getPublishedPromotionCatalog(){
+      await AcademicPublicationControl.reload();
+      const catalog=await AcademicPublicationControl.getCatalog(false);
+      promotionCatalogLatestNumber=catalog.length
+        ?Math.max(...catalog.map(item=>Number(item.semesterNumber)).filter(Number.isFinite))
+        :-1;
+
+      promotionPublishedCatalog=catalog
+        .filter(item=>
+          item&&
+          Number.isInteger(Number(item.semesterNumber))&&
+          AcademicPublicationControl.isPublished(
+            Number(item.semesterNumber),
+            promotionCatalogLatestNumber
+          )
+        )
+        .sort((a,b)=>Number(a.semesterNumber)-Number(b.semesterNumber));
+
+      return promotionPublishedCatalog.slice();
+    }
+
+    function publishedPromotionCatalogItem(sheetName){
+      const wanted=String(sheetName||'').trim();
+      return promotionPublishedCatalog.find(item=>
+        String(item&&item.sheetName||'').trim()===wanted
+      )||null;
+    }
+
+    async function loadPromotionRecapSemester(sheetName){
+      const item=publishedPromotionCatalogItem(sheetName);
+      const content=$('promotionContent');
+      const select=$('promotionSemesterSelect');
+
+      promotionData=null;
+      setPromotionDetailEnabled(false);
+
+      if(!item){
+        renderPromotionPublicationState(null);
+        if(content){
+          content.innerHTML=
+            '<div class="promotionUnavailable">'+
+              '<span>PUBLICATION REQUIRED</span>'+
+              '<strong>This semester is not available for Promotion Recap.</strong>'+
+              '<p>Only Academic Record semesters currently published by Administrator can be opened here.</p>'+
+            '</div>';
+        }
+        return;
+      }
+
+      const number=Number(item.semesterNumber);
+      if(!AcademicPublicationControl.isPublished(number,promotionCatalogLatestNumber)){
+        if(select)select.value='';
+        renderPromotionPublicationState(null);
+        if(content){
+          content.innerHTML=
+            '<div class="promotionUnavailable">'+
+              '<span>UNPUBLISHED SEMESTER</span>'+
+              '<strong>Promotion Recap access is locked.</strong>'+
+              '<p>Publish this Academic Record semester through Administrator before the recap can be viewed.</p>'+
+            '</div>';
+        }
+        return;
+      }
+
+      const token=++promotionLoadToken;
+      renderPromotionPublicationState(item);
+      text('modalSub','Selected semester: '+item.sheetName+' • Loading promotion data...');
+      if(content){
+        content.innerHTML=
+          '<div class="promotionRecapLoading">'+
+            '<span></span><span></span><span></span>'+
+            '<strong>Loading '+escapeHtml(item.sheetName)+' Promotion Recap...</strong>'+
+          '</div>';
+      }
+
+      try{
+        const data=await GakuseiDataService.getPromotionRecap(item.sheetName);
+        if(token!==promotionLoadToken)return;
+
+        /* Re-check the publication state before exposing the loaded recap. */
+        if(!AcademicPublicationControl.isPublished(number,promotionCatalogLatestNumber)){
+          promotionData=null;
+          setPromotionDetailEnabled(false);
+          if(content){
+            content.innerHTML=
+              '<div class="promotionUnavailable">'+
+                '<span>UNPUBLISHED SEMESTER</span>'+
+                '<strong>Promotion Recap access is locked.</strong>'+
+                '<p>This semester is no longer published.</p>'+
+              '</div>';
+          }
+          return;
+        }
+
+        if(!data||!data.success){
+          if(content){
+            content.innerHTML='<div class="empty">'+
+              escapeHtml(data&&data.message||'Unable to load.')+
+            '</div>';
+          }
+          return;
+        }
+
+        promotionData=data;
+        renderPromotion(data);
+        setPromotionDetailEnabled(true);
+      }catch(error){
+        if(token!==promotionLoadToken)return;
+        if(content){
+          content.innerHTML='<div class="empty">'+escapeHtml(error.message||error)+'</div>';
+        }
+      }
+    }
+
     async function openPromotionRecap(){
       closeNenseiRecap();
       promotionData=null;
+      promotionPublishedCatalog=[];
+      promotionCatalogLatestNumber=-1;
+      ++promotionLoadToken;
+
       $('promotionModal').classList.remove('hidden');
-      $('promotionContent').innerHTML='<div class="empty">Loading...</div>';
+      setPromotionDetailEnabled(false);
+
+      const select=$('promotionSemesterSelect');
+      if(select){
+        select.disabled=true;
+        select.innerHTML='<option value="">LOADING PUBLISHED SEMESTERS...</option>';
+      }
+      text('modalSub','Synchronizing Academic Publication settings...');
+      renderPromotionPublicationState(null);
+      $('promotionContent').innerHTML=
+        '<div class="promotionRecapLoading">'+
+          '<span></span><span></span><span></span>'+
+          '<strong>Checking published Academic Record semesters...</strong>'+
+        '</div>';
+
       try{
-        const data=await GakuseiDataService.getLatestPromotionRecap();
-        if(!data||!data.success){
-          $('promotionContent').innerHTML='<div class="empty">'+escapeHtml(data&&data.message||'Unable to load.')+'</div>';
+        const published=await getPublishedPromotionCatalog();
+        populatePromotionSemesterSelect();
+
+        if(!published.length){
+          text('modalSub','No published Academic Record semester is currently available.');
+          $('promotionContent').innerHTML=
+            '<div class="promotionUnavailable">'+
+              '<span>NO PUBLISHED SEMESTER</span>'+
+              '<strong>Promotion Recap is not available yet.</strong>'+
+              '<p>An Administrator must publish an Academic Record semester before its promotion result can be accessed.</p>'+
+            '</div>';
           return;
         }
-        promotionData=data;
-        renderPromotion(data);
+
+        const latestPublished=published[published.length-1];
+        if(select)select.value=latestPublished.sheetName;
+        await loadPromotionRecapSemester(latestPublished.sheetName);
       }catch(error){
+        text('modalSub','Unable to synchronize publication settings.');
         $('promotionContent').innerHTML='<div class="empty">'+escapeHtml(error.message||error)+'</div>';
       }
     }
-    function closePromotionRecap(){$('promotionModal').classList.add('hidden')}
-    function renderPromotion(data){text('modalSub','Latest semester: '+(data.semesterTitle||'-')+' • Updated: '+(data.generatedAt||'-'));const s=data.summary||{},rows=data.rows||[];let html='<div class="summary">'+summaryCard('Total Students',s.total||0)+summaryCard('Promoted',s.promoted||0)+summaryCard('Retained',s.retained||0)+summaryCard('Unspecified',s.unspecified||0)+'</div><div class="tableWrap"><table class="recapTable"><thead><tr><th>No.</th><th>ID</th><th>Student</th><th>Dormitory</th><th>Grade</th><th>Status</th><th>Ranking</th><th>Remarks</th></tr></thead><tbody>';rows.forEach((row,index)=>{html+='<tr><td>'+(index+1)+'</td><td>'+escapeHtml(row.nomorId)+'</td><td>'+escapeHtml(row.namaLatin)+'</td><td>'+escapeHtml(row.asrama)+'</td><td>'+escapeHtml(row.nenseiLabel)+'</td><td>'+escapeHtml(row.gradeStatus)+'</td><td>'+escapeHtml(row.rankingResult)+'</td><td>'+escapeHtml(row.remarks)+'</td></tr>'});html+='</tbody></table></div>';$('promotionContent').innerHTML=html}
+
+    async function changePromotionRecapSemester(){
+      const select=$('promotionSemesterSelect');
+      if(!select||select.disabled)return;
+      const selected=String(select.value||'').trim();
+      if(!selected)return;
+      await loadPromotionRecapSemester(selected);
+    }
+
+    function closePromotionRecap(){
+      ++promotionLoadToken;
+      $('promotionModal').classList.add('hidden');
+    }
+
+    function renderPromotion(data){
+      text(
+        'modalSub',
+        'Selected semester: '+(data.semesterTitle||'-')+
+        ' • Updated: '+(data.generatedAt||'-')
+      );
+      const s=data.summary||{},rows=data.rows||[];
+      let html=
+        '<div class="summary">'+
+          summaryCard('Total Students',s.total||0)+
+          summaryCard('Promoted',s.promoted||0)+
+          summaryCard('Retained',s.retained||0)+
+          summaryCard('Unspecified',s.unspecified||0)+
+        '</div>'+
+        '<div class="tableWrap">'+
+          '<table class="recapTable">'+
+            '<thead><tr><th>No.</th><th>ID</th><th>Student</th><th>Dormitory</th><th>Grade</th><th>Status</th><th>Ranking</th><th>Remarks</th></tr></thead>'+
+            '<tbody>';
+
+      rows.forEach((row,index)=>{
+        html+=
+          '<tr>'+
+            '<td>'+(index+1)+'</td>'+
+            '<td>'+escapeHtml(row.nomorId)+'</td>'+
+            '<td>'+escapeHtml(row.namaLatin)+'</td>'+
+            '<td>'+escapeHtml(row.asrama)+'</td>'+
+            '<td>'+escapeHtml(row.nenseiLabel)+'</td>'+
+            '<td>'+escapeHtml(row.gradeStatus)+'</td>'+
+            '<td>'+escapeHtml(row.rankingResult)+'</td>'+
+            '<td>'+escapeHtml(row.remarks)+'</td>'+
+          '</tr>';
+      });
+
+      html+='</tbody></table></div>';
+      $('promotionContent').innerHTML=html;
+    }
     function summaryCard(label,value){return'<div class="summaryCard"><div class="summaryLabel">'+label+'</div><div class="summaryValue">'+value+'</div></div>'}
     async function openPromotionDocumentReview(){
       if(!promotionData||pdfBusy)return;
@@ -7010,7 +7272,7 @@ async function requestPdf(mode,sheetName,button){
         const pages=createPromotionPages(promotionData);
         await openDocumentReview({
           title:'NENSEI PROMOTION RECAP',
-          subtitle:'Latest semester: '+(promotionData.semesterTitle||'-')+' • '+pages.length+' page'+(pages.length===1?'':'s'),
+          subtitle:'Selected semester: '+(promotionData.semesterTitle||'-')+' • '+pages.length+' page'+(pages.length===1?'':'s'),
           fileName:'MAHOUTOKORO_NENSEI_PROMOTION_RECAP_'+safeName(promotionData.semesterTitle)+'.pdf',
           pages,
           documentData:{kind:'promotion',data:promotionData}

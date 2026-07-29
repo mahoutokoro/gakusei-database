@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=20260728-v129-dense-gp-ranking-mobile-note">
+    <link rel="stylesheet" href="./style.css?v=20260729-v130-published-promotion-recap-selector">
 
 </head>
 <body class="front-mode">
@@ -44,7 +44,7 @@
           </button>
           <button type="button" role="menuitem" onclick="openPromotionRecapFromMenu()">
             <span class="generalMenuItemTitle">NENSEI PROMOTION RECAP</span>
-            <span class="generalMenuItemText">Latest promotion and retention results</span>
+            <span class="generalMenuItemText">Published-semester promotion and retention results</span>
           </button>
           <button id="generalStudentLoginItem" class="generalStudentLoginItem" type="button" role="menuitem" onclick="openStudentLoginFromGeneralMenu()">
             <span id="generalStudentLoginTitle" class="generalMenuItemTitle">LOGIN AS GAKUSEI</span>
@@ -371,9 +371,43 @@
   </div>
 
   <div id="promotionModal" class="modal hidden">
-    <div class="modalCard">
-      <div class="modalHeader"><div><h2 class="modalTitle">NENSEI PROMOTION RECAP</h2><div id="modalSub" class="modalSubtitle"></div></div><div class="modalButtons"><button class="download" type="button" onclick="openPromotionDocumentReview()">VIEW FULL DETAIL</button><button type="button" onclick="closePromotionRecap()">CLOSE</button></div></div>
-      <div id="promotionContent"><div class="empty">Loading...</div></div>
+    <div class="modalCard promotionModalCard">
+      <div class="modalHeader">
+        <div>
+          <h2 class="modalTitle">NENSEI PROMOTION RECAP</h2>
+          <div id="modalSub" class="modalSubtitle">Choose a published Academic Record semester.</div>
+        </div>
+        <div class="modalButtons">
+          <button id="promotionDetailButton" class="download" type="button" onclick="openPromotionDocumentReview()" disabled>VIEW FULL DETAIL</button>
+          <button type="button" onclick="closePromotionRecap()">CLOSE</button>
+        </div>
+      </div>
+
+      <section class="promotionSemesterControl" aria-label="Promotion recap semester selector">
+        <div class="promotionSemesterCopy">
+          <span>ACADEMIC PUBLICATION SYNC</span>
+          <strong>Choose Promotion Semester</strong>
+          <small>Only semesters currently published through Administrator Academic Publication are available.</small>
+        </div>
+        <label class="promotionSemesterField" for="promotionSemesterSelect">
+          <span>AVAILABLE SEMESTER</span>
+          <div class="promotionSemesterSelectShell">
+            <select id="promotionSemesterSelect" onchange="changePromotionRecapSemester()" aria-label="Choose published semester for promotion recap" disabled>
+              <option value="">LOADING PUBLISHED SEMESTERS...</option>
+            </select>
+            <i aria-hidden="true">⌄</i>
+          </div>
+        </label>
+        <div id="promotionPublicationState" class="promotionPublicationState">
+          <span class="promotionPublicationDot" aria-hidden="true"></span>
+          <div>
+            <small>PUBLICATION STATUS</small>
+            <strong>CHECKING...</strong>
+          </div>
+        </div>
+      </section>
+
+      <div id="promotionContent"><div class="empty">Loading published semester access...</div></div>
     </div>
   </div>
   <div id="adminModal" class="adminModal hidden" role="dialog" aria-modal="true" aria-labelledby="adminModalTitle">
@@ -547,7 +581,7 @@
 
   <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING DOCUMENT</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
 
-    <script src="./script.js?v=20260728-v129-dense-gp-ranking-mobile-note" defer></script>
+    <script src="./script.js?v=20260729-v130-published-promotion-recap-selector" defer></script>
 
 </body>
 </html>
