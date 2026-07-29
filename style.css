@@ -83,7 +83,7 @@
     .scoreTable th:nth-child(4),.scoreTable td:nth-child(4){width:13%}
     .scoreTable th:nth-child(5),.scoreTable td:nth-child(5){width:13%}
     .scoreTable th:nth-child(6),.scoreTable td:nth-child(6){width:18%}
-    .scoreSubject{font-size:8.6px!important;font-weight:900!important;line-height:1.25;text-transform:uppercase}
+    .scoreSubject{font-family:Georgia,"Noto Sans JP","Times New Roman",serif;font-size:8.6px!important;font-weight:800!important;line-height:1.25;text-transform:none;overflow-wrap:anywhere}
     .scoreNumber{color:#8e1118!important;font-size:14px!important;font-weight:900!important}
     .scoreKanji{font-family:"Noto Sans JP",sans-serif;font-size:12px!important;font-weight:900!important;white-space:nowrap}
     .pdfOutcome{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}

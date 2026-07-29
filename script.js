@@ -3480,9 +3480,7 @@ const AcademicPublicationControl=(()=>{
       publicationMode:storageMode,
       message:visible.length
         ? source.message||''
-        : hidden.length
-          ? 'Academic Records are awaiting official publication by the administrator.'
-          : source.message||'No recorded academic semester was found for this student.'
+        : source.message||'No Academic Records are currently available.'
     };
   }
 
@@ -6105,7 +6103,7 @@ function startGpRankingRefresh(){
 
       const head=document.createElement('div');
       head.className='m90AcademicHead';
-      head.innerHTML='<div class="m90AcademicHeading"><span>ACADEMIC ARCHIVE</span><h3>Academic Records</h3><p>Latest recorded semester first. Navigate one semester at a time.</p></div>';
+      head.innerHTML='<div class="m90AcademicHeading"><span>ACADEMIC ARCHIVE</span><h3>Academic Records</h3></div>';
       const actions=document.createElement('div');
       actions.className='m90AcademicActions';
       const count=document.createElement('span');
@@ -6117,14 +6115,6 @@ function startGpRankingRefresh(){
       transcript.disabled=!records.length;
       transcript.addEventListener('click',()=>downloadTranscript(transcript));
       actions.append(count,transcript);head.appendChild(actions);app.appendChild(head);
-
-      const publicationHiddenCount=Number(data&&data.publicationHiddenCount)||0;
-      if(publicationHiddenCount>0){
-        const notice=document.createElement('div');
-        notice.className='m90PublicationNotice';
-        notice.innerHTML='<span>LOCKED</span><div><strong>ACADEMIC RELEASE PENDING</strong><p>'+escapeHtml(publicationHiddenCount===1?'Newest Academic Record awaiting Admin publication.':publicationHiddenCount+' Academic Records are unpublished.')+'</p></div>';
-        app.appendChild(notice);
-      }
 
       if(!records.length){
         const empty=document.createElement('div');
@@ -6369,13 +6359,8 @@ function startGpRankingRefresh(){
       $('transcriptButton').disabled=recordedCount<1;
       $('transcriptButton').textContent='VIEW ACADEMIC TRANSCRIPT';
 
-      const publicationHiddenCount=Number(data&&data.publicationHiddenCount)||0;
-      const publicationNoticeHtml=publicationHiddenCount>0
-        ? '<div class="academicPublicationNotice"><span class="academicPublicationLock">LOCKED</span><div><strong>ACADEMIC RELEASE PENDING</strong><p>'+escapeHtml(publicationHiddenCount===1?'The newest Academic Record is awaiting official publication by the administrator.':publicationHiddenCount+' Academic Records are currently unpublished by the administrator.')+'</p></div></div>'
-        : '';
-
       if(!records.length){
-        box.innerHTML=publicationNoticeHtml+
+        box.innerHTML=
           '<div class="empty">'+
             escapeHtml(
               data.message||
@@ -6384,8 +6369,6 @@ function startGpRankingRefresh(){
           '</div>';
         return;
       }
-
-      if(publicationNoticeHtml)box.insertAdjacentHTML('beforeend',publicationNoticeHtml);
 
       records.forEach(record=>{
         const card=document.createElement('section');
