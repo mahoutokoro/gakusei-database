@@ -3243,8 +3243,13 @@ function detectTaNenseiFromAcademicBlock(displayValues, studentRowIndex, semeste
    When blank, the Admin UI works in LOCAL TEST MODE only.
    ========================================================= */
 const ACADEMIC_PUBLICATION_CONFIG=Object.freeze({
-  API_URL:'',
+  /*
+   * V133 — Academic Publication now uses the SAME deployed global Portal
+   * backend as Gakusei login / SOA. No second deployment or second URL.
+   */
+  API_URL:'https://script.google.com/macros/s/AKfycbzgr2KVBm9Iibql6pTqo-d5lrgddNYXOnpN4GC1cENGjSFnHBEBbmZHEDU7Cea2LvHy/exec',
   LOCAL_SETTINGS_KEY:'mahoutokoro-academic-publication-v1',
+  GLOBAL_CACHE_KEY:'mahoutokoro-academic-publication-global-cache-v1',
   ADMIN_PASSWORD_SHA256:'6d00671b21139644b658cb6f0184e5f4e7893dd3e299045d8d93049df01e319c',
   REQUEST_TIMEOUT_MS:12000
 });
@@ -3257,6 +3262,12 @@ const AcademicPublicationControl=(()=>{
   let adminPasswordMemory='';
   let storageMode='LOCAL TEST MODE';
   let remoteError='';
+  /*
+   * One-time bridge for installations that already have Admin decisions in
+   * the old browser-local storage. It is never allowed to write globally
+   * until the real Admin password has been authenticated.
+   */
+  let migrationCandidate=null;
 
   function apiUrl(){
     const runtime=typeof window!=='undefined'&&window.MAHOUTOKORO_ADMIN_API_URL
@@ -3299,6 +3310,19 @@ const AcademicPublicationControl=(()=>{
 
   function saveLocalSettings(next){
     try{localStorage.setItem(ACADEMIC_PUBLICATION_CONFIG.LOCAL_SETTINGS_KEY,JSON.stringify(next))}catch(error){}
+  }
+
+  function loadGlobalCacheSettings(){
+    try{
+      const parsed=JSON.parse(localStorage.getItem(ACADEMIC_PUBLICATION_CONFIG.GLOBAL_CACHE_KEY)||'null');
+      return normalizeSettings(parsed,'global-cache');
+    }catch(error){
+      return normalizeSettings(null,'default');
+    }
+  }
+
+  function saveGlobalCacheSettings(next){
+    try{localStorage.setItem(ACADEMIC_PUBLICATION_CONFIG.GLOBAL_CACHE_KEY,JSON.stringify(next))}catch(error){}
   }
 
   async function fetchJsonWithTimeout(url,options={}){
@@ -3387,25 +3411,80 @@ const AcademicPublicationControl=(()=>{
     });
   }
 
+  async function writeRemoteSettings(url,password,next){
+    const body=new URLSearchParams();
+    body.set('action','savePublicationSettings');
+    body.set('password',String(password||''));
+    body.set('settings',JSON.stringify(next));
+
+    /*
+     * The Portal backend already accepts cross-origin POST for SOA.
+     * Use the same proven route first. Keep the previous hidden-form path as
+     * a compatibility fallback for browsers that block the redirected fetch.
+     */
+    try{
+      return await fetchJsonWithTimeout(url,{
+        method:'POST',
+        body,
+        redirect:'follow',
+        credentials:'omit'
+      });
+    }catch(fetchError){
+      await postRemoteSettingsViaHiddenForm(url,password,next);
+      return await readRemoteSettings(url);
+    }
+  }
+
   async function loadSettings(force=false){
     if(readyPromise&&!force)return readyPromise;
     readyPromise=(async()=>{
       const url=apiUrl();
+      const legacyLocal=loadLocalSettings();
       remoteError='';
+
       if(!url){
-        settings=loadLocalSettings();
+        settings=legacyLocal;
         storageMode='LOCAL TEST MODE';
         return settings;
       }
+
       try{
         const payload=await readRemoteSettings(url);
-        if(!payload||payload.success===false)throw new Error(payload&&payload.message?payload.message:'Invalid settings response.');
-        settings=normalizeSettings(payload.settings||payload,'remote');
+        if(!payload||payload.success===false){
+          throw new Error(payload&&payload.message?payload.message:'Invalid settings response.');
+        }
+
+        const remoteSettings=normalizeSettings(payload.settings||payload,'remote');
+
+        /*
+         * Preserve old browser-local Admin decisions only as a migration
+         * candidate. Students never use this candidate as the global source.
+         * It can be uploaded only after the Admin password is authenticated.
+         */
+        migrationCandidate=(
+          !remoteSettings.configured &&
+          legacyLocal.configured
+        ) ? legacyLocal : null;
+
+        settings=remoteSettings;
         storageMode='GLOBAL REMOTE MODE';
-        saveLocalSettings(settings);
+        saveGlobalCacheSettings(settings);
+
+        /*
+         * Do not overwrite the legacy local copy while a migration is pending.
+         * After a successful global save it is mirrored again as a backup.
+         */
+        if(!migrationCandidate)saveLocalSettings(settings);
       }catch(error){
         remoteError=error&&error.message?error.message:String(error);
-        settings=loadLocalSettings();
+
+        /*
+         * In global mode, never treat arbitrary old per-browser publication
+         * decisions as authoritative. Use only the last successfully fetched
+         * GLOBAL snapshot as the offline fallback.
+         */
+        settings=loadGlobalCacheSettings();
+        migrationCandidate=null;
         storageMode='OFFLINE FALLBACK';
       }
       return settings;
@@ -3515,8 +3594,27 @@ const AcademicPublicationControl=(()=>{
       adminPasswordMemory='';
       throw new Error('Incorrect administrator password.');
     }
+
     adminAuthenticated=true;
     adminPasswordMemory=String(password||'');
+
+    /*
+     * V133 one-time migration:
+     * If the new global backend has never been configured, carry forward the
+     * existing Admin browser's old Publish/Unpublish matrix after successful
+     * Admin authentication. A student browser can never trigger this write.
+     */
+    if(migrationCandidate&&apiUrl()&&!settings.configured){
+      const candidate=migrationCandidate;
+      try{
+        await save(candidate.semesters);
+        migrationCandidate=null;
+      }catch(error){
+        migrationCandidate=candidate;
+        remoteError='Legacy publication migration is pending: '+(error&&error.message?error.message:String(error));
+      }
+    }
+
     return true;
   }
 
@@ -3544,40 +3642,50 @@ const AcademicPublicationControl=(()=>{
 
   async function save(nextSemesterMap){
     if(!adminAuthenticated)throw new Error('Admin authentication is required.');
+
     const next=normalizeSettings({
       configured:true,
       semesters:nextSemesterMap,
       updatedAt:new Date().toISOString(),
       updatedBy:'ADMIN'
     },'local');
-    saveLocalSettings(next);
 
     const url=apiUrl();
     if(!url){
       settings=next;
+      saveLocalSettings(next);
       storageMode='LOCAL TEST MODE';
       return{success:true,localOnly:true,settings};
     }
 
     try{
-      await postRemoteSettingsViaHiddenForm(url,adminPasswordMemory,next);
-      const verification=await readRemoteSettings(url);
+      const verification=await writeRemoteSettings(url,adminPasswordMemory,next);
       if(!verification||verification.success===false){
         throw new Error(verification&&verification.message?verification.message:'Remote save verification failed.');
       }
+
       const verified=normalizeSettings(verification.settings||verification,'remote');
       const expected=JSON.stringify(normalizeSemesterMap(next.semesters));
       const actual=JSON.stringify(normalizeSemesterMap(verified.semesters));
       if(expected!==actual){
         throw new Error('Remote settings did not match the requested publication state. Check the Admin password and Web App deployment permissions.');
       }
+
       settings=verified;
+      migrationCandidate=null;
       storageMode='GLOBAL REMOTE MODE';
       remoteError='';
+
+      /* Local storage is only a cache/backup after GLOBAL verification. */
+      saveGlobalCacheSettings(settings);
       saveLocalSettings(settings);
+
       return{success:true,localOnly:false,settings};
     }catch(error){
-      settings=next;
+      /*
+       * Never pretend an unsaved per-browser change is global. Keep the last
+       * verified global state active and report the backend failure.
+       */
       storageMode='OFFLINE FALLBACK';
       remoteError=error&&error.message?error.message:String(error);
       throw new Error('Global settings could not be saved: '+remoteError);
@@ -5380,7 +5488,12 @@ function startGpRankingRefresh(){
           return;
         }
 
-        await AcademicPublicationControl.ready();
+        /*
+         * V133 — always re-read the shared global publication matrix before
+         * exposing Academic Records. This prevents an already-open browser
+         * from continuing to use an old Admin decision.
+         */
+        await AcademicPublicationControl.reload();
         const publishedAcademicData=AcademicPublicationControl.filterAcademicData(response.data||{});
         renderAcademic(publishedAcademicData);
         renderMobileAcademic(publishedAcademicData);
@@ -6530,7 +6643,12 @@ async function requestPdf(mode,sheetName,button){
       await academicLoadPromise;
     }
 
-    await AcademicPublicationControl.ready();
+    /*
+     * Re-check global publication immediately before VIEW DETAIL / Transcript.
+     * An Admin unpublish made on another device therefore cannot be bypassed
+     * by a stale page that was already open.
+     */
+    await AcademicPublicationControl.reload();
     const rawPayload=await GakuseiDataService.getAcademicPdfPayload(
       currentStudentId,
       sheetName,
@@ -10531,7 +10649,7 @@ function adminBackendNoticeText(){
   const mode=AcademicPublicationControl.getStorageMode();
   if(mode==='GLOBAL REMOTE MODE')return 'GLOBAL MODE • Publication settings are shared with every visitor through the configured Apps Script backend.';
   if(mode==='OFFLINE FALLBACK')return 'OFFLINE FALLBACK • Remote publication settings could not be reached. Changes are not saved globally until the backend connection works.';
-  return 'LOCAL TEST MODE • UI and locking logic are active in this browser only. Deploy Code.gs and paste its /exec URL into ACADEMIC_PUBLICATION_CONFIG.API_URL for site-wide publication control.';
+  return 'GLOBAL BACKEND REQUIRED • Publication control could not initialize from the configured Portal backend.';
 }
 
 async function refreshAdminSemesterCatalog(force){
@@ -10649,7 +10767,20 @@ async function toggleNewestAcademicPublication(){
   }
 }
 
-function startRefresh(){if(refreshTimer)clearInterval(refreshTimer);refreshTimer=setInterval(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)},AUTO_REFRESH_MS)}function escapeHtml(value){return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out}function safeName(value){return String(value||'REPORT').replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_')}
+function startRefresh(){
+  if(refreshTimer)clearInterval(refreshTimer);
+  refreshTimer=setInterval(()=>{
+    /*
+     * V133 — SOA OPEN/CLOSE was already stored globally by Code.gs.
+     * Re-read that global state before the existing silent student refresh so
+     * eligible buttons follow Admin changes on other devices without reload.
+     * Backend submitSOA still performs its own authoritative gate check.
+     */
+    SOAAccessControl.refresh(true)
+      .catch(()=>null)
+      .finally(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)});
+  },AUTO_REFRESH_MS);
+}function escapeHtml(value){return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out}function safeName(value){return String(value||'REPORT').replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_')}
 
 
 /* =====================================================================
