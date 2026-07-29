@@ -342,6 +342,14 @@ const GakuseiDataService = (() => {
       records,
       matchedRecordCount: available.length,
       totalTimelineCount: available.length,
+      /*
+       * V131 — preserve the real Academic Record timeline boundary.
+       * A semester-only VIEW DETAIL payload contains just one record, so the
+       * publication filter must not infer "latest semester" from that one-item
+       * payload. Use the same latestSemesterTitle that the Academic Records UI
+       * already uses for Publish/Unpublish decisions.
+       */
+      latestSemesterTitle: String(academicData.latestSemesterTitle || ''),
       generatedDateLatin: formatDateLong(new Date()),
       assets: (() => {
         const headerLogoUrls = makeDriveImageUrls(CONFIG.HEADER_LOGO_ID, 'w1000');
@@ -3481,7 +3489,7 @@ const AcademicPublicationControl=(()=>{
   function filterPdfPayload(payload){
     const source=payload&&typeof payload==='object'?payload:{};
     const records=Array.isArray(source.records)?source.records:[];
-    const latestNumber=latestNumberFromData({},records);
+    const latestNumber=latestNumberFromData(source,records);
     const visible=records.filter(record=>{
       if(!record)return false;
       if(record.recordType==='GRADUATED_DEVOTED')return true;
