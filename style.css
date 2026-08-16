@@ -16841,3 +16841,182 @@ body.student-login-open{overflow:hidden}
     line-height:1.4!important;
   }
 }
+
+
+/* =====================================================================
+   V134 — ACHIEVEMENTS
+   Additive only: semester cards, semester record document, transcript.
+   Existing project styling and behavior remain unchanged.
+   ===================================================================== */
+.semesterAchievements{
+  margin:12px 14px 0;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:13px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 8%,rgba(5,5,8,.78)),rgba(5,5,8,.72));
+}
+.semesterAchievementsTitle{
+  padding:9px 11px;
+  border-bottom:1px solid var(--border);
+  color:var(--accent);
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.09em;
+}
+.semesterAchievementsTable{display:grid}
+.semesterAchievementsHead,
+.semesterAchievementRow{
+  display:grid;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  gap:10px;
+  align-items:center;
+}
+.semesterAchievementsHead{
+  padding:7px 10px;
+  color:var(--muted);
+  background:rgba(255,255,255,.025);
+  font-size:7.5px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.semesterAchievementRow{
+  padding:9px 10px;
+  border-top:1px solid color-mix(in srgb,var(--border) 55%,transparent);
+  color:var(--strong);
+  font-size:10px;
+  line-height:1.3;
+}
+.semesterAchievementsHead + .semesterAchievementRow{border-top:0}
+.semesterAchievementRow strong{color:var(--accent);font-size:10px;line-height:1.3}
+.semesterAchievementsEmpty{
+  padding:10px 11px;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.35;
+}
+
+/* Mobile Academic Record semester achievements */
+.m134SemesterAchievements{
+  margin:8px 0 0;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--accent) 28%,rgba(255,255,255,.10));
+  border-radius:11px;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 8%,rgba(5,5,8,.42)),rgba(5,5,8,.28));
+}
+.m134SemesterAchievementsTitle{
+  padding:7px 8px;
+  border-bottom:1px solid color-mix(in srgb,var(--accent) 22%,rgba(255,255,255,.08));
+  color:var(--accent);
+  font-size:6.6px;
+  font-weight:900;
+  letter-spacing:.09em;
+}
+.m134SemesterAchievementsHead,
+.m134SemesterAchievementRow{
+  display:grid;
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);
+  gap:7px;
+  align-items:center;
+}
+.m134SemesterAchievementsHead{
+  padding:6px 8px;
+  color:var(--muted);
+  background:rgba(255,255,255,.025);
+  font-size:5.7px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+.m134SemesterAchievementRow{
+  padding:7px 8px;
+  border-top:1px solid color-mix(in srgb,var(--accent) 18%,rgba(255,255,255,.06));
+  color:var(--strong);
+  font-size:7px;
+  line-height:1.28;
+}
+.m134SemesterAchievementRow strong{color:var(--accent);font-size:7px;line-height:1.28}
+.m134SemesterAchievementsEmpty{padding:8px;color:var(--muted);font-size:6.5px;line-height:1.3}
+
+/* Semester Academic Record document — after Remarks, before Hanko */
+.pdfSemesterAchievementsTable{
+  width:100%;
+  margin-top:7px;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+.pdfSemesterAchievementsTable th,
+.pdfSemesterAchievementsTable td{border:1px solid #c9a877}
+.pdfSemesterAchievementsTable th{
+  padding:5px 7px;
+  color:#fff1da;
+  background:#251e19;
+  font-size:6.8px;
+  font-weight:900;
+  text-align:center;
+}
+.pdfSemesterAchievementsTable td{
+  padding:5px 7px;
+  color:#2a211a;
+  background:#fffaf2;
+  font-size:7.5px;
+  line-height:1.22;
+  vertical-align:middle;
+  overflow-wrap:anywhere;
+}
+.pdfSemesterAchievementsTable th:first-child,
+.pdfSemesterAchievementsTable td:first-child{width:42%}
+.pdfSemesterAchievementsTable th:last-child,
+.pdfSemesterAchievementsTable td:last-child{width:58%}
+.pdfSemesterAchievementsEmpty td{color:#806c59;text-align:center;font-style:italic}
+
+/* Transcript — cumulative achievements immediately after Notes */
+.transcriptAchievementsBlock{margin-top:8px}
+.transcriptAchievementsHeading{
+  padding:6px 9px;
+  color:#fff2dc;
+  background:#8e1118;
+  border-left:6px solid #d6ad72;
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.06em;
+}
+.transcriptAchievementsTable{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+.transcriptAchievementsTable th,
+.transcriptAchievementsTable td{border:1px solid #c9a877}
+.transcriptAchievementsTable th{
+  padding:4px 6px;
+  color:#fff1da;
+  background:#251e19;
+  font-size:6.4px;
+  font-weight:900;
+  text-align:center;
+}
+.transcriptAchievementsTable td{
+  padding:4px 6px;
+  color:#2a211a;
+  background:#fffaf2;
+  font-size:6.8px;
+  line-height:1.15;
+  vertical-align:middle;
+  overflow-wrap:anywhere;
+}
+.transcriptAchievementsTable th:nth-child(1),
+.transcriptAchievementsTable td:nth-child(1){width:31%}
+.transcriptAchievementsTable th:nth-child(2),
+.transcriptAchievementsTable td:nth-child(2){width:50%}
+.transcriptAchievementsTable th:nth-child(3),
+.transcriptAchievementsTable td:nth-child(3){width:19%;text-align:center}
+.transcriptAchievementsEmptyRow td{color:#806c59;text-align:center!important;font-style:italic}
+.transcriptAchievementsDense .transcriptAchievementsTable th{padding:3px 5px;font-size:5.9px}
+.transcriptAchievementsDense .transcriptAchievementsTable td{padding:3px 5px;font-size:6.1px;line-height:1.08}
+.transcriptAchievementsDense .transcriptAchievementsBlock{margin-top:6px}
+.transcriptAchievementsVeryDense .transcriptAchievementsTable th{padding:2px 4px;font-size:5.4px}
+.transcriptAchievementsVeryDense .transcriptAchievementsTable td{padding:2px 4px;font-size:5.5px;line-height:1.02}
+.transcriptAchievementsVeryDense .compactTranscriptSignatures{margin-top:5px}
+
+@media (max-width:768px){
+  #mobileAcademicMount .m134SemesterAchievements{margin-top:7px!important}
+}

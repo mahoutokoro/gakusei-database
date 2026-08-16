@@ -28,6 +28,14 @@ const GakuseiDataService = (() => {
     ACADEMIC_SPREADSHEET_ID: '1oMojS3CofQr4q9Wm9tByRB3xflpJuhsXeDaHJ1QyIC8',
 
     /*
+     * ACHIEVEMENTS memakai timeline semester yang sama dengan Academic Record.
+     * Setiap tab semester berformat "N A.R." dan memakai:
+     * A = Gakusei ID, C = Achievement, D = Title.
+     */
+    ACHIEVEMENT_SPREADSHEET_ID: '1rUCWodFaoY-V8kdBwznZaVQ295TOVUT9Na9UGBqS6UM',
+    ACHIEVEMENT_READ_CONCURRENCY: 2,
+
+    /*
      * GViz tidak menyediakan daftar nama tab. Karena nama semester memakai
      * nomor + format A.R., website memeriksa nomor secara berurutan dan hanya
      * menerima respons yang benar-benar memiliki struktur Academic Record.
@@ -1317,6 +1325,13 @@ function restoreFailedAcademicRecords(studentId, records, failedSheetNames) {
 
     resolveMissingAcademicNensei(records, dormCode, currentGrade);
 
+    /*
+     * ACHIEVEMENTS is an additive semester companion to Academic Records.
+     * A failure in the separate achievement spreadsheet must never suppress
+     * or invalidate an otherwise valid Academic Record semester.
+     */
+    await attachSemesterAchievements(records, studentId);
+
     records.forEach(record => {
       if (record && record._academicContext) delete record._academicContext;
     });
@@ -1339,6 +1354,112 @@ function restoreFailedAcademicRecords(studentId, records, failedSheetNames) {
           ? 'Nomor ID siswa tidak ditemukan di kolom F pada seluruh sheet A.R. yang terdeteksi.'
           : 'Tidak ada sheet semester berformat A.R. yang terdeteksi.'
     };
+  }
+
+  async function attachSemesterAchievements(records, studentId) {
+    const safeRecords = Array.isArray(records) ? records : [];
+    const semesterRecords = safeRecords.filter(record =>
+      record &&
+      record.sourceAvailable !== false &&
+      record.recordType !== 'GRADUATED_DEVOTED' &&
+      extractSemesterNumber(record.sheetName || record.semesterTitle) >= 0
+    );
+
+    if (!semesterRecords.length) return safeRecords;
+
+    const results = await mapLimit(
+      semesterRecords,
+      Math.max(1, Number(CONFIG.ACHIEVEMENT_READ_CONCURRENCY) || 1),
+      async record => {
+        try {
+          return await readSemesterAchievements(
+            record.sheetName || record.semesterTitle,
+            studentId,
+            false
+          );
+        } catch (error) {
+          console.warn(
+            '[Mahoutokoro Achievements] Semester achievements could not be loaded.',
+            {
+              sheetName: record.sheetName || record.semesterTitle || '',
+              studentId,
+              message: error && error.message ? error.message : String(error)
+            }
+          );
+          return [];
+        }
+      }
+    );
+
+    semesterRecords.forEach((record, index) => {
+      record.achievements = Array.isArray(results[index]) ? results[index] : [];
+    });
+
+    return safeRecords;
+  }
+
+  async function readSemesterAchievements(sheetName, studentId, bypassCache = false) {
+    const normalizedStudentId = normalizeId(studentId);
+    if (!normalizedStudentId) return [];
+
+    const semesterNumber = extractSemesterNumber(sheetName);
+    const canonicalSheetName = semesterNumber >= 0
+      ? `${semesterNumber} A.R.`
+      : String(sheetName || '').trim();
+
+    /*
+     * The new spreadsheet follows the same official A.R. naming convention,
+     * therefore the canonical name is authoritative. If an existing Academic
+     * Record already resolved to the canonical spelling, this is one request.
+     */
+    const candidateNames = Array.from(new Set([
+      canonicalSheetName,
+      String(sheetName || '').trim()
+    ].filter(Boolean)));
+
+    let lastError = null;
+    for (const candidate of candidateNames) {
+      try {
+        const table = await fetchTable({
+          spreadsheetId: CONFIG.ACHIEVEMENT_SPREADSHEET_ID,
+          sheet: candidate,
+          range: 'A:D',
+          bypassCache,
+          maxAttempts: 2
+        });
+
+        const achievements = [];
+        (table.display || []).forEach(row => {
+          if (!idsMatch(row && row[0], normalizedStudentId)) return;
+
+          const achievement = String(row && row[2] != null ? row[2] : '')
+            .normalize('NFKC')
+            .replace(/\s+/g, ' ')
+            .trim();
+          const title = String(row && row[3] != null ? row[3] : '')
+            .normalize('NFKC')
+            .replace(/\s+/g, ' ')
+            .trim();
+
+          if (!achievement && !title) return;
+
+          achievements.push({
+            achievement: achievement || '-',
+            title: title || '-',
+            semester: semesterNumber >= 0
+              ? `${semesterNumber} A.R.`
+              : (String(sheetName || '').trim() || '-')
+          });
+        });
+
+        return achievements;
+      } catch (error) {
+        lastError = error;
+      }
+    }
+
+    if (lastError) throw lastError;
+    return [];
   }
 
   async function readAcademicSemesterRecord(sheetName, studentId, dormCode, bypassCache = false) {
@@ -6309,6 +6430,8 @@ function startGpRankingRefresh(){
         card.appendChild(subjects);
         if(soaRetained)card.appendChild(createSOARetainedNotice(true));
 
+        card.appendChild(createSemesterAchievementsBlock(record,true));
+
         const foot=document.createElement('div');foot.className='m90SemesterFoot';
         foot.innerHTML='<div><span>Grade Status</span><strong class="'+gradeClass(record.gradeStatus||'')+'">'+escapeHtml(record.gradeStatus||'-')+'</strong></div><div><span>Ranking Result</span><strong class="'+rankClass(record.rankingResult||'')+'">'+escapeHtml(record.rankingResult||'-')+'</strong></div>';
         const detail=document.createElement('button');detail.type='button';detail.textContent='VIEW DETAIL';detail.addEventListener('click',()=>requestPdf('semester',record.sheetName,detail));foot.appendChild(detail);card.appendChild(foot);
@@ -6587,6 +6710,8 @@ function startGpRankingRefresh(){
         card.appendChild(subjects);
         if(soaRetained)card.appendChild(createSOARetainedNotice(false));
 
+        card.appendChild(createSemesterAchievementsBlock(record,false));
+
         const foot=document.createElement('div');
         foot.className='semesterFoot';
         foot.appendChild(
@@ -6614,6 +6739,44 @@ function startGpRankingRefresh(){
         card.appendChild(foot);
         box.appendChild(card);
       });
+    }
+
+    function createSemesterAchievementsBlock(record,isMobile){
+      const achievements=Array.isArray(record&&record.achievements)?record.achievements:[];
+      const section=document.createElement('section');
+      section.className=isMobile?'m134SemesterAchievements':'semesterAchievements';
+
+      const title=document.createElement('div');
+      title.className=isMobile?'m134SemesterAchievementsTitle':'semesterAchievementsTitle';
+      title.textContent='SEMESTER ACHIEVEMENTS';
+      section.appendChild(title);
+
+      if(!achievements.length){
+        const empty=document.createElement('div');
+        empty.className=isMobile?'m134SemesterAchievementsEmpty':'semesterAchievementsEmpty';
+        empty.textContent='No achievement recorded for this semester.';
+        section.appendChild(empty);
+        return section;
+      }
+
+      const table=document.createElement('div');
+      table.className=isMobile?'m134SemesterAchievementsTable':'semesterAchievementsTable';
+      table.innerHTML=
+        '<div class="'+(isMobile?'m134SemesterAchievementsHead':'semesterAchievementsHead')+'">'+
+          '<span>Achievement</span><span>Title</span>'+ 
+        '</div>';
+
+      achievements.forEach(item=>{
+        const row=document.createElement('div');
+        row.className=isMobile?'m134SemesterAchievementRow':'semesterAchievementRow';
+        row.innerHTML=
+          '<span>'+escapeHtml(item&&item.achievement||'-')+'</span>'+ 
+          '<strong>'+escapeHtml(item&&item.title||'-')+'</strong>';
+        table.appendChild(row);
+      });
+
+      section.appendChild(table);
+      return section;
     }
 
     function miniTitle(value){const e=document.createElement('div');e.className='miniTitle';e.textContent=value;return e}
@@ -7730,6 +7893,22 @@ function buildTranscriptModel(records){
     });
   });
 
+  const achievementRows=[];
+  academicRecords.forEach(record=>{
+    const semester=String(record&&record.semesterTitle||record&&record.sheetName||'').trim()||'-';
+    const achievements=Array.isArray(record&&record.achievements)?record.achievements:[];
+    achievements.forEach(item=>{
+      const achievement=String(item&&item.achievement||'').trim();
+      const title=String(item&&item.title||'').trim();
+      if(!achievement&&!title)return;
+      achievementRows.push({
+        achievement:achievement||'-',
+        title:title||'-',
+        semester:String(item&&item.semester||semester).trim()||semester
+      });
+    });
+  });
+
   const studyMarks=subjectRows
     .map(row=>parseTranscriptNumber(row.score))
     .filter(value=>value!==null);
@@ -7755,6 +7934,7 @@ function buildTranscriptModel(records){
 
   return {
     subjectRows,
+    achievementRows,
     studyResult,
     devotedStudentTitle,
     devotedStudentMark,
@@ -7993,6 +8173,46 @@ function appendAcademicPageWatermark(page,logoUrls){
   return watermark;
 }
 
+function createTranscriptAchievementsTable(rows){
+  const achievements=Array.isArray(rows)?rows:[];
+  const block=document.createElement('section');
+  block.className='transcriptAchievementsBlock';
+
+  const heading=document.createElement('div');
+  heading.className='transcriptAchievementsHeading';
+  heading.textContent='ACHIEVEMENTS';
+  block.appendChild(heading);
+
+  const table=document.createElement('table');
+  table.className='transcriptAchievementsTable';
+  table.innerHTML=
+    '<thead><tr>'+ 
+      '<th>Achievement</th>'+ 
+      '<th>Title</th>'+ 
+      '<th>Semester</th>'+ 
+    '</tr></thead>';
+
+  const tbody=document.createElement('tbody');
+  if(!achievements.length){
+    const tr=document.createElement('tr');
+    tr.className='transcriptAchievementsEmptyRow';
+    tr.innerHTML='<td colspan="3">No achievement recorded.</td>';
+    tbody.appendChild(tr);
+  }else{
+    achievements.forEach(item=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=
+        '<td>'+escapeHtml(item&&item.achievement||'-')+'</td>'+ 
+        '<td>'+escapeHtml(item&&item.title||'-')+'</td>'+ 
+        '<td>'+escapeHtml(item&&item.semester||'-')+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  table.appendChild(tbody);
+  block.appendChild(table);
+  return block;
+}
+
 function createTranscriptPage(payload,model,options){
   const student=payload.student||{};
   const assets=payload.assets||{};
@@ -8001,6 +8221,9 @@ function createTranscriptPage(payload,model,options){
   const page=pdfPage('reportPage transcriptPage compactTranscriptPage singlePageTranscript');
   if(totalRows>28)page.classList.add('transcriptDense');
   if(totalRows>40)page.classList.add('transcriptVeryDense');
+  const achievementCount=Array.isArray(model&&model.achievementRows)?model.achievementRows.length:0;
+  if(achievementCount>4)page.classList.add('transcriptAchievementsDense');
+  if(achievementCount>10)page.classList.add('transcriptAchievementsVeryDense');
 
   const headerLogoUrls=uniqueImageUrls([
     ...(Array.isArray(assets.headerLogoUrls)?assets.headerLogoUrls:[]),
@@ -8088,6 +8311,9 @@ function createTranscriptPage(payload,model,options){
   note.innerHTML='<strong>Notes:</strong> Final Score = (Study Result + Devoted Student Score) ÷ 2.';
   page.appendChild(note);
 
+  /* ACHIEVEMENTS must appear immediately after Notes in the transcript. */
+  page.appendChild(createTranscriptAchievementsTable(model.achievementRows||[]));
+
   const approval=document.createElement('div');
   approval.className='approvalBlock signatures transcriptSignatures compactTranscriptSignatures';
   approval.appendChild(signature('Mahoutokoro Headmaster',headmasterStampUrls,'Ryoumen Shō'));
@@ -8100,6 +8326,32 @@ function createTranscriptPage(payload,model,options){
   page.appendChild(footer);
 
   return page;
+}
+
+function createPdfSemesterAchievements(record){
+  const achievements=Array.isArray(record&&record.achievements)?record.achievements:[];
+  const table=document.createElement('table');
+  table.className='pdfSemesterAchievementsTable';
+  table.innerHTML=
+    '<thead><tr><th>Achievement</th><th>Title</th></tr></thead>';
+
+  const tbody=document.createElement('tbody');
+  if(!achievements.length){
+    const tr=document.createElement('tr');
+    tr.className='pdfSemesterAchievementsEmpty';
+    tr.innerHTML='<td colspan="2">No achievement recorded for this semester.</td>';
+    tbody.appendChild(tr);
+  }else{
+    achievements.forEach(item=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=
+        '<td>'+escapeHtml(item&&item.achievement||'-')+'</td>'+ 
+        '<td>'+escapeHtml(item&&item.title||'-')+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  table.appendChild(tbody);
+  return table;
 }
 
 function createAcademicRecordPage(payload,record,options){
@@ -8252,6 +8504,10 @@ function createAcademicRecordPage(payload,record,options){
         '<div class="pdfRemarksLabel">Remarks / Examination Eligibility</div>'+ 
         '<div class="pdfRemarksText">'+escapeHtml(record.remarks||'-')+'</div>';
       page.appendChild(remarks);
+
+      /* Semester Achievements is positioned after Remarks and before Hanko. */
+      page.appendChild(pdfSection('Semester Achievements'));
+      page.appendChild(createPdfSemesterAchievements(record));
 
       const approval=document.createElement('div');
       approval.className='approvalBlock signatures';
