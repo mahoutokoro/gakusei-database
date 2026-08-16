@@ -16946,19 +16946,20 @@ body.student-login-open{overflow:hidden}
 .pdfSemesterAchievementsTable th,
 .pdfSemesterAchievementsTable td{border:1px solid #c9a877}
 .pdfSemesterAchievementsTable th{
-  padding:5px 7px;
+  padding:6px 4px;
   color:#fff1da;
   background:#251e19;
-  font-size:6.8px;
+  font-size:6.55px;
+  line-height:1.18;
   font-weight:900;
   text-align:center;
 }
 .pdfSemesterAchievementsTable td{
-  padding:5px 7px;
+  padding:5px;
   color:#2a211a;
   background:#fffaf2;
-  font-size:7.5px;
-  line-height:1.22;
+  font-size:9.5px;
+  line-height:1.2;
   vertical-align:middle;
   overflow-wrap:anywhere;
 }
@@ -16969,15 +16970,22 @@ body.student-login-open{overflow:hidden}
 .pdfSemesterAchievementsEmpty td{color:#806c59;text-align:center;font-style:italic}
 
 /* Transcript — cumulative achievements immediately after Notes */
-.transcriptAchievementsBlock{margin-top:8px}
+.singlePageTranscript{
+  display:flex;
+  flex-direction:column;
+}
+.transcriptAchievementsBlock{
+  margin-top:8px;
+  flex:0 0 auto;
+}
 .transcriptAchievementsHeading{
   padding:6px 9px;
   color:#fff2dc;
   background:#8e1118;
   border-left:6px solid #d6ad72;
-  font-size:8px;
+  font-size:8.8px;
   font-weight:900;
-  letter-spacing:.06em;
+  letter-spacing:.05em;
 }
 .transcriptAchievementsTable{
   width:100%;
@@ -16987,36 +16995,251 @@ body.student-login-open{overflow:hidden}
 .transcriptAchievementsTable th,
 .transcriptAchievementsTable td{border:1px solid #c9a877}
 .transcriptAchievementsTable th{
-  padding:4px 6px;
+  padding:6px 7px;
   color:#fff1da;
   background:#251e19;
-  font-size:6.4px;
+  font-size:7px;
   font-weight:900;
   text-align:center;
 }
 .transcriptAchievementsTable td{
-  padding:4px 6px;
+  padding:6px 8px;
   color:#2a211a;
   background:#fffaf2;
-  font-size:6.8px;
-  line-height:1.15;
+  font-size:7.8px;
+  line-height:1.2;
   vertical-align:middle;
   overflow-wrap:anywhere;
 }
 .transcriptAchievementsTable th:nth-child(1),
-.transcriptAchievementsTable td:nth-child(1){width:31%}
+.transcriptAchievementsTable td:nth-child(1){width:29%}
 .transcriptAchievementsTable th:nth-child(2),
-.transcriptAchievementsTable td:nth-child(2){width:50%}
+.transcriptAchievementsTable td:nth-child(2){width:41%}
 .transcriptAchievementsTable th:nth-child(3),
-.transcriptAchievementsTable td:nth-child(3){width:19%;text-align:center}
+.transcriptAchievementsTable td:nth-child(3){width:14%;text-align:center}
+.transcriptAchievementsTable th:nth-child(4),
+.transcriptAchievementsTable td:nth-child(4){width:16%;text-align:center}
 .transcriptAchievementsEmptyRow td{color:#806c59;text-align:center!important;font-style:italic}
-.transcriptAchievementsDense .transcriptAchievementsTable th{padding:3px 5px;font-size:5.9px}
-.transcriptAchievementsDense .transcriptAchievementsTable td{padding:3px 5px;font-size:6.1px;line-height:1.08}
-.transcriptAchievementsDense .transcriptAchievementsBlock{margin-top:6px}
-.transcriptAchievementsVeryDense .transcriptAchievementsTable th{padding:2px 4px;font-size:5.4px}
-.transcriptAchievementsVeryDense .transcriptAchievementsTable td{padding:2px 4px;font-size:5.5px;line-height:1.02}
-.transcriptAchievementsVeryDense .compactTranscriptSignatures{margin-top:5px}
+
+/*
+ * The Hanko separator belongs to a protected signature zone, not to the
+ * achievements table above it. The flexible spacer grows into unused page
+ * space and contracts as achievements grow, while keeping a minimum gap.
+ */
+.transcriptApprovalSpacer{
+  flex:1 1 auto;
+  min-height:22px;
+}
+.transcriptApprovalZone{
+  flex:0 0 auto;
+  margin-top:0!important;
+  margin-bottom:24px;
+  padding-top:12px;
+}
+.transcriptAchievementsDense .transcriptAchievementsTable th{padding:4px 6px}
+.transcriptAchievementsDense .transcriptAchievementsTable td{padding:4px 7px}
+.transcriptAchievementsDense .transcriptAchievementsBlock{margin-top:7px}
+.transcriptAchievementsDense .transcriptApprovalSpacer{min-height:18px}
+.transcriptAchievementsVeryDense .transcriptAchievementsTable th{padding:3px 5px}
+.transcriptAchievementsVeryDense .transcriptAchievementsTable td{padding:3px 6px}
+.transcriptAchievementsVeryDense .transcriptApprovalSpacer{min-height:14px}
 
 @media (max-width:768px){
   #mobileAcademicMount .m134SemesterAchievements{margin-top:7px!important}
+}
+
+
+/* =====================================================================
+   V136 — FONT CONSISTENCY ONLY
+   Scope is deliberately limited to Academic/Transcript ACHIEVEMENTS and
+   transcript dense-state typography. No data, structure, or other project
+   styling is changed here.
+   ===================================================================== */
+
+/* Website desktop: achievement details follow existing subject/detail text. */
+.semesterAchievementsHead{
+  font-size:8px;
+}
+.semesterAchievementRow,
+.semesterAchievementRow strong{
+  font-size:11px;
+  line-height:1.3;
+}
+.semesterAchievementsEmpty{
+  font-size:10px;
+}
+
+/* Website mobile: match the native m90 academic subject detail sizing. */
+.m134SemesterAchievementsTitle{
+  font-size:5.5px;
+}
+.m134SemesterAchievementsHead{
+  font-size:4.6px;
+}
+.m134SemesterAchievementRow,
+.m134SemesterAchievementRow strong{
+  font-size:7px;
+  line-height:1.22;
+}
+.m134SemesterAchievementsEmpty{
+  font-size:7px;
+  line-height:1.22;
+}
+
+/* Semester Academic Record: exactly match the existing score table type. */
+.pdfSemesterAchievementsTable th{
+  font-size:6.55px !important;
+  line-height:1.18;
+}
+.pdfSemesterAchievementsTable td{
+  font-size:9.5px !important;
+  line-height:1.2;
+}
+
+/* Transcript: achievement table uses the same body/header type as results. */
+.transcriptAchievementsTable th{
+  font-size:7.2px !important;
+  line-height:1.15;
+}
+.transcriptAchievementsTable td{
+  font-size:7.25px !important;
+  line-height:1.15;
+}
+
+/* Dense transcript modes may compact geometry, NEVER typography. */
+.transcriptDense .transcriptTwoTableGrid .transcriptMiniTable th,
+.transcriptVeryDense .transcriptTwoTableGrid .transcriptMiniTable th{
+  font-size:7.2px !important;
+  line-height:1.15 !important;
+}
+.transcriptDense .transcriptTwoTableGrid .transcriptMiniTable td,
+.transcriptVeryDense .transcriptTwoTableGrid .transcriptMiniTable td{
+  font-size:7.25px !important;
+  line-height:1.15 !important;
+}
+.transcriptDense .transcriptTwoTableGrid .transcriptMiniScore,
+.transcriptVeryDense .transcriptTwoTableGrid .transcriptMiniScore{
+  font-size:9.8px !important;
+}
+
+/* Achievement density may only reduce padding/spacing, not font size. */
+.transcriptAchievementsDense .transcriptAchievementsTable th,
+.transcriptAchievementsVeryDense .transcriptAchievementsTable th{
+  font-size:7.2px !important;
+  line-height:1.15 !important;
+}
+.transcriptAchievementsDense .transcriptAchievementsTable td,
+.transcriptAchievementsVeryDense .transcriptAchievementsTable td{
+  font-size:7.25px !important;
+  line-height:1.15 !important;
+}
+
+/* =====================================================================
+   V138 — TRANSCRIPT ACHIEVEMENT FONT FAMILY CONSISTENCY ONLY
+   Match the Achievement section to the exact Semester Records font stack.
+   Font sizes, spacing, layout, data, and all unrelated project styling stay
+   unchanged.
+   ===================================================================== */
+.singlePageTranscript .transcriptAchievementsHeading,
+.singlePageTranscript .transcriptAchievementsTable,
+.singlePageTranscript .transcriptAchievementsTable th,
+.singlePageTranscript .transcriptAchievementsTable td{
+  font-family:Georgia,"Noto Sans JP","Times New Roman",serif !important;
+}
+
+/* =====================================================================
+   V139 — TRANSCRIPT SUBJECT TYPOGRAPHY + RESULT NOTE ALIGNMENT
+   Scope is deliberately limited to the single-page Academic Transcript.
+   Subject labels inherit the same body type as their table cells; the
+   Achievement heading/header remain uppercase; the formula note lives in
+   the Devoted Student column through the existing document structure.
+   ===================================================================== */
+.singlePageTranscript .transcriptMiniSubject{
+  font-family:inherit !important;
+  font-weight:inherit !important;
+}
+.singlePageTranscript .transcriptAchievementsHeading,
+.singlePageTranscript .transcriptAchievementsTable th{
+  text-transform:uppercase;
+}
+.singlePageTranscript .devotedStudentBlock .transcriptFormulaNote{
+  width:100%;
+}
+
+
+/* =====================================================================
+   V140 — DOCUMENT TABLE READABILITY + TRANSCRIPT HANKO POSITION
+   Scope is limited to the requested Academic Record / Transcript type sizes,
+   website Achievement parity, and the protected Transcript signature spacer.
+   No data, document structure, or unrelated project styling is changed.
+   ===================================================================== */
+
+/*
+ * Transcript score rows and Achievement rows now use the exact body size of
+ * the FINAL RESULT table. Numeric scores use the exact FINAL RESULT mark size.
+ * This deliberately overrides dense-state typography too: density may still
+ * compact row geometry, but it must not make the text smaller.
+ */
+.singlePageTranscript .transcriptTwoTableGrid .transcriptMiniTable td,
+.singlePageTranscript .transcriptAchievementsTable td,
+.singlePageTranscript.transcriptDense .transcriptTwoTableGrid .transcriptMiniTable td,
+.singlePageTranscript.transcriptVeryDense .transcriptTwoTableGrid .transcriptMiniTable td,
+.singlePageTranscript.transcriptAchievementsDense .transcriptAchievementsTable td,
+.singlePageTranscript.transcriptAchievementsVeryDense .transcriptAchievementsTable td{
+  font-size:7.8px !important;
+  line-height:1.2 !important;
+}
+.singlePageTranscript .transcriptTwoTableGrid .transcriptMiniScore,
+.singlePageTranscript.transcriptDense .transcriptTwoTableGrid .transcriptMiniScore,
+.singlePageTranscript.transcriptVeryDense .transcriptTwoTableGrid .transcriptMiniScore{
+  font-size:10.5px !important;
+}
+
+/*
+ * Semester Academic Record document already uses a larger readable body size;
+ * keep score and Achievement content exactly paired so neither section can
+ * become smaller than the other through older cascading rules.
+ */
+.reportPage:not(.singlePageTranscript) .scoreTable td,
+.reportPage:not(.singlePageTranscript) .pdfSemesterAchievementsTable td{
+  font-size:9.5px !important;
+}
+
+/* Website: Achievement copy follows Semester Records subject copy exactly. */
+.semesterAchievementRow,
+.semesterAchievementRow strong{
+  font-size:11px !important;
+  line-height:1.3 !important;
+}
+.semesterAchievementsHead{
+  font-size:8px !important;
+}
+@media (max-width:768px){
+  #mobileAcademicMount .m134SemesterAchievementRow,
+  #mobileAcademicMount .m134SemesterAchievementRow strong{
+    font-size:7px !important;
+    line-height:1.22 !important;
+  }
+  #mobileAcademicMount .m134SemesterAchievementsHead{
+    font-size:4.6px !important;
+  }
+}
+
+/*
+ * Keep the Hanko zone adaptive, but cap how much blank space its spacer may
+ * absorb. It can still contract when Achievement rows grow, while no longer
+ * pushing the signatures unnecessarily close to the bottom of a short page.
+ */
+.singlePageTranscript .transcriptApprovalSpacer{
+  flex:1 1 auto;
+  min-height:22px;
+  max-height:72px;
+}
+.singlePageTranscript.transcriptAchievementsDense .transcriptApprovalSpacer{
+  min-height:18px;
+  max-height:54px;
+}
+.singlePageTranscript.transcriptAchievementsVeryDense .transcriptApprovalSpacer{
+  min-height:14px;
+  max-height:40px;
 }

@@ -6741,6 +6741,38 @@ function startGpRankingRefresh(){
       });
     }
 
+    function formatAchievementTitleCase(value){
+      const raw=String(value==null?'':value)
+        .normalize('NFKC')
+        .replace(/\s+/g,' ')
+        .trim();
+      if(!raw||raw==='-')return raw||'-';
+
+      let text=raw.toLocaleLowerCase('en-US');
+      text=text.replace(/(^|[\s/\\|(\[{\-]+)(\p{L})/gu,(match,prefix,letter)=>
+        prefix+letter.toLocaleUpperCase('en-US')
+      );
+
+      text=text.replace(
+        /\b(And|As|At|But|By|For|From|In|Nor|Of|On|Or|Per|The|To|Via|Vs)\b/g,
+        word=>word.toLocaleLowerCase('en-US')
+      );
+      text=text.replace(/^\p{L}/u,letter=>letter.toLocaleUpperCase('en-US'));
+      text=text.replace(/([:;!?]\s+)(\p{L})/gu,(match,prefix,letter)=>
+        prefix+letter.toLocaleUpperCase('en-US')
+      );
+
+      const acronymMap={
+        Gp:'GP',Rp:'RP',Fhp:'FHP',Soa:'SOA',Mjp:'MJP',Jmc:'JMC',Mvp:'MVP',
+        Id:'ID',Ai:'AI',Ar:'AR',It:'IT',Ui:'UI',Ux:'UX',Pdf:'PDF',Png:'PNG'
+      };
+      Object.keys(acronymMap).forEach(key=>{
+        text=text.replace(new RegExp('\\b'+key+'\\b','g'),acronymMap[key]);
+      });
+      text=text.replace(/A\.r\./gi,'A.R.');
+      return text;
+    }
+
     function createSemesterAchievementsBlock(record,isMobile){
       const achievements=Array.isArray(record&&record.achievements)?record.achievements:[];
       const section=document.createElement('section');
@@ -6770,7 +6802,7 @@ function startGpRankingRefresh(){
         const row=document.createElement('div');
         row.className=isMobile?'m134SemesterAchievementRow':'semesterAchievementRow';
         row.innerHTML=
-          '<span>'+escapeHtml(item&&item.achievement||'-')+'</span>'+ 
+          '<span>'+escapeHtml(formatAchievementTitleCase(item&&item.achievement||'-'))+'</span>'+ 
           '<strong>'+escapeHtml(item&&item.title||'-')+'</strong>';
         table.appendChild(row);
       });
@@ -7901,9 +7933,14 @@ function buildTranscriptModel(records){
       const achievement=String(item&&item.achievement||'').trim();
       const title=String(item&&item.title||'').trim();
       if(!achievement&&!title)return;
+      const nenseiLabel=String(
+        record&&record.nenseiLabel||
+        (Number(record&&record.nensei)>0?`${Number(record.nensei)} NENSEI`:'-')
+      ).trim()||'-';
       achievementRows.push({
         achievement:achievement||'-',
         title:title||'-',
+        nensei:nenseiLabel,
         semester:String(item&&item.semester||semester).trim()||semester
       });
     });
@@ -8016,7 +8053,7 @@ function createTranscriptSubjectTable(rows,tableNumber,targetRowCount){
   safeRows.forEach(row=>{
     const tr=document.createElement('tr');
     tr.innerHTML=
-      '<td class="transcriptMiniSubject jp">'+transcriptValueHtml(row.subjectLabel)+'</td>'+ 
+      '<td class="transcriptMiniSubject">'+transcriptValueHtml(row.subjectLabel)+'</td>'+ 
       '<td class="transcriptMiniScore">'+transcriptValueHtml(row.score)+'</td>';
     tbody.appendChild(tr);
   });
@@ -8187,23 +8224,25 @@ function createTranscriptAchievementsTable(rows){
   table.className='transcriptAchievementsTable';
   table.innerHTML=
     '<thead><tr>'+ 
-      '<th>Achievement</th>'+ 
-      '<th>Title</th>'+ 
-      '<th>Semester</th>'+ 
+      '<th>ACHIEVEMENT</th>'+ 
+      '<th>TITLE</th>'+ 
+      '<th>NENSEI</th>'+ 
+      '<th>SEMESTER</th>'+ 
     '</tr></thead>';
 
   const tbody=document.createElement('tbody');
   if(!achievements.length){
     const tr=document.createElement('tr');
     tr.className='transcriptAchievementsEmptyRow';
-    tr.innerHTML='<td colspan="3">No achievement recorded.</td>';
+    tr.innerHTML='<td colspan="4">No achievement recorded.</td>';
     tbody.appendChild(tr);
   }else{
     achievements.forEach(item=>{
       const tr=document.createElement('tr');
       tr.innerHTML=
-        '<td>'+escapeHtml(item&&item.achievement||'-')+'</td>'+ 
+        '<td>'+escapeHtml(formatAchievementTitleCase(item&&item.achievement||'-'))+'</td>'+ 
         '<td>'+escapeHtml(item&&item.title||'-')+'</td>'+ 
+        '<td>'+escapeHtml(item&&item.nensei||'-')+'</td>'+ 
         '<td>'+escapeHtml(item&&item.semester||'-')+'</td>';
       tbody.appendChild(tr);
     });
@@ -8219,9 +8258,15 @@ function createTranscriptPage(payload,model,options){
   const settings=options||{};
   const totalRows=Math.max(0,Number(settings.totalRows)||0);
   const page=pdfPage('reportPage transcriptPage compactTranscriptPage singlePageTranscript');
+  const achievementCount=Array.isArray(model&&model.achievementRows)?model.achievementRows.length:0;
+
+  /*
+   * Preserve the project's original transcript-density trigger: achievement
+   * rows must never cause the recorded subject score area to use a smaller
+   * font. Achievement growth is handled by spacing/padding only.
+   */
   if(totalRows>28)page.classList.add('transcriptDense');
   if(totalRows>40)page.classList.add('transcriptVeryDense');
-  const achievementCount=Array.isArray(model&&model.achievementRows)?model.achievementRows.length:0;
   if(achievementCount>4)page.classList.add('transcriptAchievementsDense');
   if(achievementCount>10)page.classList.add('transcriptAchievementsVeryDense');
 
@@ -8261,7 +8306,7 @@ function createTranscriptPage(payload,model,options){
   titleWrap.innerHTML=
     '<div class="reportInstitution"><span class="reportInstitutionJp jp">魔 法 所</span> - MAHOUTOKORO INSTITUTE OF SPIRIT AND MAGIC.</div>'+ 
     '<div class="reportTitle">ACADEMIC TRANSCRIPT</div>'+ 
-    '<div class="reportSub">Complete recorded subject scores.</div>';
+    '<div class="reportSub">Complete academic records.</div>';
   head.appendChild(titleWrap);
 
   const term=document.createElement('div');
@@ -8287,12 +8332,18 @@ function createTranscriptPage(payload,model,options){
   const resultGrid=document.createElement('div');
   resultGrid.className='transcriptBottomGrid';
 
-  resultGrid.appendChild(createTranscriptResultTable(
+  const devotedBlock=createTranscriptResultTable(
     'DEVOTED STUDENT',
     [{title:model.devotedStudentTitle,mark:formatTranscriptMark(model.devotedStudentMark)}],
     'devotedStudentBlock',
     true
-  ));
+  );
+
+  const note=document.createElement('div');
+  note.className='transcriptFormulaNote';
+  note.innerHTML='<strong>Notes:</strong> Final Score = (Study Result + Devoted Student Score) ÷ 2.';
+  devotedBlock.appendChild(note);
+  resultGrid.appendChild(devotedBlock);
 
   resultGrid.appendChild(createTranscriptResultTable(
     'FINAL RESULT',
@@ -8306,16 +8357,22 @@ function createTranscriptPage(payload,model,options){
   ));
   page.appendChild(resultGrid);
 
-  const note=document.createElement('div');
-  note.className='transcriptFormulaNote';
-  note.innerHTML='<strong>Notes:</strong> Final Score = (Study Result + Devoted Student Score) ÷ 2.';
-  page.appendChild(note);
-
-  /* ACHIEVEMENTS must appear immediately after Notes in the transcript. */
+  /* ACHIEVEMENTS follows the completed result area in the transcript. */
   page.appendChild(createTranscriptAchievementsTable(model.achievementRows||[]));
 
+  /*
+   * Flexible protected space belongs to the Hanko/signature zone itself.
+   * It expands when the transcript is short and contracts only to a safe
+   * minimum as the achievements table grows, so the separator line never
+   * appears glued to the table above it.
+   */
+  const approvalSpacer=document.createElement('div');
+  approvalSpacer.className='transcriptApprovalSpacer';
+  approvalSpacer.setAttribute('aria-hidden','true');
+  page.appendChild(approvalSpacer);
+
   const approval=document.createElement('div');
-  approval.className='approvalBlock signatures transcriptSignatures compactTranscriptSignatures';
+  approval.className='approvalBlock signatures transcriptSignatures compactTranscriptSignatures transcriptApprovalZone';
   approval.appendChild(signature('Mahoutokoro Headmaster',headmasterStampUrls,'Ryoumen Shō'));
   approval.appendChild(signature('MJP Report Administration',studentAffairsStampUrls,'Student Affairs Office'));
   page.appendChild(approval);
@@ -8345,7 +8402,7 @@ function createPdfSemesterAchievements(record){
     achievements.forEach(item=>{
       const tr=document.createElement('tr');
       tr.innerHTML=
-        '<td>'+escapeHtml(item&&item.achievement||'-')+'</td>'+ 
+        '<td>'+escapeHtml(formatAchievementTitleCase(item&&item.achievement||'-'))+'</td>'+ 
         '<td>'+escapeHtml(item&&item.title||'-')+'</td>';
       tbody.appendChild(tr);
     });
