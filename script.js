@@ -6775,40 +6775,58 @@ function startGpRankingRefresh(){
 
     function createSemesterAchievementsBlock(record,isMobile){
       const achievements=Array.isArray(record&&record.achievements)?record.achievements:[];
-      const section=document.createElement('section');
-      section.className=isMobile?'m134SemesterAchievements':'semesterAchievements';
+      const fragment=document.createDocumentFragment();
 
+      /*
+       * V142 — Semester Achievements now uses the exact native Academic Record
+       * section language already used by Activity Participation / Subject Results.
+       * There is intentionally no separate Achievement wrapper/card anymore:
+       * the heading is the same mini-title component and the content is the same
+       * subject-result container/header/row system. Achievement data is unchanged.
+       */
       const title=document.createElement('div');
-      title.className=isMobile?'m134SemesterAchievementsTitle':'semesterAchievementsTitle';
-      title.textContent='SEMESTER ACHIEVEMENTS';
-      section.appendChild(title);
+      title.className=isMobile?'m90MiniTitle achievementMiniTitle':'miniTitle achievementMiniTitle';
+      title.textContent='Semester Achievements';
+      fragment.appendChild(title);
+
+      const table=document.createElement('div');
+      table.className=isMobile?'m90Subjects achievementSubjects achievementSubjectsMobile':'subjects achievementSubjects';
 
       if(!achievements.length){
         const empty=document.createElement('div');
-        empty.className=isMobile?'m134SemesterAchievementsEmpty':'semesterAchievementsEmpty';
-        empty.textContent='No achievement recorded for this semester.';
-        section.appendChild(empty);
-        return section;
+        empty.className=isMobile?'m90SubjectRow achievementSubjectRow achievementSubjectEmpty':'subjectRow achievementSubjectRow achievementSubjectEmpty';
+        if(isMobile){
+          empty.innerHTML='<strong>No achievement recorded for this semester.</strong>';
+        }else{
+          empty.innerHTML='<div class="subjectName">No achievement recorded for this semester.</div>';
+        }
+        table.appendChild(empty);
+        fragment.appendChild(table);
+        return fragment;
       }
 
-      const table=document.createElement('div');
-      table.className=isMobile?'m134SemesterAchievementsTable':'semesterAchievementsTable';
-      table.innerHTML=
-        '<div class="'+(isMobile?'m134SemesterAchievementsHead':'semesterAchievementsHead')+'">'+
-          '<span>Achievement</span><span>Title</span>'+ 
-        '</div>';
+      const head=document.createElement('div');
+      head.className=isMobile?'m90SubjectHeader achievementSubjectHeader':'subjectHeader achievementSubjectHeader';
+      head.innerHTML='<span>Achievement</span><span>Title</span>';
+      table.appendChild(head);
 
       achievements.forEach(item=>{
         const row=document.createElement('div');
-        row.className=isMobile?'m134SemesterAchievementRow':'semesterAchievementRow';
-        row.innerHTML=
-          '<span>'+escapeHtml(formatAchievementTitleCase(item&&item.achievement||'-'))+'</span>'+ 
-          '<strong>'+escapeHtml(item&&item.title||'-')+'</strong>';
+        row.className=isMobile?'m90SubjectRow achievementSubjectRow':'subjectRow achievementSubjectRow';
+        if(isMobile){
+          row.innerHTML=
+            '<strong>'+escapeHtml(formatAchievementTitleCase(item&&item.achievement||'-'))+'</strong>'+ 
+            '<b class="achievementTitleCell">'+escapeHtml(item&&item.title||'-')+'</b>';
+        }else{
+          row.innerHTML=
+            '<div class="subjectName achievementNameCell">'+escapeHtml(formatAchievementTitleCase(item&&item.achievement||'-'))+'</div>'+ 
+            '<div class="mark achievementTitleCell">'+escapeHtml(item&&item.title||'-')+'</div>';
+        }
         table.appendChild(row);
       });
 
-      section.appendChild(table);
-      return section;
+      fragment.appendChild(table);
+      return fragment;
     }
 
     function miniTitle(value){const e=document.createElement('div');e.className='miniTitle';e.textContent=value;return e}

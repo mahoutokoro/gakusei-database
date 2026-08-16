@@ -17243,3 +17243,123 @@ body.student-login-open{overflow:hidden}
   min-height:14px;
   max-height:40px;
 }
+
+
+/* =====================================================================
+   V141 — WEBSITE ACHIEVEMENT TYPOGRAPHY PARITY WITH SUBJECT RESULTS
+   Scope is deliberately limited to website Achievement font sizing.
+   Desktop title/header/body now use the exact active Subject Results sizes.
+   Mobile already matches the active m90 Subject Results scale and is locked
+   explicitly below. No document, data, layout, spacing, or other styling is
+   changed.
+   ===================================================================== */
+
+/* Desktop website: exact active Subject Results typography. */
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterAchievementsTitle{
+  font-size:12px !important;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterAchievementsHead{
+  font-size:10.5px !important;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterAchievementRow,
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .semesterAchievementRow strong{
+  font-size:14.5px !important;
+  line-height:1.35 !important;
+}
+
+/* Mobile website: keep exact active Subject Results title/header/text scale. */
+@media (max-width:768px){
+  #mobileAcademicMount .m134SemesterAchievementsTitle{
+    font-size:5.5px !important;
+  }
+  #mobileAcademicMount .m134SemesterAchievementsHead{
+    font-size:4.6px !important;
+  }
+  #mobileAcademicMount .m134SemesterAchievementRow,
+  #mobileAcademicMount .m134SemesterAchievementRow strong{
+    font-size:7px !important;
+    line-height:1.22 !important;
+  }
+}
+
+/* =====================================================================
+   V142 — WEBSITE SEMESTER ACHIEVEMENTS = NATIVE ACADEMIC SECTION DESIGN
+   Website only. Semester Achievements now reuses the exact visual language of
+   Activity Participation / Subject Results: native mini title, native subjects
+   container, native header, native rows, native mark surface. Achievement data,
+   documents, transcript, SOA, publication, and every unrelated component stay
+   unchanged.
+   ===================================================================== */
+
+/* Desktop: same section heading and Subject Results container/rows. */
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .achievementSubjectHeader,
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .achievementSubjectRow{
+  grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr) !important;
+  gap:11px !important;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .achievementSubjectHeader>span:nth-child(2){
+  text-align:left;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .achievementNameCell{
+  min-width:0;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .achievementTitleCell{
+  min-height:36px;
+  height:auto;
+  padding:8px 10px;
+  place-items:center start;
+  color:var(--accent);
+  font-size:14.5px !important;
+  font-weight:750 !important;
+  line-height:1.35 !important;
+  text-align:left;
+  white-space:normal;
+  overflow:visible;
+  text-overflow:clip;
+  overflow-wrap:anywhere;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .achievementSubjectEmpty{
+  grid-template-columns:minmax(0,1fr) !important;
+}
+#academicCardPanel .academicRecords>.semesterCard:not(.devotedStudentSemesterCard) .achievementSubjectEmpty .subjectName{
+  color:var(--muted);
+  font-weight:700;
+}
+
+/* Mobile: same m90 section title, subject container, header and row system. */
+@media (max-width:768px){
+  #mobileAcademicMount .achievementSubjectsMobile{
+    margin:0 10px 5px !important;
+  }
+  #mobileAcademicMount .achievementSubjectHeader,
+  #mobileAcademicMount .achievementSubjectRow{
+    grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr) !important;
+    gap:4px !important;
+  }
+  #mobileAcademicMount .achievementSubjectHeader>span:nth-child(2){
+    text-align:left !important;
+  }
+  #mobileAcademicMount .achievementSubjectRow>b.achievementTitleCell{
+    min-height:25px !important;
+    height:auto !important;
+    padding:4px 6px !important;
+    place-items:center start !important;
+    color:var(--accent) !important;
+    font-size:7px !important;
+    font-weight:900 !important;
+    line-height:1.22 !important;
+    text-align:left !important;
+    white-space:normal !important;
+    overflow:visible !important;
+    text-overflow:clip !important;
+    overflow-wrap:anywhere !important;
+  }
+  #mobileAcademicMount .achievementSubjectEmpty{
+    grid-template-columns:minmax(0,1fr) !important;
+  }
+  #mobileAcademicMount .achievementSubjectEmpty>strong{
+    color:var(--muted) !important;
+    font-weight:700 !important;
+  }
+}
+
