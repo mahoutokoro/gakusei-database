@@ -8074,11 +8074,17 @@ function createTranscriptPages(payload){
   }];
 
   /*
-   * Subjects continue from the left table into the right table. The transcript
-   * first attempts the original one-page composition. ACHIEVEMENTS and
-   * CONTRIBUTIONS are moved together to a continuation page only when the
-   * rendered first-page composition would enter the protected Hanko/footer
-   * zone. Short transcripts therefore remain a single page.
+   * Transcript pagination policy:
+   * 1) Keep the complete transcript on one page when it is genuinely safe.
+   * 2) If the supplementary records would enter the protected Hanko/footer
+   *    zone, move them to a continuation page.
+   * 3) For GRADUATED transcripts only, if ACHIEVEMENTS + CONTRIBUTIONS still
+   *    cannot coexist safely on that continuation page, keep ACHIEVEMENTS on
+   *    page 2 and move CONTRIBUTIONS to page 3. Every generated page keeps
+   *    the same identity/header treatment and its own official Hanko area.
+   *
+   * This is layout-only. Academic filtering, score calculations, graduation
+   * rules, achievement data, and contribution data remain unchanged.
    */
   const rowsPerTable=Math.max(1,Math.ceil(sourceRows.length/2));
   const tables=[
@@ -8102,18 +8108,69 @@ function createTranscriptPages(payload){
     return [singlePage];
   }
 
-  const firstPage=createTranscriptPage(payload,model,{
-    ...baseSettings,
-    includeSupplemental:false,
-    pageNumber:1,
-    totalPages:2
-  });
-  const secondPage=createTranscriptSupplementPage(payload,model,{
+  const student=payload&&payload.student?payload.student:{};
+  const showContributions=Boolean(student&&student.isGraduated);
+
+  /* Regular transcript: Contributions must never be generated. */
+  if(!showContributions){
+    const firstPage=createTranscriptPage(payload,model,{
+      ...baseSettings,
+      includeSupplemental:false,
+      pageNumber:1,
+      totalPages:2
+    });
+    const achievementPage=createTranscriptSupplementPage(payload,model,{
+      supplementMode:'achievements',
+      pageNumber:2,
+      totalPages:2
+    });
+    return [firstPage,achievementPage];
+  }
+
+  /*
+   * Alumni first try one shared supplementary page. Unlike the old behavior,
+   * this continuation page is measured too, so a long contribution list can
+   * never be silently clipped behind the footer or Hanko zone.
+   */
+  const combinedSupplement=createTranscriptSupplementPage(payload,model,{
+    supplementMode:'both',
     pageNumber:2,
     totalPages:2
   });
 
-  return [firstPage,secondPage];
+  if(transcriptPageKeepsHankoSafe(combinedSupplement)){
+    const firstPage=createTranscriptPage(payload,model,{
+      ...baseSettings,
+      includeSupplemental:false,
+      pageNumber:1,
+      totalPages:2
+    });
+    return [firstPage,combinedSupplement];
+  }
+
+  /*
+   * Too many supplementary rows: use the requested three-page composition.
+   * Page 2 = ACHIEVEMENTS, Page 3 = CONTRIBUTIONS. The page count is rebuilt
+   * from scratch so every footer correctly reads PAGE n OF 3.
+   */
+  const firstPage=createTranscriptPage(payload,model,{
+    ...baseSettings,
+    includeSupplemental:false,
+    pageNumber:1,
+    totalPages:3
+  });
+  const achievementPage=createTranscriptSupplementPage(payload,model,{
+    supplementMode:'achievements',
+    pageNumber:2,
+    totalPages:3
+  });
+  const contributionPage=createTranscriptSupplementPage(payload,model,{
+    supplementMode:'contributions',
+    pageNumber:3,
+    totalPages:3
+  });
+
+  return [firstPage,achievementPage,contributionPage];
 }
 
 function transcriptPageKeepsHankoSafe(page){
@@ -8359,6 +8416,125 @@ function transcriptValueHtml(value){
 }
 
 
+/* =====================================================================
+   V156 — TRANSCRIPT CONTENT-AWARE COLUMN SIZING
+   Presentation-only helper. It measures the longest visible value in each
+   transcript column, then fits every column between safe minimum/maximum
+   shares so no column becomes implausibly narrow or wastes page width.
+   Data, filtering, graduation logic and pagination decisions are untouched.
+   ===================================================================== */
+function measureTranscriptColumnText(value,isHeader){
+  const text=String(value==null?'':value)
+    .normalize('NFKC')
+    .replace(/\s+/g,' ')
+    .trim();
+  if(!text)return isHeader?7:1;
+
+  let units=0;
+  Array.from(text).forEach(character=>{
+    if(/[\u3000-\u30ff\u3400-\u9fff\uf900-\ufaff]/.test(character))units+=1.75;
+    else if(/[A-Z0-9]/.test(character))units+=1.05;
+    else if(/[a-z]/.test(character))units+=.92;
+    else if(/\s/.test(character))units+=.45;
+    else units+=.62;
+  });
+  return Math.min(isHeader?38:72,Math.max(isHeader?7:1,units*(isHeader?1.08:1)));
+}
+
+function fitTranscriptColumnShares(weights,minimums,maximums){
+  const count=Math.max(weights.length,minimums.length,maximums.length);
+  const base=Array.from({length:count},(_,index)=>Math.max(.01,Number(weights[index])||1));
+  const min=Array.from({length:count},(_,index)=>Math.max(0,Number(minimums[index])||0));
+  const max=Array.from({length:count},(_,index)=>Math.max(min[index],Number(maximums[index])||100));
+  const result=Array(count).fill(null);
+  const free=new Set(Array.from({length:count},(_,index)=>index));
+  let remaining=100;
+
+  for(let guard=0;guard<count*3&&free.size;guard++){
+    const baseSum=Array.from(free).reduce((sum,index)=>sum+base[index],0)||1;
+    let clamped=false;
+
+    for(const index of Array.from(free)){
+      const candidate=remaining*(base[index]/baseSum);
+      if(candidate<min[index]-1e-6){
+        result[index]=min[index];
+        remaining-=min[index];
+        free.delete(index);
+        clamped=true;
+      }else if(candidate>max[index]+1e-6){
+        result[index]=max[index];
+        remaining-=max[index];
+        free.delete(index);
+        clamped=true;
+      }
+    }
+
+    if(!clamped){
+      const sum=Array.from(free).reduce((total,index)=>total+base[index],0)||1;
+      Array.from(free).forEach(index=>{
+        result[index]=remaining*(base[index]/sum);
+      });
+      free.clear();
+    }
+  }
+
+  if(free.size){
+    const share=remaining/free.size;
+    Array.from(free).forEach(index=>{result[index]=share;});
+  }
+
+  const total=result.reduce((sum,value)=>sum+(Number(value)||0),0)||100;
+  return result.map(value=>(Number(value)||0)*100/total);
+}
+
+function applyTranscriptContentAwareColumns(table,options){
+  if(!table||!table.rows)return table;
+  const settings=options||{};
+  const rows=Array.from(table.rows);
+  let columnCount=0;
+
+  rows.forEach(row=>{
+    const count=Array.from(row.cells||[]).reduce((sum,cell)=>sum+Math.max(1,Number(cell.colSpan)||1),0);
+    columnCount=Math.max(columnCount,count);
+  });
+  if(!columnCount)return table;
+
+  const weights=Array(columnCount).fill(1);
+  rows.forEach(row=>{
+    let columnIndex=0;
+    Array.from(row.cells||[]).forEach(cell=>{
+      const span=Math.max(1,Number(cell.colSpan)||1);
+      if(span===1&&columnIndex<columnCount){
+        const measured=measureTranscriptColumnText(cell.textContent||'',cell.tagName==='TH');
+        weights[columnIndex]=Math.max(weights[columnIndex],measured);
+      }
+      columnIndex+=span;
+    });
+  });
+
+  const priorities=Array.isArray(settings.priorities)?settings.priorities:[];
+  const balancedWeights=weights.map((weight,index)=>
+    Math.pow(Math.max(1,weight),Number(settings.exponent)||.72)*Math.max(.1,Number(priorities[index])||1)
+  );
+  const minimums=Array.isArray(settings.minimums)?settings.minimums:Array(columnCount).fill(0);
+  const maximums=Array.isArray(settings.maximums)?settings.maximums:Array(columnCount).fill(100);
+  const shares=fitTranscriptColumnShares(balancedWeights,minimums,maximums);
+
+  const oldColgroup=table.querySelector(':scope > colgroup.transcriptContentAwareColumns');
+  if(oldColgroup)oldColgroup.remove();
+  const colgroup=document.createElement('colgroup');
+  colgroup.className='transcriptContentAwareColumns';
+  shares.forEach(share=>{
+    const col=document.createElement('col');
+    col.style.width=`${share.toFixed(3)}%`;
+    colgroup.appendChild(col);
+  });
+  table.insertBefore(colgroup,table.firstChild);
+  table.dataset.contentAwareColumns='true';
+  return table;
+}
+
+
 function createTranscriptSubjectTable(rows,tableNumber,targetRowCount){
   const table=document.createElement('table');
   table.className='transcriptMiniTable';
@@ -8385,6 +8561,12 @@ function createTranscriptSubjectTable(rows,tableNumber,targetRowCount){
   }
 
   table.appendChild(tbody);
+  applyTranscriptContentAwareColumns(table,{
+    minimums:[68,16],
+    maximums:[84,32],
+    priorities:[1.08,.72],
+    exponent:.74
+  });
   return table;
 }
 
@@ -8412,6 +8594,12 @@ function createTranscriptResultTable(title,rows,className,showColumnHeader=true)
     tbody.appendChild(tr);
   });
   table.appendChild(tbody);
+  applyTranscriptContentAwareColumns(table,{
+    minimums:[60,18],
+    maximums:[82,40],
+    priorities:[1.05,.78],
+    exponent:.74
+  });
   block.appendChild(table);
   return block;
 }
@@ -8579,6 +8767,12 @@ function createTranscriptAchievementsTable(rows){
     });
   }
   table.appendChild(tbody);
+  applyTranscriptContentAwareColumns(table,{
+    minimums:[20,27,13,14],
+    maximums:[35,46,21,24],
+    priorities:[1.00,1.12,.74,.82],
+    exponent:.70
+  });
   block.appendChild(table);
   return block;
 }
@@ -8621,6 +8815,12 @@ function createTranscriptContributionsTable(rows){
     });
   }
   table.appendChild(tbody);
+  applyTranscriptContentAwareColumns(table,{
+    minimums:[22,22,15,16],
+    maximums:[39,39,25,28],
+    priorities:[1.06,1.06,.78,.84],
+    exponent:.70
+  });
   block.appendChild(table);
   return block;
 }
@@ -8776,10 +8976,30 @@ function createTranscriptSupplementPage(payload,model,options){
   const student=payload.student||{};
   const assets=payload.assets||{};
   const settings=options||{};
-  const page=pdfPage('reportPage transcriptPage compactTranscriptPage singlePageTranscript transcriptSupplementPage');
+  const mode=String(settings.supplementMode||'both').toLowerCase();
   const showContributions=Boolean(student&&student.isGraduated);
-  const supplementalCount=(Array.isArray(model&&model.achievementRows)?model.achievementRows.length:0)+
-    (showContributions&&Array.isArray(model&&model.contributionRows)?model.contributionRows.length:0);
+  const includeAchievements=mode!=='contributions';
+  const includeContributions=showContributions&&mode!=='achievements';
+  const achievementCount=includeAchievements&&Array.isArray(model&&model.achievementRows)
+    ?model.achievementRows.length
+    :0;
+  const contributionCount=includeContributions&&Array.isArray(model&&model.contributionRows)
+    ?model.contributionRows.length
+    :0;
+  const supplementalCount=achievementCount+contributionCount;
+
+  const pageClasses=[
+    'reportPage',
+    'transcriptPage',
+    'compactTranscriptPage',
+    'singlePageTranscript',
+    'transcriptSupplementPage'
+  ];
+  if(mode==='achievements')pageClasses.push('transcriptAchievementsOnlyPage','transcriptSplitSectionPage');
+  if(mode==='contributions')pageClasses.push('transcriptContributionsOnlyPage','transcriptSplitSectionPage');
+  if(mode==='both')pageClasses.push('transcriptCombinedSupplementPage');
+
+  const page=pdfPage(pageClasses.join(' '));
 
   if(supplementalCount>10)page.classList.add('transcriptAchievementsDense');
   if(supplementalCount>18)page.classList.add('transcriptAchievementsVeryDense');
@@ -8829,13 +9049,19 @@ function createTranscriptSupplementPage(payload,model,options){
   head.appendChild(term);
   page.appendChild(head);
 
+  /* Continuation pages use the exact same transcript identity block. */
   page.appendChild(createAcademicDocumentIdentity(student,photoUrls,dormLogoUrls,{showGraduationDates:true}));
-  page.appendChild(createTranscriptAchievementsTable(model.achievementRows||[]));
-  if(showContributions){
+
+  if(includeAchievements){
+    page.appendChild(createTranscriptAchievementsTable(model.achievementRows||[]));
+  }
+
+  /* Hard rule: Contributions exist only on GRADUATED transcripts. */
+  if(includeContributions){
     page.appendChild(createTranscriptContributionsTable(model.contributionRows||[]));
   }
 
-  /* Page 2 carries the same official Hanko/signature area as page 1. */
+  /* Every transcript continuation page keeps the official Hanko/signature area. */
   const approvalSpacer=document.createElement('div');
   approvalSpacer.className='transcriptApprovalSpacer';
   approvalSpacer.setAttribute('aria-hidden','true');
