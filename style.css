@@ -18013,14 +18013,13 @@ body.student-login-open{overflow:hidden}
   font-feature-settings:"lnum" 1,"tnum" 1;
 }
 
-/* =====================================================================
-   V154 — TRANSCRIPT NOTES + ADMIN GRADUATION RELEASE CONTROL
-   Scope is limited to the requested transcript note cleanup and the new
-   Admin graduated-status release/scheduling workspace. Existing academic,
-   SOA, desktop, mobile, and data layouts remain untouched.
-   ===================================================================== */
 
-/* Transcript Notes: keep label/formula visually separated and vertically tidy. */
+/* =====================================================================
+   V155 — TRANSCRIPT NOTES ONLY
+   Graduation Admin Control has been removed. This override is intentionally
+   limited to the Academic Transcript Notes box: tidy alignment with square,
+   table-like corners. No other project styling or logic is changed.
+   ===================================================================== */
 .pdfPage.reportPage.transcriptPage.singlePageTranscript
 .devotedStudentBlock .transcriptFormulaNote{
   width:100%!important;
@@ -18032,6 +18031,7 @@ body.student-login-open{overflow:hidden}
   row-gap:2px!important;
   padding:8px 10px!important;
   margin-top:9px!important;
+  border-radius:0!important;
   text-align:left!important;
   line-height:1.4!important;
 }
@@ -18052,400 +18052,413 @@ body.student-login-open{overflow:hidden}
   word-break:normal!important;
 }
 
-/* Admin workspace ordering: Graduation Release sits between publication and SOA. */
-#adminControlView .adminGraduationControl{
+/* =====================================================================
+   V156 — GRADUATION RELEASE BY WAVE
+   Scope: Administrator Graduation controls only.
+   - Source grouping follows GRADUATED column C (Gel. 1, Gel. 2, ...).
+   - One ON/OFF switch and one WIB auto-ON schedule per wave.
+   - Student list expands/collapses under each wave; names open that record.
+   ===================================================================== */
+#adminControlView .adminGraduationWaveControl{
   order:45!important;
-  flex:0 0 auto!important;
-}
-
-.adminGraduationControl{
   margin:0 22px 16px;
-  overflow:hidden;
+  padding:16px;
   border:1px solid color-mix(in srgb,var(--accent) 42%,transparent);
-  border-radius:18px;
+  border-radius:16px;
   background:
-    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 42%),
-    radial-gradient(circle at 0 100%,color-mix(in srgb,var(--accent2) 9%,transparent),transparent 40%),
-    rgba(255,255,255,.018);
-  box-shadow:inset 0 0 30px rgba(0,0,0,.18);
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 8%,transparent),transparent 38%),
+    linear-gradient(145deg,rgba(255,255,255,.025),rgba(0,0,0,.26));
+  box-shadow:inset 0 0 24px rgba(0,0,0,.16);
 }
-.adminGraduationHead{
+.adminGraduationWaveIntro{
   display:flex;
-  align-items:flex-end;
+  align-items:flex-start;
   justify-content:space-between;
-  gap:20px;
-  padding:17px 17px 13px;
-  border-bottom:1px solid color-mix(in srgb,var(--border) 68%,transparent);
+  gap:18px;
 }
-.adminGraduationCopy{min-width:0}
-.adminGraduationCopy>span{
+.adminGraduationWaveIntro>div:first-child{min-width:0}
+.adminGraduationWaveIntro>div:first-child>span{
   color:var(--accent);
   font-size:8px;
   font-weight:900;
   letter-spacing:.14em;
 }
-.adminGraduationCopy h3{
+.adminGraduationWaveIntro h3{
   margin:5px 0 0;
   color:var(--strong);
-  font-size:16px;
+  font-size:17px;
   font-weight:900;
 }
-.adminGraduationCopy p{
-  max-width:570px;
+.adminGraduationWaveIntro p{
+  max-width:610px;
   margin:6px 0 0;
   color:var(--muted);
   font-size:9px;
   line-height:1.45;
 }
-.adminGraduationTools{
-  width:260px;
-  flex:0 0 260px;
+.adminGraduationWaveIntro p strong{color:var(--strong)}
+.adminGraduationWaveSummary{
+  flex:0 0 150px;
   display:grid;
-  gap:6px;
+  gap:3px;
+  justify-items:end;
+  text-align:right;
 }
-.adminGraduationTools>label,
-.adminGraduationControlCell>label,
-.adminGraduationScheduleCell>label{
+.adminGraduationWaveSummary span,
+.adminGraduationWaveSummary small{
   color:var(--muted);
-  font-size:7px;
+  font-size:6.5px;
   font-weight:900;
-  letter-spacing:.095em;
+  letter-spacing:.09em;
 }
-.adminGraduationSearchRow{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:7px;
-}
-.adminGraduationSearchRow input,
-.adminGraduationControlCell select,
-.adminGraduationScheduleCell input{
-  width:100%;
-  min-width:0;
-  height:36px;
-  padding:0 10px;
-  border:1px solid var(--border);
-  border-radius:10px;
-  outline:none;
-  color:var(--strong);
-  background:#09090c;
-  font-size:8px;
-  font-weight:800;
-}
-.adminGraduationSearchRow input:focus,
-.adminGraduationControlCell select:focus,
-.adminGraduationScheduleCell input:focus{
-  border-color:var(--accent);
-  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 10%,transparent);
-}
-.adminGraduationSearchRow button{
-  height:36px;
-  padding:0 11px;
-  border:1px solid var(--border);
-  border-radius:10px;
-  color:#111;
-  background:linear-gradient(135deg,var(--accent),var(--strong));
-  font-size:7px;
+.adminGraduationWaveSummary strong{
+  color:var(--accent);
+  font-size:11px;
   font-weight:900;
-  cursor:pointer;
 }
-.adminGraduationMeta{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  margin:10px 17px 0;
-  padding:8px 10px;
-  border:1px solid color-mix(in srgb,var(--border) 68%,transparent);
-  border-radius:10px;
-  color:var(--muted);
-  background:rgba(0,0,0,.25);
-  font-size:7px;
-  letter-spacing:.04em;
-}
-.adminGraduationMeta span strong,
-.adminGraduationMeta>strong{color:var(--accent);font-weight:900}
-
-.adminGraduationList{
-  max-height:430px;
-  overflow:auto;
+.adminGraduationWaveList{
   display:grid;
-  align-content:start;
   gap:8px;
-  margin:10px 17px 0;
-  padding:2px 5px 2px 0;
-  scrollbar-width:thin;
-  scrollbar-color:var(--accent) color-mix(in srgb,var(--panel2) 90%,#000);
+  margin-top:13px;
 }
-.adminGraduationList::-webkit-scrollbar{width:8px}
-.adminGraduationList::-webkit-scrollbar-track{border-radius:999px;background:color-mix(in srgb,var(--panel2) 92%,#000)}
-.adminGraduationList::-webkit-scrollbar-thumb{
-  border:2px solid color-mix(in srgb,var(--panel2) 88%,#000);
-  border-radius:999px;
-  background:linear-gradient(180deg,var(--strong),var(--accent),var(--accent2));
-}
-.adminGraduationLoading{
-  padding:22px;
+.adminGraduationWaveLoading{
+  padding:18px;
   border:1px dashed var(--border);
   border-radius:12px;
   color:var(--muted);
   text-align:center;
   font-size:9px;
 }
-.adminGraduationLoading.is-error{color:#ffc0c7;border-color:rgba(207,78,91,.34)}
-.adminGraduationRow{
-  display:grid;
-  grid-template-columns:minmax(190px,1.2fr) 154px 108px 184px minmax(150px,.9fr);
-  gap:10px;
-  align-items:center;
-  min-height:82px;
-  padding:10px 11px;
-  border:1px solid var(--border);
+.adminGraduationWaveLoading.is-error{color:#ffb3bb}
+.adminGraduationWaveCard{
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--border) 82%,transparent);
   border-radius:14px;
-  background:
-    radial-gradient(circle at 0 50%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 36%),
-    rgba(255,255,255,.022);
-  transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;
+  background:rgba(0,0,0,.25);
 }
-.adminGraduationRow:hover{
-  border-color:color-mix(in srgb,var(--accent) 62%,transparent);
-  background:color-mix(in srgb,var(--accent) 6%,rgba(255,255,255,.025));
-}
-.adminGraduationRow.is-dirty{
-  box-shadow:inset 3px 0 0 var(--accent);
-}
-.adminGraduationRow.is-filtered-out{display:none!important}
-.adminGraduationIdentity{
-  min-width:0;
-  display:flex;
+.adminGraduationWaveHead{
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) minmax(360px,auto);
+  gap:11px;
   align-items:center;
-  gap:10px;
+  padding:11px 12px;
 }
-.adminGraduationMonogram{
-  width:38px;
-  height:38px;
-  flex:0 0 38px;
+.adminGraduationWaveExpand{
+  width:32px;
+  height:32px;
   display:grid;
   place-items:center;
-  border:1px solid color-mix(in srgb,var(--accent) 44%,transparent);
-  border-radius:12px;
-  color:var(--strong);
-  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 13%,rgba(0,0,0,.5)),rgba(0,0,0,.58));
-  font-family:"Cinzel",Georgia,serif;
-  font-size:14px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--accent);
+  background:rgba(255,255,255,.03);
+  font-size:15px;
   font-weight:900;
-  box-shadow:inset 0 0 16px color-mix(in srgb,var(--accent) 7%,transparent);
+  cursor:pointer;
+  transition:.18s ease;
 }
-.adminGraduationIdentityCopy{min-width:0}
-.adminGraduationIdentityCopy strong{
-  display:block;
-  overflow:hidden;
+.adminGraduationWaveExpand:hover,
+.adminGraduationWaveExpand.is-open{
+  border-color:var(--accent);
   color:var(--strong);
-  font-size:10px;
-  line-height:1.15;
-  text-overflow:ellipsis;
-  white-space:nowrap;
+  background:color-mix(in srgb,var(--accent) 9%,rgba(0,0,0,.3));
 }
-.adminGraduationIdentityCopy span{
+.adminGraduationWaveIdentity{min-width:0}
+.adminGraduationWaveIdentity>span{
+  display:block;
+  color:var(--muted);
+  font-size:6.3px;
+  font-weight:900;
+  letter-spacing:.1em;
+}
+.adminGraduationWaveIdentity strong{
   display:block;
   margin-top:3px;
-  overflow:hidden;
-  color:var(--accent);
-  font-size:8px;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-}
-.adminGraduationIdentityCopy small{
-  display:block;
-  margin-top:4px;
-  color:var(--muted);
-  font-size:6.5px;
-  line-height:1.2;
-}
-.adminGraduationSourceBadges{
-  display:grid;
-  gap:5px;
-}
-.adminGraduationSourceBadges span{
-  min-height:25px;
-  display:grid;
-  place-items:center;
-  padding:4px 6px;
-  border:1px solid var(--border);
-  border-radius:999px;
-  font-size:6.2px;
+  color:var(--strong);
+  font-size:13px;
   font-weight:900;
-  letter-spacing:.035em;
-  text-align:center;
 }
-.adminGraduationSourceBadges .is-ready{
-  color:#bff4d5;
-  border-color:rgba(94,196,139,.30);
-  background:rgba(38,122,76,.14);
+.adminGraduationWaveIdentity small{
+  display:block;
+  margin-top:3px;
+  color:var(--accent);
+  font-size:6.8px;
+  font-weight:850;
 }
-.adminGraduationSourceBadges .is-missing{
-  color:#d1c6bc;
-  border-color:rgba(170,160,150,.20);
-  background:rgba(120,110,105,.08);
-}
-.adminGraduationControlCell,
-.adminGraduationScheduleCell{
-  min-width:0;
+.adminGraduationWaveControls{
   display:grid;
-  gap:5px;
+  grid-template-columns:126px 230px;
+  gap:10px;
+  align-items:end;
+  justify-content:end;
 }
-.adminGraduationControlCell select:disabled,
-.adminGraduationScheduleCell input:disabled{
-  opacity:.46;
-  cursor:not-allowed;
+.adminGraduationWaveSwitchWrap{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  min-height:36px;
 }
-.adminGraduationEffective{
-  min-width:0;
-  display:grid;
-  gap:6px;
-  align-content:center;
-}
-.adminGraduationEffectiveBadge{
-  min-height:28px;
-  display:grid;
-  place-items:center;
-  padding:5px 8px;
-  border:1px solid var(--border);
-  border-radius:999px;
+.adminGraduationWaveState{
+  min-width:66px;
   font-size:6.8px;
   font-weight:900;
-  letter-spacing:.065em;
-  text-align:center;
+  letter-spacing:.06em;
+  text-align:right;
 }
-.adminGraduationEffectiveBadge.is-current{
-  color:#c9d6f7;
-  border-color:rgba(111,145,220,.30);
-  background:rgba(57,80,142,.14);
+.adminGraduationWaveState.is-on{color:#a9ebc6}
+.adminGraduationWaveState.is-off{color:#f3afb7}
+.adminGraduationWaveState.is-scheduled{color:#efcf9e}
+.adminGraduationWaveSwitch{
+  position:relative;
+  width:46px;
+  height:25px;
+  display:block;
+  flex:0 0 46px;
+  cursor:pointer;
 }
-.adminGraduationEffectiveBadge.is-graduated{
-  color:#bff4d5;
-  border-color:rgba(94,196,139,.34);
-  background:rgba(38,122,76,.18);
+.adminGraduationWaveSwitch input{
+  position:absolute;
+  opacity:0;
+  pointer-events:none;
 }
-.adminGraduationEffectiveBadge.is-scheduled{
-  color:#f4d7a8;
-  border-color:rgba(220,170,93,.34);
-  background:rgba(128,82,25,.16);
+.adminGraduationWaveSwitch>span{
+  position:absolute;
+  inset:0;
+  border:1px solid rgba(255,255,255,.1);
+  border-radius:999px;
+  background:rgba(125,37,48,.54);
+  box-shadow:inset 0 0 10px rgba(0,0,0,.42);
 }
-.adminGraduationEffectiveBadge.is-waiting{
-  color:#ffc0c7;
-  border-color:rgba(207,78,91,.32);
-  background:rgba(139,35,45,.15);
+.adminGraduationWaveSwitch>span i{
+  position:absolute;
+  left:3px;
+  top:3px;
+  width:17px;
+  height:17px;
+  border-radius:50%;
+  background:#f6e9e1;
+  box-shadow:0 2px 8px rgba(0,0,0,.45);
+  transition:transform .18s ease,background .18s ease;
 }
-.adminGraduationEffectiveDetail{
+.adminGraduationWaveSwitch input:checked+span{background:rgba(48,130,84,.6)}
+.adminGraduationWaveSwitch input:checked+span i{
+  transform:translateX(21px);
+  background:#d9f3e4;
+}
+.adminGraduationWaveSwitch input:focus-visible+span{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+.adminGraduationWaveSchedule{
+  display:grid;
+  gap:5px;
+  min-width:0;
+}
+.adminGraduationWaveSchedule>span{
   color:var(--muted);
   font-size:6.2px;
-  line-height:1.32;
+  font-weight:900;
+  letter-spacing:.09em;
 }
-.adminGraduationFooter{
+.adminGraduationWaveSchedule>div{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 36px;
+  align-items:center;
+  overflow:hidden;
+  border:1px solid var(--border);
+  border-radius:10px;
+  background:#09090c;
+}
+.adminGraduationWaveSchedule input{
+  width:100%;
+  height:34px;
+  min-width:0;
+  padding:0 9px;
+  border:0;
+  outline:0;
+  color:var(--strong);
+  background:transparent;
+  font-size:7.4px;
+  font-weight:800;
+  color-scheme:dark;
+}
+.adminGraduationWaveSchedule input:disabled{
+  opacity:.42;
+  cursor:not-allowed;
+}
+.adminGraduationWaveSchedule b{
+  min-height:34px;
+  display:grid;
+  place-items:center;
+  border-left:1px solid var(--border);
+  color:var(--accent);
+  font-size:6.5px;
+  letter-spacing:.05em;
+}
+.adminGraduationWaveMembers{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  padding:10px 12px 12px 57px;
+  border-top:1px solid color-mix(in srgb,var(--border) 58%,transparent);
+  background:linear-gradient(180deg,rgba(255,255,255,.018),rgba(0,0,0,.15));
+}
+.adminGraduationStudentLink{
+  min-width:0;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:2px 10px;
+  padding:9px 10px;
+  border:1px solid color-mix(in srgb,var(--border) 66%,transparent);
+  border-radius:10px;
+  color:var(--text);
+  text-align:left;
+  background:rgba(255,255,255,.02);
+  cursor:pointer;
+  transition:.16s ease;
+}
+.adminGraduationStudentLink:hover,
+.adminGraduationStudentLink:focus-visible{
+  outline:none;
+  border-color:var(--accent);
+  background:color-mix(in srgb,var(--accent) 8%,rgba(255,255,255,.02));
+  transform:translateY(-1px);
+}
+.adminGraduationStudentLink strong{
+  min-width:0;
+  overflow:hidden;
+  color:var(--strong);
+  font-size:8.5px;
+  font-weight:900;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.adminGraduationStudentLink span{
+  grid-column:1;
+  min-width:0;
+  overflow:hidden;
+  color:var(--accent);
+  font-size:7.2px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.adminGraduationStudentLink small{
+  grid-column:2;
+  grid-row:1/3;
+  align-self:center;
+  color:var(--muted);
+  font-size:6.4px;
+  font-weight:800;
+}
+.adminGraduationWaveFooter{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:14px;
-  margin-top:11px;
-  padding:12px 17px 15px;
-  border-top:1px solid color-mix(in srgb,var(--border) 65%,transparent);
-  background:rgba(0,0,0,.15);
+  margin-top:12px;
+  padding-top:11px;
+  border-top:1px solid color-mix(in srgb,var(--border) 62%,transparent);
 }
-.adminGraduationMessage{
+.adminGraduationWaveMessage{
   min-height:15px;
   color:var(--muted);
   font-size:7.5px;
   line-height:1.35;
 }
-.adminGraduationMessage.is-success{color:#a8e8c4}
-.adminGraduationMessage.is-error{color:#ffc0c7}
-.adminGraduationSaveButton{
-  min-height:38px;
-  flex:0 0 auto;
-  padding:8px 13px;
+.adminGraduationWaveMessage.is-success{color:#a8e8c4}
+.adminGraduationWaveMessage.is-error{color:#ffb3bb}
+.adminGraduationWaveSaveButton{
+  min-height:36px;
+  padding:8px 12px;
   border:1px solid rgba(255,255,255,.12);
-  border-radius:11px;
+  border-radius:10px;
   color:#111;
   background:linear-gradient(135deg,var(--accent),var(--strong) 60%,var(--accent2));
-  font-size:7.5px;
+  font-size:7.2px;
   font-weight:900;
-  letter-spacing:.035em;
   cursor:pointer;
+  white-space:nowrap;
 }
-.adminGraduationSaveButton:hover:not(:disabled),
-.adminGraduationSearchRow button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
 
 @media (max-width:768px){
-  #adminControlView .adminGraduationControl{
+  #adminControlView .adminGraduationWaveControl{
+    order:45!important;
     margin:0 10px 12px!important;
+    padding:11px!important;
+    border-radius:13px!important;
   }
-  .adminGraduationHead{
+  .adminGraduationWaveIntro{
     display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
     gap:10px!important;
-    padding:12px!important;
   }
-  .adminGraduationCopy>span{font-size:6.2px!important}
-  .adminGraduationCopy h3{font-size:13px!important}
-  .adminGraduationCopy p{font-size:7.1px!important;line-height:1.4!important}
-  .adminGraduationTools{
-    width:100%!important;
-    flex-basis:auto!important;
-  }
-  .adminGraduationTools>label,
-  .adminGraduationControlCell>label,
-  .adminGraduationScheduleCell>label{font-size:5.7px!important}
-  .adminGraduationSearchRow input,
-  .adminGraduationControlCell select,
-  .adminGraduationScheduleCell input{
-    height:33px!important;
-    font-size:6.8px!important;
-    border-radius:9px!important;
-  }
-  .adminGraduationSearchRow button{height:33px!important;font-size:5.8px!important;border-radius:9px!important}
-  .adminGraduationMeta{
-    margin:8px 12px 0!important;
-    padding:7px 8px!important;
-    font-size:5.7px!important;
-  }
-  .adminGraduationList{
-    max-height:410px!important;
-    margin:8px 12px 0!important;
+  .adminGraduationWaveIntro>div:first-child>span{font-size:5.8px!important}
+  .adminGraduationWaveIntro h3{font-size:12px!important}
+  .adminGraduationWaveIntro p{font-size:6.7px!important;line-height:1.4!important}
+  .adminGraduationWaveSummary{flex-basis:auto!important}
+  .adminGraduationWaveSummary span,
+  .adminGraduationWaveSummary small{font-size:5px!important}
+  .adminGraduationWaveSummary strong{font-size:8px!important}
+  .adminGraduationWaveList{gap:6px!important;margin-top:9px!important}
+  .adminGraduationWaveCard{border-radius:11px!important}
+  .adminGraduationWaveHead{
+    grid-template-columns:28px minmax(0,1fr)!important;
     gap:7px!important;
-    padding-right:3px!important;
+    padding:8px!important;
   }
-  .adminGraduationRow{
-    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
-    gap:8px!important;
-    min-height:0!important;
-    padding:9px!important;
-    border-radius:12px!important;
+  .adminGraduationWaveExpand{
+    width:27px!important;
+    height:27px!important;
+    border-radius:8px!important;
+    font-size:12px!important;
   }
-  .adminGraduationIdentity{grid-column:1/-1!important}
-  .adminGraduationMonogram{width:34px!important;height:34px!important;flex-basis:34px!important;border-radius:10px!important;font-size:12px!important}
-  .adminGraduationIdentityCopy strong{font-size:8.5px!important}
-  .adminGraduationIdentityCopy span{font-size:7px!important}
-  .adminGraduationIdentityCopy small{font-size:5.7px!important}
-  .adminGraduationSourceBadges{grid-column:1/-1!important;grid-template-columns:1fr 1fr!important;gap:6px!important}
-  .adminGraduationSourceBadges span{min-height:23px!important;font-size:5.3px!important}
-  .adminGraduationControlCell{grid-column:1!important}
-  .adminGraduationScheduleCell{grid-column:2!important}
-  .adminGraduationEffective{grid-column:1/-1!important;grid-template-columns:110px minmax(0,1fr)!important;align-items:center!important;gap:7px!important}
-  .adminGraduationEffectiveBadge{min-height:27px!important;font-size:5.7px!important}
-  .adminGraduationEffectiveDetail{font-size:5.7px!important;line-height:1.3!important}
-  .adminGraduationFooter{
+  .adminGraduationWaveIdentity>span{font-size:4.8px!important}
+  .adminGraduationWaveIdentity strong{font-size:9px!important}
+  .adminGraduationWaveIdentity small{font-size:5.3px!important}
+  .adminGraduationWaveControls{
+    grid-column:1/-1!important;
+    grid-template-columns:96px minmax(0,1fr)!important;
+    gap:7px!important;
+    align-items:end!important;
+  }
+  .adminGraduationWaveSwitchWrap{justify-content:flex-start!important;min-height:30px!important;gap:5px!important}
+  .adminGraduationWaveState{min-width:48px!important;font-size:5.2px!important;text-align:left!important}
+  .adminGraduationWaveSwitch{width:38px!important;height:21px!important;flex-basis:38px!important}
+  .adminGraduationWaveSwitch>span i{left:3px!important;top:3px!important;width:13px!important;height:13px!important}
+  .adminGraduationWaveSwitch input:checked+span i{transform:translateX(17px)!important}
+  .adminGraduationWaveSchedule>span{font-size:4.8px!important}
+  .adminGraduationWaveSchedule>div{grid-template-columns:minmax(0,1fr) 30px!important;border-radius:8px!important}
+  .adminGraduationWaveSchedule input{height:30px!important;padding:0 7px!important;font-size:5.7px!important}
+  .adminGraduationWaveSchedule b{min-height:30px!important;font-size:5.2px!important}
+  .adminGraduationWaveMembers{
+    grid-template-columns:1fr!important;
+    gap:5px!important;
+    padding:7px 8px 8px!important;
+  }
+  .adminGraduationStudentLink{padding:7px 8px!important;border-radius:8px!important}
+  .adminGraduationStudentLink strong{font-size:6.7px!important}
+  .adminGraduationStudentLink span{font-size:5.8px!important}
+  .adminGraduationStudentLink small{font-size:5.2px!important}
+  .adminGraduationWaveFooter{
     display:grid!important;
-    gap:8px!important;
-    padding:10px 12px 12px!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:7px!important;
+    margin-top:9px!important;
+    padding-top:9px!important;
   }
-  .adminGraduationMessage{font-size:6px!important}
-  .adminGraduationSaveButton{width:100%!important;min-height:34px!important;font-size:6.2px!important;border-radius:9px!important}
+  .adminGraduationWaveMessage{font-size:5.7px!important}
+  .adminGraduationWaveSaveButton{min-height:31px!important;padding:6px 8px!important;border-radius:8px!important;font-size:5.4px!important}
 }
 
 @media (max-width:390px){
-  #adminControlView .adminGraduationControl{margin-left:8px!important;margin-right:8px!important}
-  .adminGraduationRow{grid-template-columns:1fr!important}
-  .adminGraduationControlCell,
-  .adminGraduationScheduleCell,
-  .adminGraduationEffective{grid-column:1!important}
-  .adminGraduationEffective{grid-template-columns:1fr!important}
+  #adminControlView .adminGraduationWaveControl{
+    margin-left:8px!important;
+    margin-right:8px!important;
+  }
+  .adminGraduationWaveIntro{grid-template-columns:1fr!important}
+  .adminGraduationWaveSummary{justify-items:start!important;text-align:left!important}
+  .adminGraduationWaveControls{grid-template-columns:88px minmax(0,1fr)!important}
+  .adminGraduationWaveFooter{grid-template-columns:1fr!important}
+  .adminGraduationWaveSaveButton{width:100%!important}
 }

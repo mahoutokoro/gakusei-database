@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=20260911-v154-graduation-release-wib">
+    <link rel="stylesheet" href="./style.css?v=20260911-v156-graduation-wave-control">
 
 </head>
 <body class="front-mode">
@@ -452,7 +452,7 @@
         <div class="adminLoginCopy">
           <span>ADMIN AUTHENTICATION</span>
           <h3>Login as Admin</h3>
-          <p>Enter the administrator password to manage Academic Records publication and graduation release.</p>
+          <p>Enter the administrator password to manage Academic Records publication and graduation release by wave.</p>
         </div>
         <form class="adminLoginForm" onsubmit="adminLogin(event)">
           <label for="adminPasswordInput">ADMIN PASSWORD</label>
@@ -479,9 +479,30 @@
             <button type="button" onclick="setAllAdminSemesterToggles(true)">PUBLISH ALL</button>
             <button type="button" onclick="setAllAdminSemesterToggles(false)">UNPUBLISH ALL</button>
             <button type="button" onclick="refreshAdminSemesterCatalog(true)">REFRESH DETECTION</button>
-            <button type="button" onclick="scrollAdminGraduationControlIntoView()">GRADUATION STATUS</button>
           </div>
         </div>
+
+        <section id="adminGraduationWaveControl" class="adminGraduationWaveControl" aria-label="Graduation release control by wave">
+          <div class="adminGraduationWaveIntro">
+            <div>
+              <span>GRADUATION RELEASE</span>
+              <h3>Graduated Waves</h3>
+              <p>Each wave detected from <strong>GRADUATED column C</strong> is ON by default. Turn a wave OFF, or keep it OFF and set a WIB schedule for automatic ON.</p>
+            </div>
+            <div class="adminGraduationWaveSummary">
+              <span>CONTROL LEVEL</span>
+              <strong id="adminGraduationWaveCount">0 WAVES</strong>
+              <small>PER WAVE • WIB</small>
+            </div>
+          </div>
+          <div id="adminGraduationWaveList" class="adminGraduationWaveList">
+            <div class="adminGraduationWaveLoading">Graduation waves will load after Admin authentication.</div>
+          </div>
+          <div class="adminGraduationWaveFooter">
+            <div id="adminGraduationWaveMessage" class="adminGraduationWaveMessage" aria-live="polite"></div>
+            <button id="adminGraduationWaveSaveButton" class="adminGraduationWaveSaveButton" type="button" onclick="saveAdminGraduationWaveSettings()">SAVE GRADUATION SETTINGS</button>
+          </div>
+        </section>
 
         <section id="adminSOAAccessControl" class="adminSOAAccessControl" aria-label="SOA application access control">
           <div class="adminSOAAccessCopy">
@@ -528,34 +549,6 @@
             <button id="adminSaveButton" class="adminSaveButton" type="button" onclick="saveAdminSemesterSettings()">SAVE PUBLICATION SETTINGS</button>
           </div>
         </div>
-
-        <section id="adminGraduationControl" class="adminGraduationControl" aria-label="Graduation release control">
-          <div class="adminGraduationHead">
-            <div class="adminGraduationCopy">
-              <span>GRADUATION RELEASE CONTROL</span>
-              <h3>Gakusei Graduated Status</h3>
-              <p>Control when each Gakusei is shown publicly as GRADUATED. AUTO preserves the existing sheet-driven logic; OFF, ON, and SCHEDULED are explicit Admin overrides.</p>
-            </div>
-            <div class="adminGraduationTools">
-              <label for="adminGraduationSearch">SEARCH GAKUSEI</label>
-              <div class="adminGraduationSearchRow">
-                <input id="adminGraduationSearch" type="search" autocomplete="off" placeholder="ID or student name" oninput="filterAdminGraduationRows()" aria-label="Search graduation control by Gakusei ID or name">
-                <button id="adminGraduationRefresh" type="button" onclick="refreshAdminGraduationCatalog(true)">REFRESH</button>
-              </div>
-            </div>
-          </div>
-          <div class="adminGraduationMeta">
-            <span>TIME REFERENCE <strong>WIB • UTC+7 • ASIA/JAKARTA</strong></span>
-            <strong id="adminGraduationCount">0 GAKUSEI</strong>
-          </div>
-          <div id="adminGraduationList" class="adminGraduationList">
-            <div class="adminGraduationLoading">Graduation controls will load after Admin authentication.</div>
-          </div>
-          <div class="adminGraduationFooter">
-            <div id="adminGraduationMessage" class="adminGraduationMessage" aria-live="polite"></div>
-            <button id="adminGraduationSaveButton" class="adminGraduationSaveButton" type="button" onclick="saveAdminGraduationSettings()">SAVE GRADUATION SETTINGS</button>
-          </div>
-        </section>
       </div>
     </div>
   </div>
@@ -636,7 +629,7 @@
 
   <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING DOCUMENT</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
 
-    <script src="./script.js?v=20260911-v154-graduation-release-wib" defer></script>
+    <script src="./script.js?v=20260911-v156-graduation-wave-control" defer></script>
 
 </body>
 </html>

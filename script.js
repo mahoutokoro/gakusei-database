@@ -403,11 +403,54 @@ const GakuseiDataService = (() => {
     };
   }
 
-  async function getGraduatedStudentIdSet(forceRefresh = false) {
+  function normalizeGraduationWaveKey(value) {
+    const text = String(value == null ? '' : value)
+      .normalize('NFKC')
+      .replace(/\s+/g, ' ')
+      .trim();
+    if (!text) return 'UNGROUPED';
+    const gel = text.match(/^GEL\.?\s*(\d+)$/i);
+    if (gel) return `GEL. ${Number(gel[1])}`;
+    return text.toUpperCase();
+  }
+
+  function formatGraduationWaveLabel(value) {
+    const key = normalizeGraduationWaveKey(value);
+    const gel = key.match(/^GEL\.\s*(\d+)$/i);
+    if (gel) return `Gel. ${Number(gel[1])}`;
+    if (key === 'UNGROUPED') return 'Ungrouped';
+    const raw = String(value == null ? '' : value).normalize('NFKC').trim();
+    return raw || key;
+  }
+
+  function resolveGraduationWaveState(value) {
+    if (
+      typeof AcademicPublicationControl !== 'undefined' &&
+      AcademicPublicationControl.resolveGraduationWave
+    ) {
+      return AcademicPublicationControl.resolveGraduationWave(value);
+    }
+    return {
+      waveKey: normalizeGraduationWaveKey(value),
+      isOn: true,
+      configuredOn: true,
+      scheduledAt: '',
+      scheduleReached: false,
+      explicit: false
+    };
+  }
+
+  async function getEffectiveGraduatedStudentIdSet(forceRefresh = false) {
+    try {
+      if (typeof AcademicPublicationControl !== 'undefined') {
+        await AcademicPublicationControl.reload();
+      }
+    } catch (error) {}
+
     const table = await safeResult(() => fetchTable({
       spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
       sheet: CONFIG.GRADUATED_SHEET,
-      range: 'D2:D',
+      range: 'C2:D',
       bypassCache: Boolean(forceRefresh)
     }), { display: [], raw: [] });
 
@@ -415,25 +458,91 @@ const GakuseiDataService = (() => {
     const displayRows = Array.isArray(table.display) ? table.display : [];
     const rawRows = Array.isArray(table.raw) ? table.raw : [];
     const rowCount = Math.max(displayRows.length, rawRows.length);
+
     for (let index = 0; index < rowCount; index++) {
-      const displayId = displayRows[index] ? displayRows[index][0] : '';
-      const rawId = rawRows[index] ? rawRows[index][0] : '';
-      const id = normalizeId(displayId || rawId);
-      if (id && isLikelyStudentId(id)) ids.add(id);
+      const displayRow = displayRows[index] || [];
+      const rawRow = rawRows[index] || [];
+      const wave = displayRow[0] != null && String(displayRow[0]).trim() !== ''
+        ? displayRow[0]
+        : rawRow[0];
+      const studentId = normalizeId(
+        displayRow[1] != null && String(displayRow[1]).trim() !== ''
+          ? displayRow[1]
+          : rawRow[1]
+      );
+      if (!studentId || !isLikelyStudentId(studentId)) continue;
+      if (resolveGraduationWaveState(wave).isOn) ids.add(studentId);
     }
+
     return ids;
   }
 
-  function isEffectivelyGraduatedCurrentStudent(studentId, graduatedIdSet) {
-    const hasGraduatedSource = graduatedIdSet instanceof Set && graduatedIdSet.has(normalizeId(studentId));
-    if (typeof AcademicPublicationControl === 'undefined' || !AcademicPublicationControl.resolveGraduationStatus) {
-      return hasGraduatedSource;
+  async function getGraduationWaveCatalog(forceRefresh = false) {
+    try {
+      if (typeof AcademicPublicationControl !== 'undefined') {
+        await AcademicPublicationControl.reload();
+      }
+    } catch (error) {}
+
+    const table = await fetchTable({
+      spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
+      sheet: CONFIG.GRADUATED_SHEET,
+      range: 'C2:G',
+      bypassCache: Boolean(forceRefresh)
+    });
+
+    const groups = new Map();
+    const displayRows = Array.isArray(table.display) ? table.display : [];
+    const rawRows = Array.isArray(table.raw) ? table.raw : [];
+    const rowCount = Math.max(displayRows.length, rawRows.length);
+
+    for (let index = 0; index < rowCount; index++) {
+      const displayRow = displayRows[index] || [];
+      const rawRow = rawRows[index] || [];
+      const waveSource = displayRow[0] != null && String(displayRow[0]).trim() !== ''
+        ? displayRow[0]
+        : rawRow[0];
+      const studentId = normalizeId(
+        displayRow[1] != null && String(displayRow[1]).trim() !== ''
+          ? displayRow[1]
+          : rawRow[1]
+      );
+      if (!studentId || !isLikelyStudentId(studentId)) continue;
+
+      const waveKey = normalizeGraduationWaveKey(waveSource);
+      if (!groups.has(waveKey)) {
+        groups.set(waveKey, {
+          waveKey,
+          waveLabel: formatGraduationWaveLabel(waveSource),
+          students: []
+        });
+      }
+
+      groups.get(waveKey).students.push({
+        nomorId: studentId,
+        namaLatin: String(displayRow[3] || rawRow[3] || '').trim() || '-',
+        namaKanji: String(displayRow[4] || rawRow[4] || '').trim() || '-'
+      });
     }
-    return Boolean(AcademicPublicationControl.resolveGraduationStatus(
-      studentId,
-      hasGraduatedSource,
-      true
-    ).isGraduated);
+
+    const waveNumber = key => {
+      const match = String(key || '').match(/(\d+)/);
+      return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
+    };
+
+    return Array.from(groups.values())
+      .map(group => ({
+        ...group,
+        students: group.students.slice().sort((a, b) =>
+          String(a.namaLatin || '').localeCompare(String(b.namaLatin || ''), 'en', { sensitivity: 'base' }) ||
+          String(a.nomorId || '').localeCompare(String(b.nomorId || ''))
+        ),
+        count: group.students.length
+      }))
+      .sort((a, b) =>
+        (waveNumber(a.waveKey) - waveNumber(b.waveKey)) ||
+        String(a.waveLabel || '').localeCompare(String(b.waveLabel || ''), 'en', { sensitivity: 'base' })
+      );
   }
 
   async function getCurrentNenseiRecap() {
@@ -444,16 +553,10 @@ const GakuseiDataService = (() => {
        * master dimulai dari kolom C, nilai kolom G tersimpan sebagai row[4]
        * dan tersedia sebagai master.currentGrade.
        */
-      try {
-        if (typeof AcademicPublicationControl !== 'undefined') {
-          await AcademicPublicationControl.ready();
-        }
-      } catch (error) {}
-
       const [masterMap, leaveStatusMap, graduatedIdSet] = await Promise.all([
         getMasterStudentMap(),
         getLeaveStatusMap(),
-        getGraduatedStudentIdSet(false)
+        getEffectiveGraduatedStudentIdSet(false)
       ]);
 
       const rows = [];
@@ -461,7 +564,7 @@ const GakuseiDataService = (() => {
 
       Object.entries(masterMap).forEach(([studentId, master]) => {
         if (!studentId || !isLikelyStudentId(studentId)) return;
-        if (isEffectivelyGraduatedCurrentStudent(studentId, graduatedIdSet)) return;
+        if (graduatedIdSet.has(normalizeId(studentId))) return;
 
         const dorm = getDormById(studentId, master.dormName || '');
         const nensei = extractMasterGradeNensei(master.currentGrade || '');
@@ -729,7 +832,8 @@ const GakuseiDataService = (() => {
     if (!requestedId) throw new Error('Masukkan nomor ID Gakusei terlebih dahulu.');
 
     /*
-     * GRADUATED columns (range D:R):
+     * GRADUATED columns (range C:R):
+     * C graduation wave (Gel. 1, Gel. 2, ...),
      * D former Gakusei ID (search key), E post-graduation/JMC resident ID,
      * F Latin name, G Kanji name, H X username,
      * I Devoted Student Subject, J Devoted Student Title,
@@ -737,7 +841,12 @@ const GakuseiDataService = (() => {
      * M Study Completion Certificate, N Student Photo, O Date of Birth,
      * P Devoted Student Kōron Cover, Q Enrollment Date, R Graduation Date.
      */
-    const [masterTable, graduatedTable] = await Promise.all([
+    const publicationRefresh = (typeof AcademicPublicationControl !== 'undefined')
+      ? AcademicPublicationControl.reload().catch(() => null)
+      : Promise.resolve(null);
+
+    const [, masterTable, graduatedTable] = await Promise.all([
+      publicationRefresh,
       safeResult(() => fetchTable({
         spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
         sheet: CONFIG.MASTER_SHEET,
@@ -746,7 +855,7 @@ const GakuseiDataService = (() => {
       safeResult(() => fetchTable({
         spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
         sheet: CONFIG.GRADUATED_SHEET,
-        range: 'D2:R'
+        range: 'C2:R'
       }), { display: [], raw: [] })
     ]);
 
@@ -754,86 +863,80 @@ const GakuseiDataService = (() => {
 
     let graduatedIndex = -1;
     for (let index = graduatedTable.display.length - 1; index >= 0; index--) {
-      if (idsMatch(graduatedTable.display[index] && graduatedTable.display[index][0], requestedId)) {
+      if (idsMatch(graduatedTable.display[index] && graduatedTable.display[index][1], requestedId)) {
         graduatedIndex = index;
         break;
       }
     }
 
-    /*
-     * V154 — Admin-controlled graduation release.
-     * AUTO keeps the existing sheet-driven behavior exactly as before.
-     * OFF can temporarily keep a Gakusei in the current-student experience,
-     * ON releases the prepared GRADUATED row immediately, and SCHEDULED
-     * releases it automatically once the configured WIB time is reached.
-     * A prepared GRADUATED row remains the authoritative alumni data source.
-     */
-    try {
-      if (typeof AcademicPublicationControl !== 'undefined') {
-        await AcademicPublicationControl.ready();
-      }
-    } catch (error) {}
-
-    const graduationResolution = (typeof AcademicPublicationControl !== 'undefined' && AcademicPublicationControl.resolveGraduationStatus)
-      ? AcademicPublicationControl.resolveGraduationStatus(
-          requestedId,
-          graduatedIndex >= 0,
-          masterIndex >= 0
-        )
-      : { isGraduated: graduatedIndex >= 0, mode: 'AUTO', scheduledAt: '' };
-
-    const useGraduatedSource = Boolean(graduationResolution.isGraduated && graduatedIndex >= 0);
+    let graduationWaveState = null;
+    if (graduatedIndex >= 0) {
+      const displayRow = graduatedTable.display[graduatedIndex] || [];
+      const rawRow = graduatedTable.raw[graduatedIndex] || [];
+      const waveSource = displayRow[0] != null && String(displayRow[0]).trim() !== ''
+        ? displayRow[0]
+        : rawRow[0];
+      graduationWaveState = resolveGraduationWaveState(waveSource);
+    }
 
     /*
-     * Bila status GRADUATED efektif, record alumni menjadi sumber utama
-     * walaupun baris lama masih tertinggal di PENDATAAN GAKUSEI.
+     * A GRADUATED row becomes the public alumni source only while its entire
+     * wave is ON. Every detected wave defaults to ON. Admin can switch a wave
+     * OFF or leave it OFF until the saved WIB schedule reaches its time.
      */
-    if (useGraduatedSource) {
+    if (graduatedIndex >= 0 && graduationWaveState && graduationWaveState.isOn) {
       const displayRow = graduatedTable.display[graduatedIndex] || [];
       const rawRow = graduatedTable.raw[graduatedIndex] || [];
       const fallbackDisplay = masterIndex >= 0 ? (masterTable.display[masterIndex] || []) : [];
       const fallbackRaw = masterIndex >= 0 ? (masterTable.raw[masterIndex] || []) : [];
 
       const postGraduationId = String(
-        chooseCellValue(displayRow[1], rawRow[1]) || ''
+        chooseCellValue(displayRow[2], rawRow[2]) || ''
       ).trim();
-      const enrollmentDate = String(displayRow[13] == null ? '' : displayRow[13]).trim();
-      const graduationDate = String(displayRow[14] == null ? '' : displayRow[14]).trim();
+      const enrollmentDate = String(displayRow[14] == null ? '' : displayRow[14]).trim();
+      const graduationDate = String(displayRow[15] == null ? '' : displayRow[15]).trim();
 
       return {
-        studentId: normalizeId(displayRow[0]),
-        namaLatin: displayRow[2] || fallbackDisplay[0] || '-',
-        namaKanji: displayRow[3] || fallbackDisplay[1] || '-',
-        usernameValue: chooseCellValue(displayRow[4], rawRow[4]) ||
+        studentId: normalizeId(displayRow[1]),
+        namaLatin: displayRow[3] || fallbackDisplay[0] || '-',
+        namaKanji: displayRow[4] || fallbackDisplay[1] || '-',
+        usernameValue: chooseCellValue(displayRow[5], rawRow[5]) ||
           chooseCellValue(fallbackDisplay[3], fallbackRaw[3]),
         currentGrade: 'GRADUATED',
         currentRank: '-',
         dormName: fallbackDisplay[6] || '',
-        birthDate: String(displayRow[11] || '').trim(),
+        birthDate: String(displayRow[12] || '').trim(),
         enrollmentDate,
         graduationDate,
-        idCardValue: chooseCellValue(displayRow[9], rawRow[9]),
-        photoValue: chooseCellValue(displayRow[10], rawRow[10]) ||
+        idCardValue: chooseCellValue(displayRow[10], rawRow[10]),
+        photoValue: chooseCellValue(displayRow[11], rawRow[11]) ||
           chooseCellValue(fallbackDisplay[11], fallbackRaw[11]),
         isGraduated: true,
-        graduationControl: graduationResolution,
+        graduationWave: formatGraduationWaveLabel(displayRow[0] || rawRow[0]),
+        graduationWaveState,
         graduatedData: {
+          wave: formatGraduationWaveLabel(displayRow[0] || rawRow[0]),
           postGraduationId,
-          devotedStudentSubject: cleanAcademicText(displayRow[5]),
-          devotedStudentTitle: cleanAcademicText(displayRow[6]),
-          devotedStudentScore: cleanAcademicMark(displayRow[7]),
-          devotedStudentFileValue: chooseCellValue(displayRow[8], rawRow[8]),
-          devotedStudentCoverValue: chooseCellValue(displayRow[12], rawRow[12]),
-          studyCompletionCertificateValue: chooseCellValue(displayRow[9], rawRow[9]),
-          photoValue: chooseCellValue(displayRow[10], rawRow[10]),
-          birthDate: String(displayRow[11] || '').trim(),
+          devotedStudentSubject: cleanAcademicText(displayRow[6]),
+          devotedStudentTitle: cleanAcademicText(displayRow[7]),
+          devotedStudentScore: cleanAcademicMark(displayRow[8]),
+          devotedStudentFileValue: chooseCellValue(displayRow[9], rawRow[9]),
+          devotedStudentCoverValue: chooseCellValue(displayRow[13], rawRow[13]),
+          studyCompletionCertificateValue: chooseCellValue(displayRow[10], rawRow[10]),
+          photoValue: chooseCellValue(displayRow[11], rawRow[11]),
+          birthDate: String(displayRow[12] || '').trim(),
           enrollmentDate,
           graduationDate
         }
       };
     }
 
-    if (masterIndex < 0) throw new Error('Nomor ID Gakusei tidak ditemukan.');
+    if (masterIndex < 0) {
+      if (graduatedIndex >= 0) {
+        throw new Error('Nomor ID Gakusei belum dirilis sebagai GRADUATED.');
+      }
+      throw new Error('Nomor ID Gakusei tidak ditemukan.');
+    }
 
     const displayRow = masterTable.display[masterIndex] || [];
     const rawRow = masterTable.raw[masterIndex] || [];
@@ -852,7 +955,8 @@ const GakuseiDataService = (() => {
       idCardValue: chooseCellValue(displayRow[10], rawRow[10]),
       photoValue: chooseCellValue(displayRow[11], rawRow[11]),
       isGraduated: false,
-      graduationControl: graduationResolution,
+      graduationWave: graduationWaveState ? graduationWaveState.waveLabel : '',
+      graduationWaveState,
       graduatedData: null
     };
   }
@@ -906,77 +1010,7 @@ const GakuseiDataService = (() => {
     };
   }
 
-
-  async function getGraduationAdminCatalog(forceRefresh = false) {
-    const [masterTable, graduatedTable] = await Promise.all([
-      safeResult(() => fetchTable({
-        spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
-        sheet: CONFIG.MASTER_SHEET,
-        range: 'C2:N',
-        bypassCache: Boolean(forceRefresh)
-      }), { display: [], raw: [] }),
-      safeResult(() => fetchTable({
-        spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
-        sheet: CONFIG.GRADUATED_SHEET,
-        range: 'D2:R',
-        bypassCache: Boolean(forceRefresh)
-      }), { display: [], raw: [] })
-    ]);
-
-    const rowsById = new Map();
-
-    (masterTable.display || []).forEach(row => {
-      const studentId = normalizeId(row && row[2]);
-      if (!studentId || !isLikelyStudentId(studentId)) return;
-      rowsById.set(studentId, {
-        studentId,
-        namaLatin: String(row && row[0] || '').trim() || '-',
-        namaKanji: String(row && row[1] || '').trim() || '-',
-        currentGrade: String(row && row[4] || '').trim() || '-',
-        hasCurrentSource: true,
-        hasGraduatedSource: false
-      });
-    });
-
-    (graduatedTable.display || []).forEach(row => {
-      const studentId = normalizeId(row && row[0]);
-      if (!studentId || !isLikelyStudentId(studentId)) return;
-      const existing = rowsById.get(studentId) || {
-        studentId,
-        namaLatin: '-',
-        namaKanji: '-',
-        currentGrade: '-',
-        hasCurrentSource: false,
-        hasGraduatedSource: false
-      };
-      existing.namaLatin = String(row && row[2] || '').trim() || existing.namaLatin || '-';
-      existing.namaKanji = String(row && row[3] || '').trim() || existing.namaKanji || '-';
-      existing.hasGraduatedSource = true;
-      rowsById.set(studentId, existing);
-    });
-
-    return Array.from(rowsById.values())
-      .map(item => {
-        const resolution = (typeof AcademicPublicationControl !== 'undefined' && AcademicPublicationControl.resolveGraduationStatus)
-          ? AcademicPublicationControl.resolveGraduationStatus(
-              item.studentId,
-              item.hasGraduatedSource,
-              item.hasCurrentSource
-            )
-          : {
-              mode: 'AUTO',
-              isGraduated: Boolean(item.hasGraduatedSource),
-              scheduledAt: '',
-              waitingForGraduatedSource: false
-            };
-        return { ...item, ...resolution };
-      })
-      .sort((a, b) =>
-        String(a.namaLatin || '').localeCompare(String(b.namaLatin || ''), 'en', { sensitivity: 'base' }) ||
-        String(a.studentId || '').localeCompare(String(b.studentId || ''))
-      );
-  }
-
+  
 async function getMasterStudentMap() {
   const table = await fetchTable({
     spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
@@ -1268,12 +1302,6 @@ function getDormById(id, fallbackDormName) {
 
   async function getCurrentGpRanking() {
     try {
-      try {
-        if (typeof AcademicPublicationControl !== 'undefined') {
-          await AcademicPublicationControl.ready();
-        }
-      } catch (error) {}
-
       const [semesterTable, logTable, masterMap, graduatedIdSet] = await Promise.all([
         fetchTable({
           spreadsheetId: CONFIG.POINT_SPREADSHEET_ID,
@@ -1288,7 +1316,7 @@ function getDormById(id, fallbackDormName) {
           bypassCache: true
         }),
         getMasterStudentMap(),
-        getGraduatedStudentIdSet(false)
+        getEffectiveGraduatedStudentIdSet(false)
       ]);
 
       const semesterTitle = (semesterTable.display[0] || []).find(value =>
@@ -1322,7 +1350,7 @@ function getDormById(id, fallbackDormName) {
       const rows = Object.entries(masterMap)
         .filter(([studentId]) =>
           isLikelyStudentId(studentId) &&
-          !isEffectivelyGraduatedCurrentStudent(studentId, graduatedIdSet)
+          !graduatedIdSet.has(normalizeId(studentId))
         )
         .map(([studentId, master]) => ({
           nomorId: studentId,
@@ -3683,7 +3711,7 @@ function detectTaNenseiFromAcademicBlock(displayValues, studentRowIndex, semeste
     getPromotionRecap,
     getLatestPromotionRecap,
     getDetectedAcademicSheets,
-    getGraduationAdminCatalog
+    getGraduationWaveCatalog
   };
 })();
 
@@ -3715,7 +3743,7 @@ const ACADEMIC_PUBLICATION_CONFIG=Object.freeze({
 });
 
 const AcademicPublicationControl=(()=>{
-  let settings={version:2,configured:false,semesters:{},graduations:{},updatedAt:'',updatedBy:'',source:'default'};
+  let settings={version:1,configured:false,semesters:{},graduationWaves:{},updatedAt:'',updatedBy:'',source:'default'};
   let readyPromise=null;
   let catalog=[];
   let adminAuthenticated=false;
@@ -3747,29 +3775,29 @@ const AcademicPublicationControl=(()=>{
     return output;
   }
 
-  function graduationKey(value){
-    return String(value==null?'':value)
-      .normalize('NFKC')
-      .replace(/[^A-Z0-9]/gi,'')
-      .toUpperCase()
-      .trim();
+  function normalizeWaveKey(value){
+    const text=String(value==null?'':value).normalize('NFKC').replace(/\s+/g,' ').trim();
+    if(!text)return'UNGROUPED';
+    const gel=text.match(/^GEL\.?\s*(\d+)$/i);
+    return gel?`GEL. ${Number(gel[1])}`:text.toUpperCase();
   }
 
-  function normalizeGraduationMap(value){
+  function normalizeGraduationWaveMap(value){
     const output={};
     if(!value||typeof value!=='object')return output;
-    Object.keys(value).sort().forEach(rawKey=>{
-      const key=graduationKey(rawKey);
-      if(!key)return;
-      const source=value[rawKey]&&typeof value[rawKey]==='object'?value[rawKey]:{};
-      const mode=String(source.mode||'AUTO').trim().toUpperCase();
-      if(!['OFF','ON','SCHEDULED'].includes(mode))return;
-      let scheduledAt='';
-      if(mode==='SCHEDULED'){
-        const date=new Date(source.scheduledAt||'');
-        if(!Number.isNaN(date.getTime()))scheduledAt=date.toISOString();
+    Object.keys(value).forEach(rawKey=>{
+      const key=normalizeWaveKey(rawKey);
+      const source=value[rawKey];
+      if(typeof source==='boolean'){
+        output[key]={enabled:Boolean(source),scheduledAt:''};
+        return;
       }
-      output[key]={mode,scheduledAt};
+      if(!source||typeof source!=='object')return;
+      const scheduledAt=String(source.scheduledAt||'').trim();
+      output[key]={
+        enabled:source.enabled!==false,
+        scheduledAt:scheduledAt&&!Number.isNaN(Date.parse(scheduledAt))?scheduledAt:''
+      };
     });
     return output;
   }
@@ -3777,10 +3805,10 @@ const AcademicPublicationControl=(()=>{
   function normalizeSettings(value,source){
     const input=value&&typeof value==='object'?value:{};
     return{
-      version:2,
+      version:1,
       configured:Boolean(input.configured),
       semesters:normalizeSemesterMap(input.semesters),
-      graduations:normalizeGraduationMap(input.graduations),
+      graduationWaves:normalizeGraduationWaveMap(input.graduationWaves),
       updatedAt:String(input.updatedAt||''),
       updatedBy:String(input.updatedBy||''),
       source:source||String(input.source||'default')
@@ -3980,6 +4008,33 @@ const AcademicPublicationControl=(()=>{
     return readyPromise;
   }
 
+  function getGraduationWaveSetting(value){
+    const waveKey=normalizeWaveKey(value);
+    const explicit=Object.prototype.hasOwnProperty.call(settings.graduationWaves,waveKey);
+    const stored=explicit?settings.graduationWaves[waveKey]:null;
+    return{
+      waveKey,
+      explicit,
+      enabled:stored?stored.enabled!==false:true,
+      scheduledAt:stored?String(stored.scheduledAt||''):''
+    };
+  }
+
+  function resolveGraduationWave(value,now=Date.now()){
+    const setting=getGraduationWaveSetting(value);
+    const scheduledMs=setting.scheduledAt?Date.parse(setting.scheduledAt):NaN;
+    const scheduleReached=!Number.isNaN(scheduledMs)&&scheduledMs<=Number(now||Date.now());
+    const isOn=Boolean(setting.enabled||scheduleReached);
+    const gel=setting.waveKey.match(/^GEL\.\s*(\d+)$/i);
+    return{
+      ...setting,
+      waveLabel:gel?`Gel. ${Number(gel[1])}`:(setting.waveKey==='UNGROUPED'?'Ungrouped':String(value||setting.waveKey)),
+      configuredOn:Boolean(setting.enabled),
+      scheduleReached,
+      isOn
+    };
+  }
+
   function semesterNumberFrom(value){
     const text=String(value||'').normalize('NFKC').toUpperCase();
     let match=text.match(/(?:^|[^0-9])(\d{1,3})\s*A\s*\.?\s*R\s*\.?/i);
@@ -4019,52 +4074,6 @@ const AcademicPublicationControl=(()=>{
     if(hasExplicitDecision(number))return isPublished(number,latestNumber)?'PUBLISHED BY ADMIN':'UNPUBLISHED BY ADMIN';
     if(number===latestNumber)return 'AWAITING ADMIN DECISION';
     return 'DEFAULT PUBLISHED';
-  }
-
-  function getGraduationControl(studentId){
-    const key=graduationKey(studentId);
-    const source=key&&settings.graduations&&settings.graduations[key];
-    if(!source)return{mode:'AUTO',scheduledAt:''};
-    const normalized=normalizeGraduationMap({[key]:source});
-    return normalized[key]||{mode:'AUTO',scheduledAt:''};
-  }
-
-  function resolveGraduationStatus(studentId,hasGraduatedSource,hasCurrentSource=true,atTime=Date.now()){
-    const control=getGraduationControl(studentId);
-    const mode=control.mode||'AUTO';
-    const graduatedReady=Boolean(hasGraduatedSource);
-    const currentReady=Boolean(hasCurrentSource);
-    let scheduledTime=NaN;
-    if(control.scheduledAt){
-      const date=new Date(control.scheduledAt);
-      scheduledTime=date.getTime();
-    }
-    const scheduleReached=Number.isFinite(scheduledTime)&&Number(atTime)>=scheduledTime;
-    let isGraduated=graduatedReady;
-
-    if(mode==='OFF'){
-      isGraduated=currentReady?false:graduatedReady;
-    }else if(mode==='ON'){
-      isGraduated=graduatedReady;
-    }else if(mode==='SCHEDULED'){
-      if(!currentReady&&graduatedReady){
-        /* Archived-only records cannot safely fall back to a current profile. */
-        isGraduated=true;
-      }else{
-        isGraduated=Boolean(scheduleReached&&graduatedReady);
-      }
-    }
-
-    return{
-      mode,
-      scheduledAt:control.scheduledAt||'',
-      scheduleReached,
-      isGraduated:Boolean(isGraduated),
-      hasGraduatedSource:graduatedReady,
-      hasCurrentSource:currentReady,
-      waitingForGraduatedSource:Boolean((mode==='ON'||(mode==='SCHEDULED'&&scheduleReached))&&!graduatedReady),
-      explicit:mode!=='AUTO'
-    };
   }
 
   function filterAcademicData(data){
@@ -4174,13 +4183,20 @@ const AcademicPublicationControl=(()=>{
   function getSettings(){return normalizeSettings(settings,settings.source)}
   function getLatestCatalogItem(){return catalog.length?catalog[catalog.length-1]:null}
 
-  async function save(nextSemesterMap,nextGraduationMap){
+  function stableObjectJson(value){
+    const source=value&&typeof value==='object'?value:{};
+    const ordered={};
+    Object.keys(source).sort().forEach(key=>{ordered[key]=source[key]});
+    return JSON.stringify(ordered);
+  }
+
+  async function saveSettings(nextSemesterMap,nextGraduationWaveMap){
     if(!adminAuthenticated)throw new Error('Admin authentication is required.');
 
     const next=normalizeSettings({
       configured:true,
       semesters:nextSemesterMap,
-      graduations:nextGraduationMap===undefined?settings.graduations:nextGraduationMap,
+      graduationWaves:nextGraduationWaveMap,
       updatedAt:new Date().toISOString(),
       updatedBy:'ADMIN'
     },'local');
@@ -4200,12 +4216,16 @@ const AcademicPublicationControl=(()=>{
       }
 
       const verified=normalizeSettings(verification.settings||verification,'remote');
-      const expected=JSON.stringify(normalizeSemesterMap(next.semesters));
-      const actual=JSON.stringify(normalizeSemesterMap(verified.semesters));
-      const expectedGraduations=JSON.stringify(normalizeGraduationMap(next.graduations));
-      const actualGraduations=JSON.stringify(normalizeGraduationMap(verified.graduations));
-      if(expected!==actual||expectedGraduations!==actualGraduations){
-        throw new Error('Remote settings did not match the requested Admin state. Check the Admin password and confirm the Portal backend preserves both publication and graduation settings.');
+      const expectedSemesters=stableObjectJson(normalizeSemesterMap(next.semesters));
+      const actualSemesters=stableObjectJson(normalizeSemesterMap(verified.semesters));
+      if(expectedSemesters!==actualSemesters){
+        throw new Error('Remote settings did not match the requested publication state. Check the Admin password and Web App deployment permissions.');
+      }
+
+      const expectedWaves=stableObjectJson(normalizeGraduationWaveMap(next.graduationWaves));
+      const actualWaves=stableObjectJson(normalizeGraduationWaveMap(verified.graduationWaves));
+      if(expectedWaves!==actualWaves){
+        throw new Error('Remote settings did not preserve Graduation Wave control. Update the Portal backend so savePublicationSettings stores the complete settings object.');
       }
 
       settings=verified;
@@ -4213,20 +4233,23 @@ const AcademicPublicationControl=(()=>{
       storageMode='GLOBAL REMOTE MODE';
       remoteError='';
 
-      /* Local storage is only a cache/backup after GLOBAL verification. */
       saveGlobalCacheSettings(settings);
       saveLocalSettings(settings);
 
       return{success:true,localOnly:false,settings};
     }catch(error){
-      /*
-       * Never pretend an unsaved per-browser change is global. Keep the last
-       * verified global state active and report the backend failure.
-       */
       storageMode='OFFLINE FALLBACK';
       remoteError=error&&error.message?error.message:String(error);
       throw new Error('Global settings could not be saved: '+remoteError);
     }
+  }
+
+  async function save(nextSemesterMap){
+    return saveSettings(nextSemesterMap,settings.graduationWaves);
+  }
+
+  async function saveGraduationWaves(nextWaveMap){
+    return saveSettings(settings.semesters,nextWaveMap);
   }
 
   function setLocalSettingsForPreview(next){
@@ -4241,11 +4264,11 @@ const AcademicPublicationControl=(()=>{
     getCatalogSnapshot,
     getLatestCatalogItem,
     getSettings,
+    getGraduationWaveSetting,
+    resolveGraduationWave,
     isPublished,
     hasExplicitDecision,
     publicationReason,
-    getGraduationControl,
-    resolveGraduationStatus,
     filterAcademicData,
     filterPdfPayload,
     login,
@@ -4253,6 +4276,7 @@ const AcademicPublicationControl=(()=>{
     isAdmin:()=>adminAuthenticated,
     getAdminPasswordForBackend:()=>adminAuthenticated?adminPasswordMemory:'',
     save,
+    saveGraduationWaves,
     getStorageMode:()=>storageMode,
     getRemoteError:()=>remoteError,
     getApiUrl:apiUrl,
@@ -4261,7 +4285,7 @@ const AcademicPublicationControl=(()=>{
 })();
 
 
-const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingTimer=null,gpRankingLoadToken=0,pdfBusy=false,promotionData=null,promotionPublishedCatalog=[],promotionCatalogLatestNumber=-1,promotionLoadToken=0,nenseiData=null,currentTheme='front',currentDocumentReview=null,academicLoadToken=0,currentAcademicReady=false,academicLoadPromise=null;
+const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingTimer=null,gpRankingLoadToken=0,pdfBusy=false,promotionData=null,promotionPublishedCatalog=[],promotionCatalogLatestNumber=-1,promotionLoadToken=0,nenseiData=null,currentTheme='front',currentDocumentReview=null,academicLoadToken=0,currentAcademicReady=false,academicLoadPromise=null,adminGraduationWaveCatalog=[];
 
 /* =========================================================
    V111 — GAKUSEI LOGIN + SOA FRONTEND BRIDGE
@@ -11315,7 +11339,7 @@ function updateAdminAccessButton(){
   }
   if(title)title.textContent=active?'ADMIN CONTROL':'LOGIN AS ADMIN';
   if(description)description.textContent=active
-    ?'Administrator mode active • manage Academic Records publication & graduation release'
+    ?'Administrator mode active • manage Academic Records publication & graduation waves'
     :'Restricted Academic Records publication & graduation release control';
   syncGeneralLogoutOption();
 }
@@ -11652,17 +11676,203 @@ async function showAdminControlView(forceCatalog){
   $('adminControlView').classList.remove('hidden');
   await Promise.all([
     refreshAdminSemesterCatalog(Boolean(forceCatalog)),
-    refreshAdminGraduationCatalog(Boolean(forceCatalog)),
+    refreshAdminGraduationWaveCatalog(false),
     refreshAdminSOAAccess(true),
     refreshAdminSOARecap(true)
   ]);
 }
 
+function formatWibScheduleInput(isoValue){
+  const ms=Date.parse(String(isoValue||''));
+  if(Number.isNaN(ms))return'';
+  const date=new Date(ms+7*60*60*1000);
+  const pad=value=>String(value).padStart(2,'0');
+  return date.getUTCFullYear()+'-'+pad(date.getUTCMonth()+1)+'-'+pad(date.getUTCDate())+'T'+pad(date.getUTCHours())+':'+pad(date.getUTCMinutes());
+}
+
+function parseWibScheduleInput(value){
+  const text=String(value||'').trim();
+  if(!text)return'';
+  const match=text.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if(!match)throw new Error('Graduation schedule must use a valid date and time.');
+  const utcMs=Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3]),Number(match[4])-7,Number(match[5]),0,0);
+  if(Number.isNaN(utcMs))throw new Error('Graduation schedule is invalid.');
+  return new Date(utcMs).toISOString();
+}
+
+function syncAdminGraduationWaveCard(card){
+  if(!card)return;
+  const toggle=card.querySelector('.adminGraduationWaveToggleInput');
+  const schedule=card.querySelector('.adminGraduationWaveScheduleInput');
+  const state=card.querySelector('.adminGraduationWaveState');
+  if(!toggle||!schedule||!state)return;
+
+  if(toggle.checked){
+    schedule.disabled=true;
+    state.textContent='ON';
+    state.className='adminGraduationWaveState is-on';
+  }else if(schedule.value){
+    schedule.disabled=false;
+    state.textContent='SCHEDULED';
+    state.className='adminGraduationWaveState is-scheduled';
+  }else{
+    schedule.disabled=false;
+    state.textContent='OFF';
+    state.className='adminGraduationWaveState is-off';
+  }
+}
+
+function renderAdminGraduationWaveCatalog(groups){
+  const list=$('adminGraduationWaveList');
+  const count=$('adminGraduationWaveCount');
+  if(!list)return;
+  const rows=Array.isArray(groups)?groups:[];
+  adminGraduationWaveCatalog=rows.slice();
+  if(count)count.textContent=rows.length+' WAVES';
+  list.innerHTML='';
+
+  if(!rows.length){
+    list.innerHTML='<div class="adminGraduationWaveLoading is-error">No graduation wave was found in GRADUATED column C.</div>';
+    return;
+  }
+
+  rows.forEach(group=>{
+    const state=AcademicPublicationControl.resolveGraduationWave(group.waveKey);
+    const stored=AcademicPublicationControl.getGraduationWaveSetting(group.waveKey);
+    const card=document.createElement('article');
+    card.className='adminGraduationWaveCard';
+    card.dataset.waveKey=group.waveKey;
+    card.dataset.waveLabel=group.waveLabel;
+
+    card.innerHTML=
+      '<div class="adminGraduationWaveHead">'+
+        '<button class="adminGraduationWaveExpand" type="button" aria-expanded="false" aria-label="Show members of '+escapeHtml(group.waveLabel)+'"><span>⌄</span></button>'+
+        '<div class="adminGraduationWaveIdentity"><span>GRADUATION WAVE</span><strong>'+escapeHtml(group.waveLabel)+'</strong><small>'+Number(group.count||0)+' GAKUSEI</small></div>'+
+        '<div class="adminGraduationWaveControls">'+
+          '<div class="adminGraduationWaveSwitchWrap">'+
+            '<span class="adminGraduationWaveState '+(state.isOn?'is-on':(stored.scheduledAt?'is-scheduled':'is-off'))+'">'+(state.isOn?'ON':(stored.scheduledAt?'SCHEDULED':'OFF'))+'</span>'+
+            '<label class="adminGraduationWaveSwitch" aria-label="'+escapeHtml(group.waveLabel)+' graduated status">'+
+              '<input class="adminGraduationWaveToggleInput" type="checkbox" '+(state.isOn?'checked':'')+'>'+
+              '<span aria-hidden="true"><i></i></span>'+
+            '</label>'+
+          '</div>'+
+          '<label class="adminGraduationWaveSchedule">'+
+            '<span>SCHEDULE AUTO ON</span>'+
+            '<div><input class="adminGraduationWaveScheduleInput" type="datetime-local" value="'+escapeHtml(formatWibScheduleInput(stored.scheduledAt))+'"><b>WIB</b></div>'+
+          '</label>'+
+        '</div>'+
+      '</div>'+
+      '<div class="adminGraduationWaveMembers hidden" aria-label="'+escapeHtml(group.waveLabel)+' Gakusei list"></div>';
+
+    const members=card.querySelector('.adminGraduationWaveMembers');
+    (group.students||[]).forEach(student=>{
+      const button=document.createElement('button');
+      button.className='adminGraduationStudentLink';
+      button.type='button';
+      button.dataset.studentId=student.nomorId||'';
+      button.innerHTML='<strong>'+escapeHtml(student.namaLatin||'-')+'</strong><span class="jp">'+escapeHtml(student.namaKanji||'-')+'</span><small>'+escapeHtml(student.nomorId||'-')+'</small>';
+      button.addEventListener('click',()=>openGakuseiFromGraduationAdmin(student.nomorId));
+      members.appendChild(button);
+    });
+
+    const expand=card.querySelector('.adminGraduationWaveExpand');
+    expand.addEventListener('click',()=>{
+      const opening=members.classList.contains('hidden');
+      members.classList.toggle('hidden',!opening);
+      expand.classList.toggle('is-open',opening);
+      expand.setAttribute('aria-expanded',opening?'true':'false');
+      expand.querySelector('span').textContent=opening?'⌃':'⌄';
+    });
+
+    const toggle=card.querySelector('.adminGraduationWaveToggleInput');
+    const schedule=card.querySelector('.adminGraduationWaveScheduleInput');
+    toggle.addEventListener('change',()=>{
+      if(toggle.checked)schedule.value='';
+      syncAdminGraduationWaveCard(card);
+    });
+    schedule.addEventListener('change',()=>{
+      if(schedule.value)toggle.checked=false;
+      syncAdminGraduationWaveCard(card);
+    });
+
+    syncAdminGraduationWaveCard(card);
+    list.appendChild(card);
+  });
+}
+
+async function refreshAdminGraduationWaveCatalog(force){
+  const list=$('adminGraduationWaveList');
+  const message=$('adminGraduationWaveMessage');
+  if(list)list.innerHTML='<div class="adminGraduationWaveLoading">Reading GRADUATED waves from column C...</div>';
+  if(message){message.className='adminGraduationWaveMessage';message.textContent=''}
+  try{
+    await AcademicPublicationControl.ready();
+    const groups=await GakuseiDataService.getGraduationWaveCatalog(Boolean(force));
+    renderAdminGraduationWaveCatalog(groups);
+  }catch(error){
+    if(list)list.innerHTML='<div class="adminGraduationWaveLoading is-error">'+escapeHtml(error&&error.message?error.message:error)+'</div>';
+  }
+}
+
+function collectAdminGraduationWaveSettings(){
+  const output={};
+  document.querySelectorAll('#adminGraduationWaveList .adminGraduationWaveCard').forEach(card=>{
+    const key=String(card.dataset.waveKey||'').trim();
+    if(!key)return;
+    const toggle=card.querySelector('.adminGraduationWaveToggleInput');
+    const schedule=card.querySelector('.adminGraduationWaveScheduleInput');
+    let enabled=Boolean(toggle&&toggle.checked);
+    let scheduledAt='';
+    if(!enabled&&schedule&&schedule.value){
+      scheduledAt=parseWibScheduleInput(schedule.value);
+      if(Date.parse(scheduledAt)<=Date.now()){
+        enabled=true;
+        scheduledAt='';
+      }
+    }
+    output[key]={enabled,scheduledAt};
+  });
+  return output;
+}
+
+async function saveAdminGraduationWaveSettings(){
+  if(!AcademicPublicationControl.isAdmin()){openAdminPanel();return}
+  const button=$('adminGraduationWaveSaveButton');
+  const message=$('adminGraduationWaveMessage');
+  if(button){button.disabled=true;button.textContent='SAVING...'}
+  if(message){message.className='adminGraduationWaveMessage';message.textContent='Saving graduation wave settings...'}
+  try{
+    const map=collectAdminGraduationWaveSettings();
+    const result=await AcademicPublicationControl.saveGraduationWaves(map);
+    if(message){
+      message.className='adminGraduationWaveMessage is-success';
+      message.textContent=result.localOnly?'Saved in LOCAL TEST MODE.':'Graduation wave settings saved globally.';
+    }
+    await refreshAdminGraduationWaveCatalog(false);
+    if(currentStudentId)fetchStudent(currentStudentId,true);
+    else loadCurrentGpRanking(true);
+  }catch(error){
+    if(message){message.className='adminGraduationWaveMessage is-error';message.textContent=error&&error.message?error.message:String(error)}
+  }finally{
+    if(button){button.disabled=false;button.textContent='SAVE GRADUATION SETTINGS'}
+  }
+}
+
+function openGakuseiFromGraduationAdmin(studentId){
+  const id=String(studentId||'').trim();
+  if(!id)return;
+  closeAdminPanel();
+  if($('idInput'))$('idInput').value=id;
+  if($('mobileStudentSearchInput'))$('mobileStudentSearchInput').value=id;
+  fetchStudent(id,false);
+  if(!MobileSwipeApp.isActive())window.scrollTo({top:0,behavior:'smooth'});
+}
+
 function adminBackendNoticeText(){
   const mode=AcademicPublicationControl.getStorageMode();
-  if(mode==='GLOBAL REMOTE MODE')return 'GLOBAL MODE • Academic publication and graduation-release settings are shared with every visitor through the configured Apps Script backend.';
-  if(mode==='OFFLINE FALLBACK')return 'OFFLINE FALLBACK • Remote Admin settings could not be reached. Changes are not saved globally until the backend connection works.';
-  return 'GLOBAL BACKEND REQUIRED • Admin controls could not initialize from the configured Portal backend.';
+  if(mode==='GLOBAL REMOTE MODE')return 'GLOBAL MODE • Publication settings are shared with every visitor through the configured Apps Script backend.';
+  if(mode==='OFFLINE FALLBACK')return 'OFFLINE FALLBACK • Remote publication settings could not be reached. Changes are not saved globally until the backend connection works.';
+  return 'GLOBAL BACKEND REQUIRED • Publication control could not initialize from the configured Portal backend.';
 }
 
 async function refreshAdminSemesterCatalog(force){
@@ -11757,263 +11967,6 @@ async function saveAdminSemesterSettings(){
   }
 }
 
-const ADMIN_GRADUATION_TIME_ZONE='Asia/Jakarta';
-let adminGraduationCatalog=[];
-
-function scrollAdminGraduationControlIntoView(){
-  const panel=$('adminGraduationControl');
-  if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'});
-}
-
-function formatAdminWibDateTime(value){
-  if(!value)return 'NOT SCHEDULED';
-  const date=new Date(value);
-  if(Number.isNaN(date.getTime()))return 'INVALID DATE';
-  try{
-    return new Intl.DateTimeFormat('en-GB',{
-      timeZone:ADMIN_GRADUATION_TIME_ZONE,
-      day:'2-digit',month:'short',year:'numeric',
-      hour:'2-digit',minute:'2-digit',hour12:false
-    }).format(date)+' WIB';
-  }catch(error){
-    return date.toLocaleString()+' WIB';
-  }
-}
-
-function isoToWibDateTimeLocal(value){
-  if(!value)return '';
-  const date=new Date(value);
-  if(Number.isNaN(date.getTime()))return '';
-  try{
-    const parts=new Intl.DateTimeFormat('en-GB',{
-      timeZone:ADMIN_GRADUATION_TIME_ZONE,
-      year:'numeric',month:'2-digit',day:'2-digit',
-      hour:'2-digit',minute:'2-digit',hourCycle:'h23'
-    }).formatToParts(date).reduce((map,part)=>{
-      if(part.type!=='literal')map[part.type]=part.value;
-      return map;
-    },{});
-    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-  }catch(error){return ''}
-}
-
-function wibDateTimeLocalToIso(value){
-  const match=String(value||'').trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
-  if(!match)return '';
-  const [,year,month,day,hour,minute]=match.map((item,index)=>index===0?item:Number(item));
-  /* WIB is fixed UTC+7. datetime-local intentionally has no browser timezone. */
-  const utc=Date.UTC(year,month-1,day,hour-7,minute,0,0);
-  const date=new Date(utc);
-  return Number.isNaN(date.getTime())?'':date.toISOString();
-}
-
-function adminGraduationPreview(item,mode,scheduledAt){
-  const hasCurrent=Boolean(item&&item.hasCurrentSource);
-  const hasGraduated=Boolean(item&&item.hasGraduatedSource);
-  const normalized=String(mode||'AUTO').toUpperCase();
-  if(normalized==='OFF'){
-    return hasCurrent
-      ? {state:'CURRENT',theme:'current',detail:'Graduated release is explicitly OFF.'}
-      : {state:'GRADUATED',theme:'graduated',detail:'Archived-only record; current-student source is unavailable.'};
-  }
-  if(normalized==='ON'){
-    return hasGraduated
-      ? {state:'GRADUATED',theme:'graduated',detail:'Graduated release is ON now.'}
-      : {state:'WAITING DATA',theme:'waiting',detail:'ON is saved, but the GRADUATED source row is not ready yet.'};
-  }
-  if(normalized==='SCHEDULED'){
-    const due=scheduledAt?new Date(scheduledAt):null;
-    const valid=due&&!Number.isNaN(due.getTime());
-    if(!valid)return{state:'SCHEDULE REQUIRED',theme:'waiting',detail:'Choose the activation date and time in WIB.'};
-    if(!hasCurrent&&hasGraduated){
-      return{state:'GRADUATED',theme:'graduated',detail:'Archived-only record cannot be held in current-student mode.'};
-    }
-    if(Date.now()>=due.getTime()){
-      return hasGraduated
-        ? {state:'GRADUATED',theme:'graduated',detail:'Scheduled activation reached '+formatAdminWibDateTime(scheduledAt)+'.'}
-        : {state:'WAITING DATA',theme:'waiting',detail:'Schedule has been reached; waiting for the GRADUATED source row.'};
-    }
-    return{state:'SCHEDULED',theme:'scheduled',detail:'Will activate '+formatAdminWibDateTime(scheduledAt)+'.'};
-  }
-  return hasGraduated
-    ? {state:'GRADUATED',theme:'graduated',detail:'AUTO • following the existing GRADUATED sheet status.'}
-    : {state:'CURRENT',theme:'current',detail:'AUTO • following the existing current-student source.'};
-}
-
-async function refreshAdminGraduationCatalog(force){
-  const list=$('adminGraduationList');
-  const refreshButton=$('adminGraduationRefresh');
-  const message=$('adminGraduationMessage');
-  if(list)list.innerHTML='<div class="adminGraduationLoading">Synchronizing Gakusei graduation status...</div>';
-  if(message){message.className='adminGraduationMessage';message.textContent=''}
-  if(refreshButton){refreshButton.disabled=true;refreshButton.textContent='REFRESHING...'}
-  try{
-    await AcademicPublicationControl.ready();
-    const rows=await GakuseiDataService.getGraduationAdminCatalog(Boolean(force));
-    adminGraduationCatalog=Array.isArray(rows)?rows:[];
-    renderAdminGraduationCatalog(adminGraduationCatalog);
-  }catch(error){
-    adminGraduationCatalog=[];
-    if(list)list.innerHTML='<div class="adminGraduationLoading is-error">'+escapeHtml(error&&error.message?error.message:error)+'</div>';
-    text('adminGraduationCount','0 GAKUSEI');
-  }finally{
-    if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='REFRESH'}
-  }
-}
-
-function renderAdminGraduationCatalog(rows){
-  const list=$('adminGraduationList');
-  if(!list)return;
-  list.innerHTML='';
-  const data=Array.isArray(rows)?rows:[];
-  const readyCount=data.filter(item=>item&&item.hasGraduatedSource).length;
-  text('adminGraduationCount',data.length+' GAKUSEI • '+readyCount+' GRADUATED READY');
-
-  if(!data.length){
-    list.innerHTML='<div class="adminGraduationLoading is-error">No Gakusei source data could be detected.</div>';
-    return;
-  }
-
-  data.forEach(item=>{
-    const control=AcademicPublicationControl.getGraduationControl(item.studentId);
-    const mode=String(control.mode||'AUTO').toUpperCase();
-    const row=document.createElement('article');
-    row.className='adminGraduationRow';
-    row.dataset.studentId=String(item.studentId||'');
-    row.dataset.search=(String(item.studentId||'')+' '+String(item.namaLatin||'')+' '+String(item.namaKanji||'')).toLowerCase();
-    row.dataset.hasCurrent=item.hasCurrentSource?'1':'0';
-    row.dataset.hasGraduated=item.hasGraduatedSource?'1':'0';
-
-    const offDisabled=!item.hasCurrentSource?' disabled':'';
-    const scheduledDisabled=!item.hasCurrentSource?' disabled':'';
-    row.innerHTML=
-      '<div class="adminGraduationIdentity">'+
-        '<span class="adminGraduationMonogram">'+escapeHtml(String(item.namaLatin||'?').trim().charAt(0).toUpperCase()||'?')+'</span>'+
-        '<div class="adminGraduationIdentityCopy">'+
-          '<strong>'+escapeHtml(item.namaLatin||'-')+'</strong>'+
-          '<span class="jp">'+escapeHtml(item.namaKanji||'-')+'</span>'+
-          '<small>'+escapeHtml(item.studentId||'-')+' • '+escapeHtml(item.currentGrade||'-')+'</small>'+
-        '</div>'+
-      '</div>'+
-      '<div class="adminGraduationSourceBadges">'+
-        '<span class="'+(item.hasCurrentSource?'is-ready':'is-missing')+'">CURRENT '+(item.hasCurrentSource?'READY':'MISSING')+'</span>'+
-        '<span class="'+(item.hasGraduatedSource?'is-ready':'is-missing')+'">GRADUATED '+(item.hasGraduatedSource?'READY':'MISSING')+'</span>'+
-      '</div>'+
-      '<div class="adminGraduationControlCell">'+
-        '<label>STATUS CONTROL</label>'+
-        '<select class="adminGraduationMode" aria-label="Graduation status control for '+escapeHtml(item.studentId||'')+'">'+
-          '<option value="AUTO" '+(mode==='AUTO'?'selected':'')+'>AUTO</option>'+
-          '<option value="OFF" '+(mode==='OFF'?'selected':'')+offDisabled+'>OFF</option>'+
-          '<option value="ON" '+(mode==='ON'?'selected':'')+'>ON</option>'+
-          '<option value="SCHEDULED" '+(mode==='SCHEDULED'?'selected':'')+scheduledDisabled+'>SCHEDULED</option>'+
-        '</select>'+
-      '</div>'+
-      '<div class="adminGraduationScheduleCell">'+
-        '<label>ACTIVATE AT • WIB</label>'+
-        '<input class="adminGraduationSchedule" type="datetime-local" value="'+escapeHtml(isoToWibDateTimeLocal(control.scheduledAt||''))+'" aria-label="Graduation activation schedule in WIB for '+escapeHtml(item.studentId||'')+'">'+
-      '</div>'+
-      '<div class="adminGraduationEffective">'+
-        '<span class="adminGraduationEffectiveBadge"></span>'+
-        '<small class="adminGraduationEffectiveDetail"></small>'+
-      '</div>';
-
-    const modeSelect=row.querySelector('.adminGraduationMode');
-    const scheduleInput=row.querySelector('.adminGraduationSchedule');
-    const sync=()=>syncAdminGraduationRow(row,item);
-    modeSelect.addEventListener('change',()=>{row.classList.add('is-dirty');sync()});
-    scheduleInput.addEventListener('change',()=>{row.classList.add('is-dirty');sync()});
-    list.appendChild(row);
-    sync();
-  });
-  filterAdminGraduationRows();
-}
-
-function syncAdminGraduationRow(row,item){
-  if(!row)return;
-  const modeSelect=row.querySelector('.adminGraduationMode');
-  const scheduleInput=row.querySelector('.adminGraduationSchedule');
-  const badge=row.querySelector('.adminGraduationEffectiveBadge');
-  const detail=row.querySelector('.adminGraduationEffectiveDetail');
-  const mode=modeSelect?String(modeSelect.value||'AUTO').toUpperCase():'AUTO';
-  if(scheduleInput) scheduleInput.disabled=mode!=='SCHEDULED'||!Boolean(item&&item.hasCurrentSource);
-  const scheduledAt=mode==='SCHEDULED'&&scheduleInput?wibDateTimeLocalToIso(scheduleInput.value):'';
-  const preview=adminGraduationPreview(item,mode,scheduledAt);
-  if(badge){badge.className='adminGraduationEffectiveBadge is-'+preview.theme;badge.textContent=preview.state}
-  if(detail)detail.textContent=preview.detail;
-}
-
-function filterAdminGraduationRows(){
-  const input=$('adminGraduationSearch');
-  const query=String(input&&input.value||'').trim().toLowerCase();
-  let visible=0;
-  document.querySelectorAll('#adminGraduationList .adminGraduationRow').forEach(row=>{
-    const show=!query||String(row.dataset.search||'').includes(query);
-    row.classList.toggle('is-filtered-out',!show);
-    if(show)visible++;
-  });
-  if(query)text('adminGraduationCount',visible+' MATCHES • '+adminGraduationCatalog.length+' TOTAL');
-  else{
-    const readyCount=adminGraduationCatalog.filter(item=>item&&item.hasGraduatedSource).length;
-    text('adminGraduationCount',adminGraduationCatalog.length+' GAKUSEI • '+readyCount+' GRADUATED READY');
-  }
-}
-
-async function saveAdminGraduationSettings(){
-  if(!AcademicPublicationControl.isAdmin()){openAdminPanel();return}
-  const button=$('adminGraduationSaveButton');
-  const message=$('adminGraduationMessage');
-  const graduationMap={};
-  let validationError='';
-
-  document.querySelectorAll('#adminGraduationList .adminGraduationRow').forEach(row=>{
-    if(validationError)return;
-    const studentId=String(row.dataset.studentId||'').trim();
-    const modeSelect=row.querySelector('.adminGraduationMode');
-    const scheduleInput=row.querySelector('.adminGraduationSchedule');
-    const mode=String(modeSelect&&modeSelect.value||'AUTO').toUpperCase();
-    const hasCurrent=row.dataset.hasCurrent==='1';
-    if(mode==='AUTO'||!studentId)return;
-    if((mode==='OFF'||mode==='SCHEDULED')&&!hasCurrent){
-      validationError=studentId+' has no current-student source, so '+mode+' cannot be used safely.';
-      return;
-    }
-    let scheduledAt='';
-    if(mode==='SCHEDULED'){
-      scheduledAt=wibDateTimeLocalToIso(scheduleInput&&scheduleInput.value||'');
-      if(!scheduledAt){
-        validationError='Choose a valid WIB activation time for '+studentId+'.';
-        return;
-      }
-    }
-    graduationMap[studentId]={mode,scheduledAt};
-  });
-
-  if(validationError){
-    if(message){message.className='adminGraduationMessage is-error';message.textContent=validationError}
-    return;
-  }
-
-  if(button){button.disabled=true;button.textContent='SAVING...'}
-  if(message){message.className='adminGraduationMessage';message.textContent='Saving graduation-release settings globally...'}
-  try{
-    const current=AcademicPublicationControl.getSettings();
-    const result=await AcademicPublicationControl.save(current.semesters||{},graduationMap);
-    if(message){
-      message.className='adminGraduationMessage is-success';
-      message.textContent=result.localOnly
-        ?'Saved in LOCAL TEST MODE. Global graduation release requires the configured Portal backend.'
-        :'Graduation-release settings saved globally. Scheduled times use WIB (UTC+7).';
-    }
-    await refreshAdminGraduationCatalog(false);
-    await refreshAdminHomeSummary(false);
-    if(currentStudentId)fetchStudent(currentStudentId,true);
-  }catch(error){
-    if(message){message.className='adminGraduationMessage is-error';message.textContent=error&&error.message?error.message:String(error)}
-  }finally{
-    if(button){button.disabled=false;button.textContent='SAVE GRADUATION SETTINGS'}
-  }
-}
-
 async function toggleNewestAcademicPublication(){
   if(!AcademicPublicationControl.isAdmin()){openAdminPanel();return}
   const button=$('adminQuickPublishButton');
@@ -12046,9 +11999,9 @@ function startRefresh(){
      * eligible buttons follow Admin changes on other devices without reload.
      * Backend submitSOA still performs its own authoritative gate check.
      */
-    Promise.allSettled([
-      SOAAccessControl.refresh(true),
-      AcademicPublicationControl.reload()
+    Promise.all([
+      SOAAccessControl.refresh(true).catch(()=>null),
+      AcademicPublicationControl.reload().catch(()=>null)
     ]).finally(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)});
   },AUTO_REFRESH_MS);
 }function escapeHtml(value){return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out}function safeName(value){return String(value||'REPORT').replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_')}
