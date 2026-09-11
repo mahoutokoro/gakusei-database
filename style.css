@@ -18462,3 +18462,5 @@ body.student-login-open{overflow:hidden}
   .adminGraduationWaveFooter{grid-template-columns:1fr!important}
   .adminGraduationWaveSaveButton{width:100%!important}
 }
+
+/* V159 — Graduation Wave legacy-backend compatibility; visual design unchanged. */
