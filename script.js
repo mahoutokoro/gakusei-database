@@ -403,136 +403,6 @@ const GakuseiDataService = (() => {
     };
   }
 
-  function normalizeGraduationWaveKey(value) {
-    const text = String(value == null ? '' : value)
-      .normalize('NFKC')
-      .replace(/\s+/g, ' ')
-      .trim();
-    if (!text) return 'UNGROUPED';
-    const gel = text.match(/^GEL\.?\s*(\d+)$/i);
-    if (gel) return `GEL. ${Number(gel[1])}`;
-    return text.toUpperCase();
-  }
-
-  function formatGraduationWaveLabel(value) {
-    const key = normalizeGraduationWaveKey(value);
-    const gel = key.match(/^GEL\.\s*(\d+)$/i);
-    if (gel) return `Gel. ${Number(gel[1])}`;
-    if (key === 'UNGROUPED') return 'Ungrouped';
-    const raw = String(value == null ? '' : value).normalize('NFKC').trim();
-    return raw || key;
-  }
-
-  function resolveGraduationWaveState(value) {
-    if (
-      typeof AcademicPublicationControl !== 'undefined' &&
-      AcademicPublicationControl.resolveGraduationWave
-    ) {
-      return AcademicPublicationControl.resolveGraduationWave(value);
-    }
-    return {
-      waveKey: normalizeGraduationWaveKey(value),
-      isOn: true,
-      configuredOn: true,
-      scheduledAt: '',
-      scheduleReached: false,
-      explicit: false
-    };
-  }
-
-  async function getEffectiveGraduatedStudentIdSet(forceRefresh = false) {
-    const table = await safeResult(() => fetchTable({
-      spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
-      sheet: CONFIG.GRADUATED_SHEET,
-      range: 'C2:D',
-      bypassCache: Boolean(forceRefresh)
-    }), { display: [], raw: [] });
-
-    const ids = new Set();
-    const displayRows = Array.isArray(table.display) ? table.display : [];
-    const rawRows = Array.isArray(table.raw) ? table.raw : [];
-    const rowCount = Math.max(displayRows.length, rawRows.length);
-
-    for (let index = 0; index < rowCount; index++) {
-      const displayRow = displayRows[index] || [];
-      const rawRow = rawRows[index] || [];
-      const wave = displayRow[0] != null && String(displayRow[0]).trim() !== ''
-        ? displayRow[0]
-        : rawRow[0];
-      const studentId = normalizeId(
-        displayRow[1] != null && String(displayRow[1]).trim() !== ''
-          ? displayRow[1]
-          : rawRow[1]
-      );
-      if (!studentId || !isLikelyStudentId(studentId)) continue;
-      if (resolveGraduationWaveState(wave).isOn) ids.add(studentId);
-    }
-
-    return ids;
-  }
-
-  async function getGraduationWaveCatalog(forceRefresh = false) {
-    const table = await fetchTable({
-      spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
-      sheet: CONFIG.GRADUATED_SHEET,
-      range: 'C2:G',
-      bypassCache: Boolean(forceRefresh)
-    });
-
-    const groups = new Map();
-    const displayRows = Array.isArray(table.display) ? table.display : [];
-    const rawRows = Array.isArray(table.raw) ? table.raw : [];
-    const rowCount = Math.max(displayRows.length, rawRows.length);
-
-    for (let index = 0; index < rowCount; index++) {
-      const displayRow = displayRows[index] || [];
-      const rawRow = rawRows[index] || [];
-      const waveSource = displayRow[0] != null && String(displayRow[0]).trim() !== ''
-        ? displayRow[0]
-        : rawRow[0];
-      const studentId = normalizeId(
-        displayRow[1] != null && String(displayRow[1]).trim() !== ''
-          ? displayRow[1]
-          : rawRow[1]
-      );
-      if (!studentId || !isLikelyStudentId(studentId)) continue;
-
-      const waveKey = normalizeGraduationWaveKey(waveSource);
-      if (!groups.has(waveKey)) {
-        groups.set(waveKey, {
-          waveKey,
-          waveLabel: formatGraduationWaveLabel(waveSource),
-          students: []
-        });
-      }
-
-      groups.get(waveKey).students.push({
-        nomorId: studentId,
-        namaLatin: String(displayRow[3] || rawRow[3] || '').trim() || '-',
-        namaKanji: String(displayRow[4] || rawRow[4] || '').trim() || '-'
-      });
-    }
-
-    const waveNumber = key => {
-      const match = String(key || '').match(/(\d+)/);
-      return match ? Number(match[1]) : Number.POSITIVE_INFINITY;
-    };
-
-    return Array.from(groups.values())
-      .map(group => ({
-        ...group,
-        students: group.students.slice().sort((a, b) =>
-          String(a.namaLatin || '').localeCompare(String(b.namaLatin || ''), 'en', { sensitivity: 'base' }) ||
-          String(a.nomorId || '').localeCompare(String(b.nomorId || ''))
-        ),
-        count: group.students.length
-      }))
-      .sort((a, b) =>
-        (waveNumber(a.waveKey) - waveNumber(b.waveKey)) ||
-        String(a.waveLabel || '').localeCompare(String(b.waveLabel || ''), 'en', { sensitivity: 'base' })
-      );
-  }
-
   async function getCurrentNenseiRecap() {
     try {
       /*
@@ -541,10 +411,9 @@ const GakuseiDataService = (() => {
        * master dimulai dari kolom C, nilai kolom G tersimpan sebagai row[4]
        * dan tersedia sebagai master.currentGrade.
        */
-      const [masterMap, leaveStatusMap, graduatedIdSet] = await Promise.all([
+      const [masterMap, leaveStatusMap] = await Promise.all([
         getMasterStudentMap(),
-        getLeaveStatusMap(),
-        getEffectiveGraduatedStudentIdSet(false)
+        getLeaveStatusMap()
       ]);
 
       const rows = [];
@@ -552,7 +421,6 @@ const GakuseiDataService = (() => {
 
       Object.entries(masterMap).forEach(([studentId, master]) => {
         if (!studentId || !isLikelyStudentId(studentId)) return;
-        if (graduatedIdSet.has(normalizeId(studentId))) return;
 
         const dorm = getDormById(studentId, master.dormName || '');
         const nensei = extractMasterGradeNensei(master.currentGrade || '');
@@ -820,8 +688,7 @@ const GakuseiDataService = (() => {
     if (!requestedId) throw new Error('Masukkan nomor ID Gakusei terlebih dahulu.');
 
     /*
-     * GRADUATED columns (range C:R):
-     * C graduation wave (Gel. 1, Gel. 2, ...),
+     * GRADUATED columns (range D:R):
      * D former Gakusei ID (search key), E post-graduation/JMC resident ID,
      * F Latin name, G Kanji name, H X username,
      * I Devoted Student Subject, J Devoted Student Title,
@@ -838,7 +705,7 @@ const GakuseiDataService = (() => {
       safeResult(() => fetchTable({
         spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
         sheet: CONFIG.GRADUATED_SHEET,
-        range: 'C2:R'
+        range: 'D2:R'
       }), { display: [], raw: [] })
     ]);
 
@@ -846,77 +713,61 @@ const GakuseiDataService = (() => {
 
     let graduatedIndex = -1;
     for (let index = graduatedTable.display.length - 1; index >= 0; index--) {
-      if (idsMatch(graduatedTable.display[index] && graduatedTable.display[index][1], requestedId)) {
+      if (idsMatch(graduatedTable.display[index] && graduatedTable.display[index][0], requestedId)) {
         graduatedIndex = index;
         break;
       }
     }
 
-    let graduationWaveState = null;
-    if (graduatedIndex >= 0) {
-      const displayRow = graduatedTable.display[graduatedIndex] || [];
-      const rawRow = graduatedTable.raw[graduatedIndex] || [];
-      const waveSource = displayRow[0] != null && String(displayRow[0]).trim() !== ''
-        ? displayRow[0]
-        : rawRow[0];
-      graduationWaveState = resolveGraduationWaveState(waveSource);
-    }
-
     /*
-     * A GRADUATED row becomes the public alumni source only while its entire
-     * wave is ON. Every detected wave defaults to ON. Admin can switch a wave
-     * OFF or leave it OFF until the saved WIB schedule reaches its time.
+     * Bila ID tercatat di GRADUATED, record alumni selalu menjadi sumber
+     * utama walaupun baris lama masih tertinggal di PENDATAAN GAKUSEI.
      */
-    if (graduatedIndex >= 0 && graduationWaveState && graduationWaveState.isOn) {
+    if (graduatedIndex >= 0) {
       const displayRow = graduatedTable.display[graduatedIndex] || [];
       const rawRow = graduatedTable.raw[graduatedIndex] || [];
       const fallbackDisplay = masterIndex >= 0 ? (masterTable.display[masterIndex] || []) : [];
       const fallbackRaw = masterIndex >= 0 ? (masterTable.raw[masterIndex] || []) : [];
 
       const postGraduationId = String(
-        chooseCellValue(displayRow[2], rawRow[2]) || ''
+        chooseCellValue(displayRow[1], rawRow[1]) || ''
       ).trim();
-      const enrollmentDate = String(displayRow[14] == null ? '' : displayRow[14]).trim();
-      const graduationDate = String(displayRow[15] == null ? '' : displayRow[15]).trim();
+      const enrollmentDate = String(displayRow[13] == null ? '' : displayRow[13]).trim();
+      const graduationDate = String(displayRow[14] == null ? '' : displayRow[14]).trim();
 
       return {
-        studentId: normalizeId(displayRow[1]),
-        namaLatin: displayRow[3] || fallbackDisplay[0] || '-',
-        namaKanji: displayRow[4] || fallbackDisplay[1] || '-',
-        usernameValue: chooseCellValue(displayRow[5], rawRow[5]) ||
+        studentId: normalizeId(displayRow[0]),
+        namaLatin: displayRow[2] || fallbackDisplay[0] || '-',
+        namaKanji: displayRow[3] || fallbackDisplay[1] || '-',
+        usernameValue: chooseCellValue(displayRow[4], rawRow[4]) ||
           chooseCellValue(fallbackDisplay[3], fallbackRaw[3]),
         currentGrade: 'GRADUATED',
         currentRank: '-',
         dormName: fallbackDisplay[6] || '',
-        birthDate: String(displayRow[12] || '').trim(),
+        birthDate: String(displayRow[11] || '').trim(),
         enrollmentDate,
         graduationDate,
-        idCardValue: chooseCellValue(displayRow[10], rawRow[10]),
-        photoValue: chooseCellValue(displayRow[11], rawRow[11]) ||
+        idCardValue: chooseCellValue(displayRow[9], rawRow[9]),
+        photoValue: chooseCellValue(displayRow[10], rawRow[10]) ||
           chooseCellValue(fallbackDisplay[11], fallbackRaw[11]),
         isGraduated: true,
-        graduationWave: formatGraduationWaveLabel(displayRow[0] || rawRow[0]),
-        graduationWaveState,
         graduatedData: {
-          wave: formatGraduationWaveLabel(displayRow[0] || rawRow[0]),
           postGraduationId,
-          devotedStudentSubject: cleanAcademicText(displayRow[6]),
-          devotedStudentTitle: cleanAcademicText(displayRow[7]),
-          devotedStudentScore: cleanAcademicMark(displayRow[8]),
-          devotedStudentFileValue: chooseCellValue(displayRow[9], rawRow[9]),
-          devotedStudentCoverValue: chooseCellValue(displayRow[13], rawRow[13]),
-          studyCompletionCertificateValue: chooseCellValue(displayRow[10], rawRow[10]),
-          photoValue: chooseCellValue(displayRow[11], rawRow[11]),
-          birthDate: String(displayRow[12] || '').trim(),
+          devotedStudentSubject: cleanAcademicText(displayRow[5]),
+          devotedStudentTitle: cleanAcademicText(displayRow[6]),
+          devotedStudentScore: cleanAcademicMark(displayRow[7]),
+          devotedStudentFileValue: chooseCellValue(displayRow[8], rawRow[8]),
+          devotedStudentCoverValue: chooseCellValue(displayRow[12], rawRow[12]),
+          studyCompletionCertificateValue: chooseCellValue(displayRow[9], rawRow[9]),
+          photoValue: chooseCellValue(displayRow[10], rawRow[10]),
+          birthDate: String(displayRow[11] || '').trim(),
           enrollmentDate,
           graduationDate
         }
       };
     }
 
-    if (masterIndex < 0) {
-      throw new Error('Nomor ID Gakusei tidak ditemukan.');
-    }
+    if (masterIndex < 0) throw new Error('Nomor ID Gakusei tidak ditemukan.');
 
     const displayRow = masterTable.display[masterIndex] || [];
     const rawRow = masterTable.raw[masterIndex] || [];
@@ -935,8 +786,6 @@ const GakuseiDataService = (() => {
       idCardValue: chooseCellValue(displayRow[10], rawRow[10]),
       photoValue: chooseCellValue(displayRow[11], rawRow[11]),
       isGraduated: false,
-      graduationWave: graduationWaveState ? graduationWaveState.waveLabel : '',
-      graduationWaveState,
       graduatedData: null
     };
   }
@@ -1282,7 +1131,7 @@ function getDormById(id, fallbackDormName) {
 
   async function getCurrentGpRanking() {
     try {
-      const [semesterTable, logTable, masterMap, graduatedIdSet] = await Promise.all([
+      const [semesterTable, logTable, masterMap] = await Promise.all([
         fetchTable({
           spreadsheetId: CONFIG.POINT_SPREADSHEET_ID,
           sheet: CONFIG.POINT_RECAP_SHEET,
@@ -1295,8 +1144,7 @@ function getDormById(id, fallbackDormName) {
           range: 'C:I',
           bypassCache: true
         }),
-        getMasterStudentMap(),
-        getEffectiveGraduatedStudentIdSet(false)
+        getMasterStudentMap()
       ]);
 
       const semesterTitle = (semesterTable.display[0] || []).find(value =>
@@ -1328,10 +1176,7 @@ function getDormById(id, fallbackDormName) {
       });
 
       const rows = Object.entries(masterMap)
-        .filter(([studentId]) =>
-          isLikelyStudentId(studentId) &&
-          !graduatedIdSet.has(normalizeId(studentId))
-        )
+        .filter(([studentId]) => isLikelyStudentId(studentId))
         .map(([studentId, master]) => ({
           nomorId: studentId,
           namaLatin: master.namaLatin || '-',
@@ -3690,14 +3535,13 @@ function detectTaNenseiFromAcademicBlock(displayValues, studentRowIndex, semeste
     getCurrentGpRanking,
     getPromotionRecap,
     getLatestPromotionRecap,
-    getDetectedAcademicSheets,
-    getGraduationWaveCatalog
+    getDetectedAcademicSheets
   };
 })();
 
 
 /* =========================================================
-   ACADEMIC RECORD PUBLICATION CONTROL — V158 BACKEND-SYNC
+   ACADEMIC RECORD PUBLICATION CONTROL — V105
    ---------------------------------------------------------
    Student-facing rule:
    - Existing/older A.R. semesters are visible by default.
@@ -3712,23 +3556,18 @@ function detectTaNenseiFromAcademicBlock(displayValues, studentRowIndex, semeste
    ========================================================= */
 const ACADEMIC_PUBLICATION_CONFIG=Object.freeze({
   /*
-   * V162 — Graduation Wave uses the same existing publication backend as Academic Publication.
-   * Student display selection remains a frontend IF; only the wave state is stored globally.
+   * V133 — Academic Publication now uses the SAME deployed global Portal
+   * backend as Gakusei login / SOA. No second deployment or second URL.
    */
   API_URL:'https://script.google.com/macros/s/AKfycbzgr2KVBm9Iibql6pTqo-d5lrgddNYXOnpN4GC1cENGjSFnHBEBbmZHEDU7Cea2LvHy/exec',
   LOCAL_SETTINGS_KEY:'mahoutokoro-academic-publication-v1',
   GLOBAL_CACHE_KEY:'mahoutokoro-academic-publication-global-cache-v1',
-  GRADUATION_WAVE_LOCAL_KEY:'mahoutokoro-graduation-wave-control-v1',
-  WAVE_COMPAT_BASE:7000000000000,
-  WAVE_COMPAT_STRIDE:1000000000,
-  WAVE_COMPAT_STATE_MULT:100000000,
-  WAVE_COMPAT_MAX_WAVE:999,
   ADMIN_PASSWORD_SHA256:'6d00671b21139644b658cb6f0184e5f4e7893dd3e299045d8d93049df01e319c',
   REQUEST_TIMEOUT_MS:12000
 });
 
 const AcademicPublicationControl=(()=>{
-  let settings={version:1,configured:false,semesters:{},graduationWaves:{},updatedAt:'',updatedBy:'',source:'default'};
+  let settings={version:1,configured:false,semesters:{},updatedAt:'',updatedBy:'',source:'default'};
   let readyPromise=null;
   let catalog=[];
   let adminAuthenticated=false;
@@ -3741,7 +3580,6 @@ const AcademicPublicationControl=(()=>{
    * until the real Admin password has been authenticated.
    */
   let migrationCandidate=null;
-  let waveMigrationCandidate=null;
 
   function apiUrl(){
     const runtime=typeof window!=='undefined'&&window.MAHOUTOKORO_ADMIN_API_URL
@@ -3750,117 +3588,13 @@ const AcademicPublicationControl=(()=>{
     return runtime||String(ACADEMIC_PUBLICATION_CONFIG.API_URL||'').trim();
   }
 
-  function isWaveCompatSemesterNumber(number){
-    const start=ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_BASE;
-    const end=start+(ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_MAX_WAVE+1)*ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_STRIDE;
-    return Number.isInteger(number)&&number>=start&&number<end;
-  }
-
-  function normalizeSemesterMap(value,includeCompat=false){
+  function normalizeSemesterMap(value){
     const output={};
     if(!value||typeof value!=='object')return output;
     Object.keys(value).forEach(key=>{
       const number=Number(key);
       if(!Number.isInteger(number)||number<0)return;
-      if(!includeCompat&&isWaveCompatSemesterNumber(number))return;
       if(typeof value[key]==='boolean')output[String(number)]=value[key];
-    });
-    return output;
-  }
-
-  function decodeGraduationWaveCompatMap(value){
-    const output={};
-    const source=normalizeSemesterMap(value,true);
-    const base=ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_BASE;
-    const stride=ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_STRIDE;
-    const stateMult=ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_STATE_MULT;
-
-    Object.keys(source).forEach(key=>{
-      if(source[key]!==true)return;
-      const encoded=Number(key);
-      if(!isWaveCompatSemesterNumber(encoded))return;
-      const payload=encoded-base;
-      const waveNumber=Math.floor(payload/stride);
-      if(!Number.isInteger(waveNumber)||waveNumber<1||waveNumber>ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_MAX_WAVE)return;
-      const withinWave=payload-waveNumber*stride;
-      const stateCode=Math.floor(withinWave/stateMult);
-      const epochMinute=withinWave-stateCode*stateMult;
-      const waveKey=`GEL. ${waveNumber}`;
-      if(stateCode===1)output[waveKey]={enabled:true,scheduledAt:''};
-      else if(stateCode===2)output[waveKey]={enabled:false,scheduledAt:''};
-      else if(stateCode===3&&epochMinute>=0&&epochMinute<stateMult){
-        output[waveKey]={enabled:false,scheduledAt:new Date(epochMinute*60000).toISOString()};
-      }
-    });
-    return output;
-  }
-
-  function encodeGraduationWaveCompatMap(waveMap){
-    const output={};
-    const source=normalizeGraduationWaveMap(waveMap);
-    const base=ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_BASE;
-    const stride=ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_STRIDE;
-    const stateMult=ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_STATE_MULT;
-
-    Object.keys(source).forEach(key=>{
-      const match=String(key).match(/^GEL\.\s*(\d+)$/i);
-      if(!match)return;
-      const waveNumber=Number(match[1]);
-      if(!Number.isInteger(waveNumber)||waveNumber<1||waveNumber>ACADEMIC_PUBLICATION_CONFIG.WAVE_COMPAT_MAX_WAVE)return;
-      const entry=source[key]||{};
-      let stateCode=entry.enabled!==false?1:2;
-      let epochMinute=0;
-      if(entry.enabled===false&&entry.scheduledAt){
-        const ms=Date.parse(entry.scheduledAt);
-        const minute=Number.isNaN(ms)?NaN:Math.floor(ms/60000);
-        if(Number.isInteger(minute)&&minute>=0&&minute<stateMult){
-          stateCode=3;
-          epochMinute=minute;
-        }
-      }
-      const encoded=base+waveNumber*stride+stateCode*stateMult+epochMinute;
-      output[String(encoded)]=true;
-    });
-    return output;
-  }
-
-  function mergeWaveSources(semesterMap,nativeWaveMap){
-    return{
-      ...decodeGraduationWaveCompatMap(semesterMap),
-      ...normalizeGraduationWaveMap(nativeWaveMap)
-    };
-  }
-
-  function buildRemoteSemesterMap(semesterMap,waveMap){
-    return{
-      ...normalizeSemesterMap(semesterMap,false),
-      ...encodeGraduationWaveCompatMap(waveMap)
-    };
-  }
-
-  function normalizeWaveKey(value){
-    const text=String(value==null?'':value).normalize('NFKC').replace(/\s+/g,' ').trim();
-    if(!text)return'UNGROUPED';
-    const gel=text.match(/^GEL\.?\s*(\d+)$/i);
-    return gel?`GEL. ${Number(gel[1])}`:text.toUpperCase();
-  }
-
-  function normalizeGraduationWaveMap(value){
-    const output={};
-    if(!value||typeof value!=='object')return output;
-    Object.keys(value).forEach(rawKey=>{
-      const key=normalizeWaveKey(rawKey);
-      const source=value[rawKey];
-      if(typeof source==='boolean'){
-        output[key]={enabled:Boolean(source),scheduledAt:''};
-        return;
-      }
-      if(!source||typeof source!=='object')return;
-      const scheduledAt=String(source.scheduledAt||'').trim();
-      output[key]={
-        enabled:source.enabled!==false,
-        scheduledAt:scheduledAt&&!Number.isNaN(Date.parse(scheduledAt))?scheduledAt:''
-      };
     });
     return output;
   }
@@ -3870,8 +3604,7 @@ const AcademicPublicationControl=(()=>{
     return{
       version:1,
       configured:Boolean(input.configured),
-      semesters:normalizeSemesterMap(input.semesters,false),
-      graduationWaves:mergeWaveSources(input.semesters,input.graduationWaves),
+      semesters:normalizeSemesterMap(input.semesters),
       updatedAt:String(input.updatedAt||''),
       updatedBy:String(input.updatedBy||''),
       source:source||String(input.source||'default')
@@ -3902,37 +3635,6 @@ const AcademicPublicationControl=(()=>{
 
   function saveGlobalCacheSettings(next){
     try{localStorage.setItem(ACADEMIC_PUBLICATION_CONFIG.GLOBAL_CACHE_KEY,JSON.stringify(next))}catch(error){}
-  }
-
-  function loadLocalGraduationWaves(){
-    try{
-      const direct=JSON.parse(localStorage.getItem(ACADEMIC_PUBLICATION_CONFIG.GRADUATION_WAVE_LOCAL_KEY)||'null');
-      const normalizedDirect=normalizeGraduationWaveMap(direct);
-      if(Object.keys(normalizedDirect).length)return normalizedDirect;
-    }catch(error){}
-
-    /*
-     * Compatibility bridge: if an older frontend stored graduationWaves
-     * inside the old local publication object, reuse it once instead of
-     * silently resetting every wave to ON.
-     */
-    try{
-      const legacy=JSON.parse(localStorage.getItem(ACADEMIC_PUBLICATION_CONFIG.LOCAL_SETTINGS_KEY)||'null');
-      return normalizeGraduationWaveMap(legacy&&legacy.graduationWaves);
-    }catch(error){
-      return{};
-    }
-  }
-
-  function saveLocalGraduationWaves(nextWaveMap){
-    const normalized=normalizeGraduationWaveMap(nextWaveMap);
-    try{
-      localStorage.setItem(
-        ACADEMIC_PUBLICATION_CONFIG.GRADUATION_WAVE_LOCAL_KEY,
-        JSON.stringify(normalized)
-      );
-    }catch(error){}
-    return normalized;
   }
 
   async function fetchJsonWithTimeout(url,options={}){
@@ -3987,7 +3689,7 @@ const AcademicPublicationControl=(()=>{
     }
   }
 
-  function postRemoteActionViaHiddenForm(url,fields){
+  function postRemoteSettingsViaHiddenForm(url,password,next){
     return new Promise((resolve,reject)=>{
       try{
         const frameName='mahoutokoroAdminPost_'+Date.now()+'_'+Math.random().toString(36).slice(2);
@@ -4001,9 +3703,14 @@ const AcademicPublicationControl=(()=>{
         form.action=url;
         form.target=frameName;
         form.style.display='none';
-        Object.keys(fields||{}).forEach(name=>{
+        const fields={
+          action:'savePublicationSettings',
+          password:String(password||''),
+          settings:JSON.stringify(next)
+        };
+        Object.keys(fields).forEach(name=>{
           const input=document.createElement('input');
-          input.type='hidden';input.name=name;input.value=String(fields[name]??'');form.appendChild(input);
+          input.type='hidden';input.name=name;input.value=fields[name];form.appendChild(input);
         });
         document.body.appendChild(iframe);
         document.body.appendChild(form);
@@ -4011,7 +3718,7 @@ const AcademicPublicationControl=(()=>{
         setTimeout(()=>{
           try{form.remove();iframe.remove()}catch(error){}
           resolve(true);
-        },1250);
+        },1100);
       }catch(error){reject(error)}
     });
   }
@@ -4022,6 +3729,11 @@ const AcademicPublicationControl=(()=>{
     body.set('password',String(password||''));
     body.set('settings',JSON.stringify(next));
 
+    /*
+     * The Portal backend already accepts cross-origin POST for SOA.
+     * Use the same proven route first. Keep the previous hidden-form path as
+     * a compatibility fallback for browsers that block the redirected fetch.
+     */
     try{
       return await fetchJsonWithTimeout(url,{
         method:'POST',
@@ -4030,26 +3742,9 @@ const AcademicPublicationControl=(()=>{
         credentials:'omit'
       });
     }catch(fetchError){
-      await postRemoteActionViaHiddenForm(url,{
-        action:'savePublicationSettings',
-        password:String(password||''),
-        settings:JSON.stringify(next)
-      });
+      await postRemoteSettingsViaHiddenForm(url,password,next);
       return await readRemoteSettings(url);
     }
-  }
-
-  async function readRemoteSettingsUntil(url,predicate,timeoutMs=6500){
-    const started=Date.now();
-    let lastPayload=null;
-    while(Date.now()-started<timeoutMs){
-      try{
-        lastPayload=await readRemoteSettings(url);
-        if(lastPayload&&lastPayload.success!==false&&predicate(lastPayload))return lastPayload;
-      }catch(error){}
-      await new Promise(resolve=>setTimeout(resolve,350));
-    }
-    return lastPayload;
   }
 
   async function loadSettings(force=false){
@@ -4057,7 +3752,6 @@ const AcademicPublicationControl=(()=>{
     readyPromise=(async()=>{
       const url=apiUrl();
       const legacyLocal=loadLocalSettings();
-      const legacyLocalWaves=loadLocalGraduationWaves();
       remoteError='';
 
       if(!url){
@@ -4074,58 +3768,40 @@ const AcademicPublicationControl=(()=>{
 
         const remoteSettings=normalizeSettings(payload.settings||payload,'remote');
 
+        /*
+         * Preserve old browser-local Admin decisions only as a migration
+         * candidate. Students never use this candidate as the global source.
+         * It can be uploaded only after the Admin password is authenticated.
+         */
         migrationCandidate=(
           !remoteSettings.configured &&
           legacyLocal.configured
         ) ? legacyLocal : null;
-        waveMigrationCandidate=(
-          !Object.keys(remoteSettings.graduationWaves||{}).length &&
-          Object.keys(legacyLocalWaves||{}).length
-        ) ? legacyLocalWaves : null;
 
         settings=remoteSettings;
         storageMode='GLOBAL REMOTE MODE';
         saveGlobalCacheSettings(settings);
 
+        /*
+         * Do not overwrite the legacy local copy while a migration is pending.
+         * After a successful global save it is mirrored again as a backup.
+         */
         if(!migrationCandidate)saveLocalSettings(settings);
       }catch(error){
         remoteError=error&&error.message?error.message:String(error);
+
+        /*
+         * In global mode, never treat arbitrary old per-browser publication
+         * decisions as authoritative. Use only the last successfully fetched
+         * GLOBAL snapshot as the offline fallback.
+         */
         settings=loadGlobalCacheSettings();
         migrationCandidate=null;
-        waveMigrationCandidate=null;
         storageMode='OFFLINE FALLBACK';
       }
       return settings;
     })();
     return readyPromise;
-  }
-
-  function getGraduationWaveSetting(value){
-    const currentWaves=normalizeGraduationWaveMap(settings.graduationWaves);
-    const waveKey=normalizeWaveKey(value);
-    const explicit=Object.prototype.hasOwnProperty.call(currentWaves,waveKey);
-    const stored=explicit?currentWaves[waveKey]:null;
-    return{
-      waveKey,
-      explicit,
-      enabled:stored?stored.enabled!==false:true,
-      scheduledAt:stored?String(stored.scheduledAt||''):''
-    };
-  }
-
-  function resolveGraduationWave(value,now=Date.now()){
-    const setting=getGraduationWaveSetting(value);
-    const scheduledMs=setting.scheduledAt?Date.parse(setting.scheduledAt):NaN;
-    const scheduleReached=!Number.isNaN(scheduledMs)&&scheduledMs<=Number(now||Date.now());
-    const isOn=Boolean(setting.enabled||scheduleReached);
-    const gel=setting.waveKey.match(/^GEL\.\s*(\d+)$/i);
-    return{
-      ...setting,
-      waveLabel:gel?`Gel. ${Number(gel[1])}`:(setting.waveKey==='UNGROUPED'?'Ungrouped':String(value||setting.waveKey)),
-      configuredOn:Boolean(setting.enabled),
-      scheduleReached,
-      isOn
-    };
   }
 
   function semesterNumberFrom(value){
@@ -4251,23 +3927,6 @@ const AcademicPublicationControl=(()=>{
       }
     }
 
-    /*
-     * V162 one-time bridge from the V161 browser-only wave control.
-     * If no global wave state exists yet, the Admin browser's previous wave
-     * choices are promoted to the shared publication store after successful
-     * authentication. This never runs from an unauthenticated visitor device.
-     */
-    if(waveMigrationCandidate&&apiUrl()&&!Object.keys(settings.graduationWaves||{}).length){
-      const candidate=waveMigrationCandidate;
-      try{
-        await saveGraduationWaves(candidate);
-        waveMigrationCandidate=null;
-      }catch(error){
-        waveMigrationCandidate=candidate;
-        remoteError='Legacy Graduation Wave migration is pending: '+(error&&error.message?error.message:String(error));
-      }
-    }
-
     return true;
   }
 
@@ -4290,26 +3949,15 @@ const AcademicPublicationControl=(()=>{
   }
 
   function getCatalogSnapshot(){return catalog.slice()}
-  function getSettings(){
-    return normalizeSettings(settings,settings.source);
-  }
+  function getSettings(){return normalizeSettings(settings,settings.source)}
   function getLatestCatalogItem(){return catalog.length?catalog[catalog.length-1]:null}
 
-  function stableObjectJson(value){
-    const source=value&&typeof value==='object'?value:{};
-    const ordered={};
-    Object.keys(source).sort().forEach(key=>{ordered[key]=source[key]});
-    return JSON.stringify(ordered);
-  }
-
-  async function saveSettings(nextSemesterMap){
+  async function save(nextSemesterMap){
     if(!adminAuthenticated)throw new Error('Admin authentication is required.');
 
-    const currentGraduationWaves=normalizeGraduationWaveMap(settings.graduationWaves);
     const next=normalizeSettings({
       configured:true,
       semesters:nextSemesterMap,
-      graduationWaves:currentGraduationWaves,
       updatedAt:new Date().toISOString(),
       updatedBy:'ADMIN'
     },'local');
@@ -4323,37 +3971,16 @@ const AcademicPublicationControl=(()=>{
     }
 
     try{
-      /*
-       * V162: one existing API action stores both controls globally.
-       * Graduation Wave is mirrored into reserved numeric semester keys so
-       * older publication backends that only preserve `semesters` still keep
-       * the wave state site-wide. Newer backends may also preserve the native
-       * `graduationWaves` object.
-       */
-      const remotePayload={
-        version:next.version,
-        configured:next.configured,
-        semesters:buildRemoteSemesterMap(next.semesters,next.graduationWaves),
-        graduationWaves:next.graduationWaves,
-        updatedAt:next.updatedAt,
-        updatedBy:next.updatedBy
-      };
-      const verification=await writeRemoteSettings(url,adminPasswordMemory,remotePayload);
+      const verification=await writeRemoteSettings(url,adminPasswordMemory,next);
       if(!verification||verification.success===false){
         throw new Error(verification&&verification.message?verification.message:'Remote save verification failed.');
       }
 
       const verified=normalizeSettings(verification.settings||verification,'remote');
-      const expectedSemesters=stableObjectJson(normalizeSemesterMap(next.semesters));
-      const actualSemesters=stableObjectJson(normalizeSemesterMap(verified.semesters));
-      if(expectedSemesters!==actualSemesters){
+      const expected=JSON.stringify(normalizeSemesterMap(next.semesters));
+      const actual=JSON.stringify(normalizeSemesterMap(verified.semesters));
+      if(expected!==actual){
         throw new Error('Remote settings did not match the requested publication state. Check the Admin password and Web App deployment permissions.');
-      }
-
-      const expectedWaves=stableObjectJson(normalizeGraduationWaveMap(next.graduationWaves));
-      const actualWaves=stableObjectJson(normalizeGraduationWaveMap(verified.graduationWaves));
-      if(expectedWaves!==actualWaves){
-        throw new Error('Remote settings did not preserve Graduation Wave control.');
       }
 
       settings=verified;
@@ -4361,84 +3988,19 @@ const AcademicPublicationControl=(()=>{
       storageMode='GLOBAL REMOTE MODE';
       remoteError='';
 
+      /* Local storage is only a cache/backup after GLOBAL verification. */
       saveGlobalCacheSettings(settings);
       saveLocalSettings(settings);
 
       return{success:true,localOnly:false,settings};
     }catch(error){
+      /*
+       * Never pretend an unsaved per-browser change is global. Keep the last
+       * verified global state active and report the backend failure.
+       */
       storageMode='OFFLINE FALLBACK';
       remoteError=error&&error.message?error.message:String(error);
       throw new Error('Global settings could not be saved: '+remoteError);
-    }
-  }
-
-  async function save(nextSemesterMap){
-    return saveSettings(nextSemesterMap);
-  }
-
-  async function saveGraduationWaves(nextWaveMap){
-    if(!adminAuthenticated)throw new Error('Admin authentication is required.');
-
-    const normalizedWaves=normalizeGraduationWaveMap(nextWaveMap);
-    const next=normalizeSettings({
-      configured:true,
-      semesters:settings.semesters,
-      graduationWaves:normalizedWaves,
-      updatedAt:new Date().toISOString(),
-      updatedBy:'ADMIN'
-    },'local');
-
-    const url=apiUrl();
-    if(!url){
-      throw new Error('Global Graduation Wave control requires the existing publication backend URL.');
-    }
-
-    try{
-      const remotePayload={
-        version:next.version,
-        configured:true,
-        semesters:buildRemoteSemesterMap(next.semesters,next.graduationWaves),
-        graduationWaves:next.graduationWaves,
-        updatedAt:next.updatedAt,
-        updatedBy:next.updatedBy
-      };
-
-      const verification=await writeRemoteSettings(url,adminPasswordMemory,remotePayload);
-      if(!verification||verification.success===false){
-        throw new Error(verification&&verification.message?verification.message:'Remote Graduation Wave save verification failed.');
-      }
-
-      let verified=normalizeSettings(verification.settings||verification,'remote');
-      const expectedWaves=stableObjectJson(normalizedWaves);
-      let actualWaves=stableObjectJson(normalizeGraduationWaveMap(verified.graduationWaves));
-
-      if(expectedWaves!==actualWaves){
-        const polled=await readRemoteSettingsUntil(url,payload=>{
-          const snapshot=normalizeSettings(payload&&payload.settings?payload.settings:payload,'remote');
-          return stableObjectJson(normalizeGraduationWaveMap(snapshot.graduationWaves))===expectedWaves;
-        },6500);
-        if(polled&&polled.success!==false){
-          verified=normalizeSettings(polled.settings||polled,'remote');
-          actualWaves=stableObjectJson(normalizeGraduationWaveMap(verified.graduationWaves));
-        }
-      }
-
-      if(expectedWaves!==actualWaves){
-        throw new Error('Global Graduation Wave settings were not preserved by the publication backend.');
-      }
-
-      settings=verified;
-      waveMigrationCandidate=null;
-      storageMode='GLOBAL REMOTE MODE';
-      remoteError='';
-      saveGlobalCacheSettings(settings);
-      saveLocalSettings(settings);
-
-      return{success:true,localOnly:false,settings:getSettings()};
-    }catch(error){
-      storageMode='OFFLINE FALLBACK';
-      remoteError=error&&error.message?error.message:String(error);
-      throw new Error('Global Graduation Wave settings could not be saved: '+remoteError);
     }
   }
 
@@ -4454,8 +4016,6 @@ const AcademicPublicationControl=(()=>{
     getCatalogSnapshot,
     getLatestCatalogItem,
     getSettings,
-    getGraduationWaveSetting,
-    resolveGraduationWave,
     isPublished,
     hasExplicitDecision,
     publicationReason,
@@ -4466,7 +4026,6 @@ const AcademicPublicationControl=(()=>{
     isAdmin:()=>adminAuthenticated,
     getAdminPasswordForBackend:()=>adminAuthenticated?adminPasswordMemory:'',
     save,
-    saveGraduationWaves,
     getStorageMode:()=>storageMode,
     getRemoteError:()=>remoteError,
     getApiUrl:apiUrl,
@@ -4475,7 +4034,7 @@ const AcademicPublicationControl=(()=>{
 })();
 
 
-const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingTimer=null,gpRankingLoadToken=0,pdfBusy=false,promotionData=null,promotionPublishedCatalog=[],promotionCatalogLatestNumber=-1,promotionLoadToken=0,nenseiData=null,currentTheme='front',currentDocumentReview=null,academicLoadToken=0,currentAcademicReady=false,academicLoadPromise=null,adminGraduationWaveCatalog=[];
+const AUTO_REFRESH_MS=60000;let currentStudentId='',refreshTimer=null,gpRankingTimer=null,gpRankingLoadToken=0,pdfBusy=false,promotionData=null,promotionPublishedCatalog=[],promotionCatalogLatestNumber=-1,promotionLoadToken=0,nenseiData=null,currentTheme='front',currentDocumentReview=null,academicLoadToken=0,currentAcademicReady=false,academicLoadPromise=null;
 
 /* =========================================================
    V111 — GAKUSEI LOGIN + SOA FRONTEND BRIDGE
@@ -11529,8 +11088,8 @@ function updateAdminAccessButton(){
   }
   if(title)title.textContent=active?'ADMIN CONTROL':'LOGIN AS ADMIN';
   if(description)description.textContent=active
-    ?'Administrator mode active • manage Academic Records publication & graduation waves'
-    :'Restricted Academic Records publication & graduation release control';
+    ?'Administrator mode active • manage Academic Records publication'
+    :'Restricted Academic Records publication control';
   syncGeneralLogoutOption();
 }
 
@@ -11866,201 +11425,14 @@ async function showAdminControlView(forceCatalog){
   $('adminControlView').classList.remove('hidden');
   await Promise.all([
     refreshAdminSemesterCatalog(Boolean(forceCatalog)),
-    refreshAdminGraduationWaveCatalog(false),
     refreshAdminSOAAccess(true),
     refreshAdminSOARecap(true)
   ]);
 }
 
-function formatWibScheduleInput(isoValue){
-  const ms=Date.parse(String(isoValue||''));
-  if(Number.isNaN(ms))return'';
-  const date=new Date(ms+7*60*60*1000);
-  const pad=value=>String(value).padStart(2,'0');
-  return date.getUTCFullYear()+'-'+pad(date.getUTCMonth()+1)+'-'+pad(date.getUTCDate())+'T'+pad(date.getUTCHours())+':'+pad(date.getUTCMinutes());
-}
-
-function parseWibScheduleInput(value){
-  const text=String(value||'').trim();
-  if(!text)return'';
-  const match=text.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
-  if(!match)throw new Error('Graduation schedule must use a valid date and time.');
-  const utcMs=Date.UTC(Number(match[1]),Number(match[2])-1,Number(match[3]),Number(match[4])-7,Number(match[5]),0,0);
-  if(Number.isNaN(utcMs))throw new Error('Graduation schedule is invalid.');
-  return new Date(utcMs).toISOString();
-}
-
-function syncAdminGraduationWaveCard(card){
-  if(!card)return;
-  const toggle=card.querySelector('.adminGraduationWaveToggleInput');
-  const schedule=card.querySelector('.adminGraduationWaveScheduleInput');
-  const state=card.querySelector('.adminGraduationWaveState');
-  if(!toggle||!schedule||!state)return;
-
-  if(toggle.checked){
-    schedule.disabled=true;
-    state.textContent='ON';
-    state.className='adminGraduationWaveState is-on';
-  }else if(schedule.value){
-    schedule.disabled=false;
-    state.textContent='SCHEDULED';
-    state.className='adminGraduationWaveState is-scheduled';
-  }else{
-    schedule.disabled=false;
-    state.textContent='OFF';
-    state.className='adminGraduationWaveState is-off';
-  }
-}
-
-function renderAdminGraduationWaveCatalog(groups){
-  const list=$('adminGraduationWaveList');
-  const count=$('adminGraduationWaveCount');
-  if(!list)return;
-  const rows=Array.isArray(groups)?groups:[];
-  adminGraduationWaveCatalog=rows.slice();
-  if(count)count.textContent=rows.length+' WAVES';
-  list.innerHTML='';
-
-  if(!rows.length){
-    list.innerHTML='<div class="adminGraduationWaveLoading is-error">No graduation wave was found in GRADUATED column C.</div>';
-    return;
-  }
-
-  rows.forEach(group=>{
-    const state=AcademicPublicationControl.resolveGraduationWave(group.waveKey);
-    const stored=AcademicPublicationControl.getGraduationWaveSetting(group.waveKey);
-    const card=document.createElement('article');
-    card.className='adminGraduationWaveCard';
-    card.dataset.waveKey=group.waveKey;
-    card.dataset.waveLabel=group.waveLabel;
-
-    card.innerHTML=
-      '<div class="adminGraduationWaveHead">'+
-        '<button class="adminGraduationWaveExpand" type="button" aria-expanded="false" aria-label="Show members of '+escapeHtml(group.waveLabel)+'"><span>⌄</span></button>'+
-        '<div class="adminGraduationWaveIdentity"><span>GRADUATION WAVE</span><strong>'+escapeHtml(group.waveLabel)+'</strong><small>'+Number(group.count||0)+' GAKUSEI</small></div>'+
-        '<div class="adminGraduationWaveControls">'+
-          '<div class="adminGraduationWaveSwitchWrap">'+
-            '<span class="adminGraduationWaveState '+(state.isOn?'is-on':(stored.scheduledAt?'is-scheduled':'is-off'))+'">'+(state.isOn?'ON':(stored.scheduledAt?'SCHEDULED':'OFF'))+'</span>'+
-            '<label class="adminGraduationWaveSwitch" aria-label="'+escapeHtml(group.waveLabel)+' graduated status">'+
-              '<input class="adminGraduationWaveToggleInput" type="checkbox" '+(state.isOn?'checked':'')+'>'+
-              '<span aria-hidden="true"><i></i></span>'+
-            '</label>'+
-          '</div>'+
-          '<label class="adminGraduationWaveSchedule">'+
-            '<span>SCHEDULE AUTO ON</span>'+
-            '<div><input class="adminGraduationWaveScheduleInput" type="datetime-local" value="'+escapeHtml(formatWibScheduleInput(stored.scheduledAt))+'"><b>WIB</b></div>'+
-          '</label>'+
-        '</div>'+
-      '</div>'+
-      '<div class="adminGraduationWaveMembers hidden" aria-label="'+escapeHtml(group.waveLabel)+' Gakusei list"></div>';
-
-    const members=card.querySelector('.adminGraduationWaveMembers');
-    (group.students||[]).forEach(student=>{
-      const button=document.createElement('button');
-      button.className='adminGraduationStudentLink';
-      button.type='button';
-      button.dataset.studentId=student.nomorId||'';
-      button.innerHTML='<strong>'+escapeHtml(student.namaLatin||'-')+'</strong><span class="jp">'+escapeHtml(student.namaKanji||'-')+'</span><small>'+escapeHtml(student.nomorId||'-')+'</small>';
-      button.addEventListener('click',()=>openGakuseiFromGraduationAdmin(student.nomorId));
-      members.appendChild(button);
-    });
-
-    const expand=card.querySelector('.adminGraduationWaveExpand');
-    expand.addEventListener('click',()=>{
-      const opening=members.classList.contains('hidden');
-      members.classList.toggle('hidden',!opening);
-      expand.classList.toggle('is-open',opening);
-      expand.setAttribute('aria-expanded',opening?'true':'false');
-      expand.querySelector('span').textContent=opening?'⌃':'⌄';
-    });
-
-    const toggle=card.querySelector('.adminGraduationWaveToggleInput');
-    const schedule=card.querySelector('.adminGraduationWaveScheduleInput');
-    toggle.addEventListener('change',()=>{
-      if(toggle.checked)schedule.value='';
-      syncAdminGraduationWaveCard(card);
-    });
-    schedule.addEventListener('change',()=>{
-      if(schedule.value)toggle.checked=false;
-      syncAdminGraduationWaveCard(card);
-    });
-
-    syncAdminGraduationWaveCard(card);
-    list.appendChild(card);
-  });
-}
-
-async function refreshAdminGraduationWaveCatalog(force){
-  const list=$('adminGraduationWaveList');
-  const message=$('adminGraduationWaveMessage');
-  if(list)list.innerHTML='<div class="adminGraduationWaveLoading">Reading GRADUATED waves from column C...</div>';
-  if(message){message.className='adminGraduationWaveMessage';message.textContent=''}
-  try{
-    await AcademicPublicationControl.ready();
-    const groups=await GakuseiDataService.getGraduationWaveCatalog(Boolean(force));
-    renderAdminGraduationWaveCatalog(groups);
-  }catch(error){
-    if(list)list.innerHTML='<div class="adminGraduationWaveLoading is-error">'+escapeHtml(error&&error.message?error.message:error)+'</div>';
-  }
-}
-
-function collectAdminGraduationWaveSettings(){
-  const output={};
-  document.querySelectorAll('#adminGraduationWaveList .adminGraduationWaveCard').forEach(card=>{
-    const key=String(card.dataset.waveKey||'').trim();
-    if(!key)return;
-    const toggle=card.querySelector('.adminGraduationWaveToggleInput');
-    const schedule=card.querySelector('.adminGraduationWaveScheduleInput');
-    let enabled=Boolean(toggle&&toggle.checked);
-    let scheduledAt='';
-    if(!enabled&&schedule&&schedule.value){
-      scheduledAt=parseWibScheduleInput(schedule.value);
-      if(Date.parse(scheduledAt)<=Date.now()){
-        enabled=true;
-        scheduledAt='';
-      }
-    }
-    output[key]={enabled,scheduledAt};
-  });
-  return output;
-}
-
-async function saveAdminGraduationWaveSettings(){
-  if(!AcademicPublicationControl.isAdmin()){openAdminPanel();return}
-  const button=$('adminGraduationWaveSaveButton');
-  const message=$('adminGraduationWaveMessage');
-  if(button){button.disabled=true;button.textContent='SAVING...'}
-  if(message){message.className='adminGraduationWaveMessage';message.textContent='Saving graduation wave settings...'}
-  try{
-    const map=collectAdminGraduationWaveSettings();
-    const result=await AcademicPublicationControl.saveGraduationWaves(map);
-    if(message){
-      message.className='adminGraduationWaveMessage is-success';
-      message.textContent='Graduation wave display settings saved.';
-    }
-    await refreshAdminGraduationWaveCatalog(false);
-    if(currentStudentId)fetchStudent(currentStudentId,true);
-    else loadCurrentGpRanking(true);
-  }catch(error){
-    if(message){message.className='adminGraduationWaveMessage is-error';message.textContent=error&&error.message?error.message:String(error)}
-  }finally{
-    if(button){button.disabled=false;button.textContent='SAVE GRADUATION SETTINGS'}
-  }
-}
-
-function openGakuseiFromGraduationAdmin(studentId){
-  const id=String(studentId||'').trim();
-  if(!id)return;
-  closeAdminPanel();
-  if($('idInput'))$('idInput').value=id;
-  if($('mobileStudentSearchInput'))$('mobileStudentSearchInput').value=id;
-  fetchStudent(id,false);
-  if(!MobileSwipeApp.isActive())window.scrollTo({top:0,behavior:'smooth'});
-}
-
 function adminBackendNoticeText(){
   const mode=AcademicPublicationControl.getStorageMode();
-  if(mode==='GLOBAL REMOTE MODE')return 'GLOBAL MODE • Academic Publication and Graduation Wave settings are shared with every visitor through the existing publication backend.';
+  if(mode==='GLOBAL REMOTE MODE')return 'GLOBAL MODE • Publication settings are shared with every visitor through the configured Apps Script backend.';
   if(mode==='OFFLINE FALLBACK')return 'OFFLINE FALLBACK • Remote publication settings could not be reached. Changes are not saved globally until the backend connection works.';
   return 'GLOBAL BACKEND REQUIRED • Publication control could not initialize from the configured Portal backend.';
 }
@@ -12189,10 +11561,9 @@ function startRefresh(){
      * eligible buttons follow Admin changes on other devices without reload.
      * Backend submitSOA still performs its own authoritative gate check.
      */
-    Promise.all([
-      SOAAccessControl.refresh(true).catch(()=>null),
-      AcademicPublicationControl.reload().catch(()=>null)
-    ]).finally(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)});
+    SOAAccessControl.refresh(true)
+      .catch(()=>null)
+      .finally(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)});
   },AUTO_REFRESH_MS);
 }function escapeHtml(value){return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out}function safeName(value){return String(value||'REPORT').replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_')}
 
