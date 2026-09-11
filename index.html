@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800;900&family=League+Spartan:wght@400;500;600;700;800;900&family=Noto+Sans+JP:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="./style.css?v=20260816-v142-achievement-native-academic-section">
+    <link rel="stylesheet" href="./style.css?v=20260911-v154-graduation-release-wib">
 
 </head>
 <body class="front-mode">
@@ -145,6 +145,16 @@
       <div class="mobileSummaryFacts">
         <div class="mobileSummaryFact"><span>CURRENT GRADE</span><strong id="mobileSummaryGrade">-</strong></div>
         <div class="mobileSummaryFact"><span>GAKUSEI ID NUMBER</span><strong id="mobileSummaryId">-</strong></div>
+      </div>
+      <div id="mobileGraduatedDates" class="mobileGraduatedDates hidden" aria-label="Graduated academic milestone dates">
+        <div class="mobileGraduatedDateCard">
+          <span>ENROLLMENT DATE</span>
+          <strong id="mobileEnrollmentDate">—</strong>
+        </div>
+        <div class="mobileGraduatedDateCard">
+          <span>GRADUATION DATE</span>
+          <strong id="mobileGraduationDate">—</strong>
+        </div>
       </div>
     </section>
 
@@ -345,6 +355,22 @@
             <div class="sectionHeader single"><h3 id="studentMediaTitle" class="sectionTitle">Gakusei ID Card / Nametag</h3></div>
             <div class="mediaStack"><div class="mediaCard"><div id="idCardPreview" class="mediaPreview"><div class="empty">ID CARD UNAVAILABLE</div></div><div id="idCardAction" class="mediaAction hidden"></div></div></div>
           </aside>
+          <section id="graduatedDatesPanel" class="panel graduatedDatesPanel hidden" aria-label="Graduated academic milestone dates">
+            <div class="graduatedDatesPanelHead">
+              <span>ACADEMIC MILESTONES</span>
+              <strong>Enrollment &amp; Graduation</strong>
+            </div>
+            <div class="graduatedDatesPanelGrid">
+              <div class="graduatedDateItem">
+                <span>ENROLLMENT DATE</span>
+                <strong id="desktopEnrollmentDate">—</strong>
+              </div>
+              <div class="graduatedDateItem">
+                <span>GRADUATION DATE</span>
+                <strong id="desktopGraduationDate">—</strong>
+              </div>
+            </div>
+          </section>
           <section id="studentPointPanel" class="panel">
             <div class="sectionHeader"><h3 class="sectionTitle">Student Point Log</h3><div id="semesterBadge" class="semesterBadge">CURRENT SEMESTER</div></div>
             <div class="semesterNote">Only point logs from the current semester are displayed.</div>
@@ -416,7 +442,7 @@
         <div>
           <div class="adminModalEyebrow">MAHOUTOKORO • RESTRICTED ACCESS</div>
           <h2 id="adminModalTitle" class="adminModalTitle">ADMINISTRATOR CONTROL</h2>
-          <p id="adminModalSubtitle" class="adminModalSubtitle">Academic Records publication management</p>
+          <p id="adminModalSubtitle" class="adminModalSubtitle">Academic Records publication & graduation release management</p>
         </div>
         <button class="adminModalClose" type="button" onclick="closeAdminPanel()">CLOSE</button>
       </div>
@@ -426,7 +452,7 @@
         <div class="adminLoginCopy">
           <span>ADMIN AUTHENTICATION</span>
           <h3>Login as Admin</h3>
-          <p>Enter the administrator password to manage Academic Records publication.</p>
+          <p>Enter the administrator password to manage Academic Records publication and graduation release.</p>
         </div>
         <form class="adminLoginForm" onsubmit="adminLogin(event)">
           <label for="adminPasswordInput">ADMIN PASSWORD</label>
@@ -453,6 +479,7 @@
             <button type="button" onclick="setAllAdminSemesterToggles(true)">PUBLISH ALL</button>
             <button type="button" onclick="setAllAdminSemesterToggles(false)">UNPUBLISH ALL</button>
             <button type="button" onclick="refreshAdminSemesterCatalog(true)">REFRESH DETECTION</button>
+            <button type="button" onclick="scrollAdminGraduationControlIntoView()">GRADUATION STATUS</button>
           </div>
         </div>
 
@@ -501,6 +528,34 @@
             <button id="adminSaveButton" class="adminSaveButton" type="button" onclick="saveAdminSemesterSettings()">SAVE PUBLICATION SETTINGS</button>
           </div>
         </div>
+
+        <section id="adminGraduationControl" class="adminGraduationControl" aria-label="Graduation release control">
+          <div class="adminGraduationHead">
+            <div class="adminGraduationCopy">
+              <span>GRADUATION RELEASE CONTROL</span>
+              <h3>Gakusei Graduated Status</h3>
+              <p>Control when each Gakusei is shown publicly as GRADUATED. AUTO preserves the existing sheet-driven logic; OFF, ON, and SCHEDULED are explicit Admin overrides.</p>
+            </div>
+            <div class="adminGraduationTools">
+              <label for="adminGraduationSearch">SEARCH GAKUSEI</label>
+              <div class="adminGraduationSearchRow">
+                <input id="adminGraduationSearch" type="search" autocomplete="off" placeholder="ID or student name" oninput="filterAdminGraduationRows()" aria-label="Search graduation control by Gakusei ID or name">
+                <button id="adminGraduationRefresh" type="button" onclick="refreshAdminGraduationCatalog(true)">REFRESH</button>
+              </div>
+            </div>
+          </div>
+          <div class="adminGraduationMeta">
+            <span>TIME REFERENCE <strong>WIB • UTC+7 • ASIA/JAKARTA</strong></span>
+            <strong id="adminGraduationCount">0 GAKUSEI</strong>
+          </div>
+          <div id="adminGraduationList" class="adminGraduationList">
+            <div class="adminGraduationLoading">Graduation controls will load after Admin authentication.</div>
+          </div>
+          <div class="adminGraduationFooter">
+            <div id="adminGraduationMessage" class="adminGraduationMessage" aria-live="polite"></div>
+            <button id="adminGraduationSaveButton" class="adminGraduationSaveButton" type="button" onclick="saveAdminGraduationSettings()">SAVE GRADUATION SETTINGS</button>
+          </div>
+        </section>
       </div>
     </div>
   </div>
@@ -581,7 +636,7 @@
 
   <div id="pdfOverlay" class="pdfOverlay hidden"><div class="pdfBox"><strong>PREPARING DOCUMENT</strong><div id="pdfText" class="pdfText">Loading...</div></div></div>
 
-    <script src="./script.js?v=20260816-v142-achievement-native-academic-section" defer></script>
+    <script src="./script.js?v=20260911-v154-graduation-release-wib" defer></script>
 
 </body>
 </html>

@@ -36,6 +36,13 @@ const GakuseiDataService = (() => {
     ACHIEVEMENT_READ_CONCURRENCY: 2,
 
     /*
+     * CONTRIBUTIONS is used only in the Academic Transcript.
+     * A = Gakusei ID, C = Office/Event, D = Contribution, E = Semester.
+     */
+    CONTRIBUTION_SPREADSHEET_ID: '1uOyng0C-gRZ4sFeGnH4nhhslb5Xb4oa8RJZjnLCObCU',
+    CONTRIBUTION_SHEET: 'CONTRIBUTIONS',
+
+    /*
      * GViz tidak menyediakan daftar nama tab. Karena nama semester memakai
      * nomor + format A.R., website memeriksa nomor secara berurutan dan hanya
      * menerima respons yang benar-benar memiliki struktur Academic Record.
@@ -177,6 +184,8 @@ const GakuseiDataService = (() => {
           rank: master.currentRank || '-',
           asrama: dorm,
           tanggalLahir: master.isGraduated ? (master.birthDate || '') : (master.birthDate || '-'),
+          enrollmentDate: master.isGraduated ? (master.enrollmentDate || '') : '',
+          graduationDate: master.isGraduated ? (master.graduationDate || '') : '',
           status,
           isGraduated: Boolean(master.isGraduated),
           postGraduationId: master.isGraduated && master.graduatedData
@@ -329,6 +338,13 @@ const GakuseiDataService = (() => {
       }
     }
 
+    const contributions = normalizedMode === 'transcript' && master.isGraduated
+      ? await safeResult(
+          () => getTranscriptContributionsById(master.studentId, available),
+          []
+        )
+      : [];
+
     const fileName = normalizedMode === 'transcript'
       ? `MAHOUTOKORO_ACADEMIC_TRANSCRIPT_${master.studentId}.pdf`
       : `MAHOUTOKORO_STUDENT_ACADEMIC_RECORD_${master.studentId}_${records[0].sheetName}.pdf`;
@@ -344,10 +360,13 @@ const GakuseiDataService = (() => {
         tingkatKelas: master.isGraduated ? 'GRADUATED' : master.currentGrade,
         isGraduated: Boolean(master.isGraduated),
         tanggalLahir: master.birthDate,
+        enrollmentDate: master.isGraduated ? (master.enrollmentDate || '') : '',
+        graduationDate: master.isGraduated ? (master.graduationDate || '') : '',
         generation: deriveGenerationLabel(master.studentId),
         asrama: dorm
       },
       records,
+      contributions,
       matchedRecordCount: available.length,
       totalTimelineCount: available.length,
       /*
@@ -384,6 +403,39 @@ const GakuseiDataService = (() => {
     };
   }
 
+  async function getGraduatedStudentIdSet(forceRefresh = false) {
+    const table = await safeResult(() => fetchTable({
+      spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
+      sheet: CONFIG.GRADUATED_SHEET,
+      range: 'D2:D',
+      bypassCache: Boolean(forceRefresh)
+    }), { display: [], raw: [] });
+
+    const ids = new Set();
+    const displayRows = Array.isArray(table.display) ? table.display : [];
+    const rawRows = Array.isArray(table.raw) ? table.raw : [];
+    const rowCount = Math.max(displayRows.length, rawRows.length);
+    for (let index = 0; index < rowCount; index++) {
+      const displayId = displayRows[index] ? displayRows[index][0] : '';
+      const rawId = rawRows[index] ? rawRows[index][0] : '';
+      const id = normalizeId(displayId || rawId);
+      if (id && isLikelyStudentId(id)) ids.add(id);
+    }
+    return ids;
+  }
+
+  function isEffectivelyGraduatedCurrentStudent(studentId, graduatedIdSet) {
+    const hasGraduatedSource = graduatedIdSet instanceof Set && graduatedIdSet.has(normalizeId(studentId));
+    if (typeof AcademicPublicationControl === 'undefined' || !AcademicPublicationControl.resolveGraduationStatus) {
+      return hasGraduatedSource;
+    }
+    return Boolean(AcademicPublicationControl.resolveGraduationStatus(
+      studentId,
+      hasGraduatedSource,
+      true
+    ).isGraduated);
+  }
+
   async function getCurrentNenseiRecap() {
     try {
       /*
@@ -392,9 +444,16 @@ const GakuseiDataService = (() => {
        * master dimulai dari kolom C, nilai kolom G tersimpan sebagai row[4]
        * dan tersedia sebagai master.currentGrade.
        */
-      const [masterMap, leaveStatusMap] = await Promise.all([
+      try {
+        if (typeof AcademicPublicationControl !== 'undefined') {
+          await AcademicPublicationControl.ready();
+        }
+      } catch (error) {}
+
+      const [masterMap, leaveStatusMap, graduatedIdSet] = await Promise.all([
         getMasterStudentMap(),
-        getLeaveStatusMap()
+        getLeaveStatusMap(),
+        getGraduatedStudentIdSet(false)
       ]);
 
       const rows = [];
@@ -402,6 +461,7 @@ const GakuseiDataService = (() => {
 
       Object.entries(masterMap).forEach(([studentId, master]) => {
         if (!studentId || !isLikelyStudentId(studentId)) return;
+        if (isEffectivelyGraduatedCurrentStudent(studentId, graduatedIdSet)) return;
 
         const dorm = getDormById(studentId, master.dormName || '');
         const nensei = extractMasterGradeNensei(master.currentGrade || '');
@@ -669,13 +729,13 @@ const GakuseiDataService = (() => {
     if (!requestedId) throw new Error('Masukkan nomor ID Gakusei terlebih dahulu.');
 
     /*
-     * GRADUATED columns (range D:P):
+     * GRADUATED columns (range D:R):
      * D former Gakusei ID (search key), E post-graduation/JMC resident ID,
      * F Latin name, G Kanji name, H X username,
      * I Devoted Student Subject, J Devoted Student Title,
      * K Devoted Student Score, L Devoted Student Kōron,
      * M Study Completion Certificate, N Student Photo, O Date of Birth,
-     * P Devoted Student Kōron Cover.
+     * P Devoted Student Kōron Cover, Q Enrollment Date, R Graduation Date.
      */
     const [masterTable, graduatedTable] = await Promise.all([
       safeResult(() => fetchTable({
@@ -686,7 +746,7 @@ const GakuseiDataService = (() => {
       safeResult(() => fetchTable({
         spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
         sheet: CONFIG.GRADUATED_SHEET,
-        range: 'D2:P'
+        range: 'D2:R'
       }), { display: [], raw: [] })
     ]);
 
@@ -701,10 +761,34 @@ const GakuseiDataService = (() => {
     }
 
     /*
-     * Bila ID tercatat di GRADUATED, record alumni selalu menjadi sumber
-     * utama walaupun baris lama masih tertinggal di PENDATAAN GAKUSEI.
+     * V154 — Admin-controlled graduation release.
+     * AUTO keeps the existing sheet-driven behavior exactly as before.
+     * OFF can temporarily keep a Gakusei in the current-student experience,
+     * ON releases the prepared GRADUATED row immediately, and SCHEDULED
+     * releases it automatically once the configured WIB time is reached.
+     * A prepared GRADUATED row remains the authoritative alumni data source.
      */
-    if (graduatedIndex >= 0) {
+    try {
+      if (typeof AcademicPublicationControl !== 'undefined') {
+        await AcademicPublicationControl.ready();
+      }
+    } catch (error) {}
+
+    const graduationResolution = (typeof AcademicPublicationControl !== 'undefined' && AcademicPublicationControl.resolveGraduationStatus)
+      ? AcademicPublicationControl.resolveGraduationStatus(
+          requestedId,
+          graduatedIndex >= 0,
+          masterIndex >= 0
+        )
+      : { isGraduated: graduatedIndex >= 0, mode: 'AUTO', scheduledAt: '' };
+
+    const useGraduatedSource = Boolean(graduationResolution.isGraduated && graduatedIndex >= 0);
+
+    /*
+     * Bila status GRADUATED efektif, record alumni menjadi sumber utama
+     * walaupun baris lama masih tertinggal di PENDATAAN GAKUSEI.
+     */
+    if (useGraduatedSource) {
       const displayRow = graduatedTable.display[graduatedIndex] || [];
       const rawRow = graduatedTable.raw[graduatedIndex] || [];
       const fallbackDisplay = masterIndex >= 0 ? (masterTable.display[masterIndex] || []) : [];
@@ -713,6 +797,8 @@ const GakuseiDataService = (() => {
       const postGraduationId = String(
         chooseCellValue(displayRow[1], rawRow[1]) || ''
       ).trim();
+      const enrollmentDate = String(displayRow[13] == null ? '' : displayRow[13]).trim();
+      const graduationDate = String(displayRow[14] == null ? '' : displayRow[14]).trim();
 
       return {
         studentId: normalizeId(displayRow[0]),
@@ -724,10 +810,13 @@ const GakuseiDataService = (() => {
         currentRank: '-',
         dormName: fallbackDisplay[6] || '',
         birthDate: String(displayRow[11] || '').trim(),
+        enrollmentDate,
+        graduationDate,
         idCardValue: chooseCellValue(displayRow[9], rawRow[9]),
         photoValue: chooseCellValue(displayRow[10], rawRow[10]) ||
           chooseCellValue(fallbackDisplay[11], fallbackRaw[11]),
         isGraduated: true,
+        graduationControl: graduationResolution,
         graduatedData: {
           postGraduationId,
           devotedStudentSubject: cleanAcademicText(displayRow[5]),
@@ -737,7 +826,9 @@ const GakuseiDataService = (() => {
           devotedStudentCoverValue: chooseCellValue(displayRow[12], rawRow[12]),
           studyCompletionCertificateValue: chooseCellValue(displayRow[9], rawRow[9]),
           photoValue: chooseCellValue(displayRow[10], rawRow[10]),
-          birthDate: String(displayRow[11] || '').trim()
+          birthDate: String(displayRow[11] || '').trim(),
+          enrollmentDate,
+          graduationDate
         }
       };
     }
@@ -756,9 +847,12 @@ const GakuseiDataService = (() => {
       currentRank: displayRow[5] || '-',
       dormName: displayRow[6] || '',
       birthDate: displayRow[7] || '-',
+      enrollmentDate: '',
+      graduationDate: '',
       idCardValue: chooseCellValue(displayRow[10], rawRow[10]),
       photoValue: chooseCellValue(displayRow[11], rawRow[11]),
       isGraduated: false,
+      graduationControl: graduationResolution,
       graduatedData: null
     };
   }
@@ -812,7 +906,77 @@ const GakuseiDataService = (() => {
     };
   }
 
-  
+
+  async function getGraduationAdminCatalog(forceRefresh = false) {
+    const [masterTable, graduatedTable] = await Promise.all([
+      safeResult(() => fetchTable({
+        spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
+        sheet: CONFIG.MASTER_SHEET,
+        range: 'C2:N',
+        bypassCache: Boolean(forceRefresh)
+      }), { display: [], raw: [] }),
+      safeResult(() => fetchTable({
+        spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
+        sheet: CONFIG.GRADUATED_SHEET,
+        range: 'D2:R',
+        bypassCache: Boolean(forceRefresh)
+      }), { display: [], raw: [] })
+    ]);
+
+    const rowsById = new Map();
+
+    (masterTable.display || []).forEach(row => {
+      const studentId = normalizeId(row && row[2]);
+      if (!studentId || !isLikelyStudentId(studentId)) return;
+      rowsById.set(studentId, {
+        studentId,
+        namaLatin: String(row && row[0] || '').trim() || '-',
+        namaKanji: String(row && row[1] || '').trim() || '-',
+        currentGrade: String(row && row[4] || '').trim() || '-',
+        hasCurrentSource: true,
+        hasGraduatedSource: false
+      });
+    });
+
+    (graduatedTable.display || []).forEach(row => {
+      const studentId = normalizeId(row && row[0]);
+      if (!studentId || !isLikelyStudentId(studentId)) return;
+      const existing = rowsById.get(studentId) || {
+        studentId,
+        namaLatin: '-',
+        namaKanji: '-',
+        currentGrade: '-',
+        hasCurrentSource: false,
+        hasGraduatedSource: false
+      };
+      existing.namaLatin = String(row && row[2] || '').trim() || existing.namaLatin || '-';
+      existing.namaKanji = String(row && row[3] || '').trim() || existing.namaKanji || '-';
+      existing.hasGraduatedSource = true;
+      rowsById.set(studentId, existing);
+    });
+
+    return Array.from(rowsById.values())
+      .map(item => {
+        const resolution = (typeof AcademicPublicationControl !== 'undefined' && AcademicPublicationControl.resolveGraduationStatus)
+          ? AcademicPublicationControl.resolveGraduationStatus(
+              item.studentId,
+              item.hasGraduatedSource,
+              item.hasCurrentSource
+            )
+          : {
+              mode: 'AUTO',
+              isGraduated: Boolean(item.hasGraduatedSource),
+              scheduledAt: '',
+              waitingForGraduatedSource: false
+            };
+        return { ...item, ...resolution };
+      })
+      .sort((a, b) =>
+        String(a.namaLatin || '').localeCompare(String(b.namaLatin || ''), 'en', { sensitivity: 'base' }) ||
+        String(a.studentId || '').localeCompare(String(b.studentId || ''))
+      );
+  }
+
 async function getMasterStudentMap() {
   const table = await fetchTable({
     spreadsheetId: CONFIG.MASTER_SPREADSHEET_ID,
@@ -1104,7 +1268,13 @@ function getDormById(id, fallbackDormName) {
 
   async function getCurrentGpRanking() {
     try {
-      const [semesterTable, logTable, masterMap] = await Promise.all([
+      try {
+        if (typeof AcademicPublicationControl !== 'undefined') {
+          await AcademicPublicationControl.ready();
+        }
+      } catch (error) {}
+
+      const [semesterTable, logTable, masterMap, graduatedIdSet] = await Promise.all([
         fetchTable({
           spreadsheetId: CONFIG.POINT_SPREADSHEET_ID,
           sheet: CONFIG.POINT_RECAP_SHEET,
@@ -1117,7 +1287,8 @@ function getDormById(id, fallbackDormName) {
           range: 'C:I',
           bypassCache: true
         }),
-        getMasterStudentMap()
+        getMasterStudentMap(),
+        getGraduatedStudentIdSet(false)
       ]);
 
       const semesterTitle = (semesterTable.display[0] || []).find(value =>
@@ -1149,7 +1320,10 @@ function getDormById(id, fallbackDormName) {
       });
 
       const rows = Object.entries(masterMap)
-        .filter(([studentId]) => isLikelyStudentId(studentId))
+        .filter(([studentId]) =>
+          isLikelyStudentId(studentId) &&
+          !isEffectivelyGraduatedCurrentStudent(studentId, graduatedIdSet)
+        )
         .map(([studentId, master]) => ({
           nomorId: studentId,
           namaLatin: master.namaLatin || '-',
@@ -1460,6 +1634,170 @@ function restoreFailedAcademicRecords(studentId, records, failedSheetNames) {
 
     if (lastError) throw lastError;
     return [];
+  }
+
+  async function getTranscriptContributionsById(studentId, academicRecords) {
+    const normalizedStudentId = normalizeId(studentId);
+    if (!normalizedStudentId) return [];
+
+    const table = await fetchTable({
+      spreadsheetId: CONFIG.CONTRIBUTION_SPREADSHEET_ID,
+      sheet: CONFIG.CONTRIBUTION_SHEET,
+      range: 'A:E'
+    });
+
+    const semesterMap = buildContributionSemesterNenseiMap(academicRecords);
+    const contributions = [];
+    const displayRows = Array.isArray(table.display) ? table.display : [];
+    const rawRows = Array.isArray(table.raw) ? table.raw : [];
+    const rowCount = Math.max(displayRows.length, rawRows.length);
+
+    /*
+     * CONTRIBUTIONS belongs to every Academic Transcript, not only alumni.
+     * Match the student ID against both GViz display and raw values so active
+     * students are not lost when the public sheet formats/formula-renders the
+     * ID differently. Graduation status is deliberately irrelevant here.
+     */
+    for (let index = 0; index < rowCount; index++) {
+      const displayRow = displayRows[index] || [];
+      const rawRow = rawRows[index] || [];
+      const displayId = displayRow[0];
+      const rawId = rawRow[0];
+
+      if (
+        !idsMatch(displayId, normalizedStudentId) &&
+        !idsMatch(rawId, normalizedStudentId)
+      ) {
+        continue;
+      }
+
+      const officeEvent = String(
+        displayRow[2] != null && String(displayRow[2]).trim() !== ''
+          ? displayRow[2]
+          : (rawRow[2] == null ? '' : rawRow[2])
+      )
+        .normalize('NFKC')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const contribution = String(
+        displayRow[3] != null && String(displayRow[3]).trim() !== ''
+          ? displayRow[3]
+          : (rawRow[3] == null ? '' : rawRow[3])
+      )
+        .normalize('NFKC')
+        .replace(/\s+/g, ' ')
+        .trim();
+      const semesterSource = String(
+        displayRow[4] != null && String(displayRow[4]).trim() !== ''
+          ? displayRow[4]
+          : (rawRow[4] == null ? '' : rawRow[4])
+      )
+        .normalize('NFKC')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+      if (!officeEvent && !contribution) continue;
+
+      const semesterInfo = parseContributionSemesterExpression(semesterSource);
+      contributions.push({
+        officeEvent: officeEvent || '-',
+        contribution: contribution || '-',
+        nensei: formatContributionNensei(semesterInfo, semesterMap),
+        semester: formatContributionSemester(semesterInfo, semesterSource)
+      });
+    }
+
+    return contributions;
+  }
+
+  function buildContributionSemesterNenseiMap(records) {
+    const map = new Map();
+    (Array.isArray(records) ? records : []).forEach(record => {
+      if (!record || record.recordType === 'GRADUATED_DEVOTED') return;
+      const semesterNumber = extractSemesterNumber(
+        record.semesterTitle || record.sheetName || ''
+      );
+      const nensei = Number(record.nensei) || 0;
+      if (semesterNumber < 0 || nensei < 1 || nensei > 7) return;
+      map.set(semesterNumber, `${nensei} NENSEI`);
+    });
+    return map;
+  }
+
+  function parseContributionSemesterExpression(value) {
+    const source = String(value || '')
+      .normalize('NFKC')
+      .replace(/\s+/g, ' ')
+      .trim();
+    const numbers = Array.from(source.matchAll(/\d{1,3}/g))
+      .map(match => Number(match[0]))
+      .filter(number => Number.isInteger(number) && number >= 0);
+
+    const isRange = /[-–—]/.test(source) && numbers.length >= 2;
+    const isList = !isRange && /[,，]/.test(source) && numbers.length >= 1;
+
+    if (isRange) {
+      const start = numbers[0];
+      const end = numbers[1];
+      const step = start <= end ? 1 : -1;
+      const expanded = [];
+      for (let number = start; ; number += step) {
+        expanded.push(number);
+        if (number === end) break;
+      }
+      return { type: 'range', numbers: expanded, start, end };
+    }
+
+    if (isList) {
+      return { type: 'list', numbers };
+    }
+
+    return numbers.length
+      ? { type: 'single', numbers: [numbers[0]] }
+      : { type: 'text', numbers: [] };
+  }
+
+  function formatContributionSemester(info, source) {
+    const parsed = info || { type: 'text', numbers: [] };
+    if (parsed.type === 'range' && parsed.numbers.length) {
+      return `${parsed.start} A.R. - ${parsed.end} A.R.`;
+    }
+    if (parsed.type === 'list' && parsed.numbers.length) {
+      return parsed.numbers.map(number => `${number} A.R.`).join(', ');
+    }
+    if (parsed.type === 'single' && parsed.numbers.length) {
+      return `${parsed.numbers[0]} A.R.`;
+    }
+    return String(source || '').trim() || '-';
+  }
+
+  function formatContributionNensei(info, semesterMap) {
+    const parsed = info || { type: 'text', numbers: [] };
+    const map = semesterMap instanceof Map ? semesterMap : new Map();
+    const fallbackNensei = '7 NENSEI';
+
+    if (parsed.type === 'range') {
+      const mapped = parsed.numbers
+        .map(number => map.get(number) || fallbackNensei);
+      const unique = mapped.filter((value, index) => index === 0 || value !== mapped[index - 1]);
+      return unique.length === 1
+        ? unique[0]
+        : `${unique[0]} - ${unique[unique.length - 1]}`;
+    }
+
+    if (parsed.type === 'list') {
+      const mapped = parsed.numbers
+        .map(number => map.get(number) || fallbackNensei);
+      return mapped
+        .filter((value, index) => index === 0 || value !== mapped[index - 1])
+        .join(', ');
+    }
+
+    if (parsed.type === 'single') {
+      return map.get(parsed.numbers[0]) || fallbackNensei;
+    }
+
+    return fallbackNensei;
   }
 
   async function readAcademicSemesterRecord(sheetName, studentId, dormCode, bypassCache = false) {
@@ -3344,7 +3682,8 @@ function detectTaNenseiFromAcademicBlock(displayValues, studentRowIndex, semeste
     getCurrentGpRanking,
     getPromotionRecap,
     getLatestPromotionRecap,
-    getDetectedAcademicSheets
+    getDetectedAcademicSheets,
+    getGraduationAdminCatalog
   };
 })();
 
@@ -3376,7 +3715,7 @@ const ACADEMIC_PUBLICATION_CONFIG=Object.freeze({
 });
 
 const AcademicPublicationControl=(()=>{
-  let settings={version:1,configured:false,semesters:{},updatedAt:'',updatedBy:'',source:'default'};
+  let settings={version:2,configured:false,semesters:{},graduations:{},updatedAt:'',updatedBy:'',source:'default'};
   let readyPromise=null;
   let catalog=[];
   let adminAuthenticated=false;
@@ -3408,12 +3747,40 @@ const AcademicPublicationControl=(()=>{
     return output;
   }
 
+  function graduationKey(value){
+    return String(value==null?'':value)
+      .normalize('NFKC')
+      .replace(/[^A-Z0-9]/gi,'')
+      .toUpperCase()
+      .trim();
+  }
+
+  function normalizeGraduationMap(value){
+    const output={};
+    if(!value||typeof value!=='object')return output;
+    Object.keys(value).sort().forEach(rawKey=>{
+      const key=graduationKey(rawKey);
+      if(!key)return;
+      const source=value[rawKey]&&typeof value[rawKey]==='object'?value[rawKey]:{};
+      const mode=String(source.mode||'AUTO').trim().toUpperCase();
+      if(!['OFF','ON','SCHEDULED'].includes(mode))return;
+      let scheduledAt='';
+      if(mode==='SCHEDULED'){
+        const date=new Date(source.scheduledAt||'');
+        if(!Number.isNaN(date.getTime()))scheduledAt=date.toISOString();
+      }
+      output[key]={mode,scheduledAt};
+    });
+    return output;
+  }
+
   function normalizeSettings(value,source){
     const input=value&&typeof value==='object'?value:{};
     return{
-      version:1,
+      version:2,
       configured:Boolean(input.configured),
       semesters:normalizeSemesterMap(input.semesters),
+      graduations:normalizeGraduationMap(input.graduations),
       updatedAt:String(input.updatedAt||''),
       updatedBy:String(input.updatedBy||''),
       source:source||String(input.source||'default')
@@ -3654,6 +4021,52 @@ const AcademicPublicationControl=(()=>{
     return 'DEFAULT PUBLISHED';
   }
 
+  function getGraduationControl(studentId){
+    const key=graduationKey(studentId);
+    const source=key&&settings.graduations&&settings.graduations[key];
+    if(!source)return{mode:'AUTO',scheduledAt:''};
+    const normalized=normalizeGraduationMap({[key]:source});
+    return normalized[key]||{mode:'AUTO',scheduledAt:''};
+  }
+
+  function resolveGraduationStatus(studentId,hasGraduatedSource,hasCurrentSource=true,atTime=Date.now()){
+    const control=getGraduationControl(studentId);
+    const mode=control.mode||'AUTO';
+    const graduatedReady=Boolean(hasGraduatedSource);
+    const currentReady=Boolean(hasCurrentSource);
+    let scheduledTime=NaN;
+    if(control.scheduledAt){
+      const date=new Date(control.scheduledAt);
+      scheduledTime=date.getTime();
+    }
+    const scheduleReached=Number.isFinite(scheduledTime)&&Number(atTime)>=scheduledTime;
+    let isGraduated=graduatedReady;
+
+    if(mode==='OFF'){
+      isGraduated=currentReady?false:graduatedReady;
+    }else if(mode==='ON'){
+      isGraduated=graduatedReady;
+    }else if(mode==='SCHEDULED'){
+      if(!currentReady&&graduatedReady){
+        /* Archived-only records cannot safely fall back to a current profile. */
+        isGraduated=true;
+      }else{
+        isGraduated=Boolean(scheduleReached&&graduatedReady);
+      }
+    }
+
+    return{
+      mode,
+      scheduledAt:control.scheduledAt||'',
+      scheduleReached,
+      isGraduated:Boolean(isGraduated),
+      hasGraduatedSource:graduatedReady,
+      hasCurrentSource:currentReady,
+      waitingForGraduatedSource:Boolean((mode==='ON'||(mode==='SCHEDULED'&&scheduleReached))&&!graduatedReady),
+      explicit:mode!=='AUTO'
+    };
+  }
+
   function filterAcademicData(data){
     const source=data&&typeof data==='object'?data:{};
     const all=Array.isArray(source.records)?source.records:[];
@@ -3761,12 +4174,13 @@ const AcademicPublicationControl=(()=>{
   function getSettings(){return normalizeSettings(settings,settings.source)}
   function getLatestCatalogItem(){return catalog.length?catalog[catalog.length-1]:null}
 
-  async function save(nextSemesterMap){
+  async function save(nextSemesterMap,nextGraduationMap){
     if(!adminAuthenticated)throw new Error('Admin authentication is required.');
 
     const next=normalizeSettings({
       configured:true,
       semesters:nextSemesterMap,
+      graduations:nextGraduationMap===undefined?settings.graduations:nextGraduationMap,
       updatedAt:new Date().toISOString(),
       updatedBy:'ADMIN'
     },'local');
@@ -3788,8 +4202,10 @@ const AcademicPublicationControl=(()=>{
       const verified=normalizeSettings(verification.settings||verification,'remote');
       const expected=JSON.stringify(normalizeSemesterMap(next.semesters));
       const actual=JSON.stringify(normalizeSemesterMap(verified.semesters));
-      if(expected!==actual){
-        throw new Error('Remote settings did not match the requested publication state. Check the Admin password and Web App deployment permissions.');
+      const expectedGraduations=JSON.stringify(normalizeGraduationMap(next.graduations));
+      const actualGraduations=JSON.stringify(normalizeGraduationMap(verified.graduations));
+      if(expected!==actual||expectedGraduations!==actualGraduations){
+        throw new Error('Remote settings did not match the requested Admin state. Check the Admin password and confirm the Portal backend preserves both publication and graduation settings.');
       }
 
       settings=verified;
@@ -3828,6 +4244,8 @@ const AcademicPublicationControl=(()=>{
     isPublished,
     hasExplicitDecision,
     publicationReason,
+    getGraduationControl,
+    resolveGraduationStatus,
     filterAcademicData,
     filterPdfPayload,
     login,
@@ -5563,6 +5981,7 @@ function startGpRankingRefresh(){
       if(!silent&&MobileProfileSwipe.isActive())MobileProfileSwipe.reset();
       renderMobileStudentHeader(d,dorm,status);
       renderMobileStudentSummary(d,dorm,status);
+      renderGraduatedMilestoneDates(d);
       renderMobileDirectData(d,dorm,status);
 
       applyGraduatedLayout(Boolean(d.isGraduated));
@@ -6175,6 +6594,27 @@ function startGpRankingRefresh(){
       }
     }
 
+    function renderGraduatedMilestoneDates(data){
+      const d=data||{};
+      const graduated=Boolean(d.isGraduated);
+      const enrollment=graduated?(String(d.enrollmentDate||'').trim()||'—'):'—';
+      const graduation=graduated?(String(d.graduationDate||'').trim()||'—'):'—';
+
+      const desktopPanel=$('graduatedDatesPanel');
+      if(desktopPanel){
+        desktopPanel.classList.toggle('hidden',!graduated);
+        text('desktopEnrollmentDate',enrollment);
+        text('desktopGraduationDate',graduation);
+      }
+
+      const mobilePanel=$('mobileGraduatedDates');
+      if(mobilePanel){
+        mobilePanel.classList.toggle('hidden',!graduated);
+        text('mobileEnrollmentDate',enrollment);
+        text('mobileGraduationDate',graduation);
+      }
+    }
+
     function renderMobileDirectData(data,dorm,status){
       const section=$('mobileStudentDirect');if(!section)return;
       const d=data||{};
@@ -6212,7 +6652,7 @@ function startGpRankingRefresh(){
           const copy=document.createElement('div');copy.className='mobileLifePathCopy';
           const title=document.createElement('strong');
           const narrative=document.createElement('p');
-          if(!residentId){title.textContent='BEYOND JMC';narrative.textContent='Upon graduation, destiny carried this Gakusei back to the ordinary world, where their journey continues beyond the borders of JMC.'}
+          if(!residentId){title.textContent='BEYOND JMC';narrative.textContent='Upon graduation, destiny may lead this Gakusei either back to the ordinary world or onward to life as an adult wizard under the auspices of JMC.'}
           else if(residentActive){title.textContent='POST-GRADUATION RESIDENCY';narrative.textContent='Upon graduation, destiny guided this Gakusei to JMC, where they were welcomed as a resident under ID '+residentId+'.'}
           else{title.textContent='RESIDENCY CONCLUDED';narrative.textContent='After graduation, this Gakusei embraced life within JMC for a time, under Resident ID '+residentId+', before ultimately choosing a new path, voluntarily withdrawing their residency and returning to the ordinary world.'}
           copy.append(title,narrative);card.append(copy);journey.appendChild(card);
@@ -6555,7 +6995,7 @@ function startGpRankingRefresh(){
 
       if(!hasResidentId){
         eyebrow.textContent='BEYOND JMC';
-        narrative.textContent='Upon graduation, destiny carried this Gakusei back to the ordinary world, where their journey continues beyond the borders of JMC.';
+        narrative.textContent='Upon graduation, destiny may lead this Gakusei either back to the ordinary world or onward to life as an adult wizard under the auspices of JMC.';
       }else if(residentActive){
         eyebrow.textContent='POST-GRADUATION RESIDENCY';
         narrative.textContent='Upon graduation, destiny guided this Gakusei to JMC, where they were welcomed as a resident under ID '+residentId+'.';
@@ -7854,32 +8294,114 @@ async function requestPdf(mode,sheetName,button){
 
 
 function createTranscriptPages(payload){
-  const model=buildTranscriptModel(payload.records||[]);
+  const model=buildTranscriptModel(payload.records||[],payload.contributions||[]);
   const sourceRows=model.subjectRows.length?model.subjectRows:[{
     subjectLabel:'',
     score:''
   }];
 
   /*
-   * The transcript is intentionally one page. Subjects continue from the
-   * left table into the right table. The two columns are kept balanced so
-   * the full transcript remains compact and visually centred.
+   * Subjects continue from the left table into the right table. The transcript
+   * first attempts the original one-page composition. ACHIEVEMENTS and
+   * CONTRIBUTIONS are moved together to a continuation page only when the
+   * rendered first-page composition would enter the protected Hanko/footer
+   * zone. Short transcripts therefore remain a single page.
    */
   const rowsPerTable=Math.max(1,Math.ceil(sourceRows.length/2));
   const tables=[
     sourceRows.slice(0,rowsPerTable),
     sourceRows.slice(rowsPerTable)
   ];
-
-  return [createTranscriptPage(payload,model,{
+  const baseSettings={
     tables,
     rowsPerTable,
-    totalRows:sourceRows.length,
-    isLast:true
-  })];
+    totalRows:sourceRows.length
+  };
+
+  const singlePage=createTranscriptPage(payload,model,{
+    ...baseSettings,
+    includeSupplemental:true,
+    pageNumber:1,
+    totalPages:1
+  });
+
+  if(transcriptPageKeepsHankoSafe(singlePage)){
+    return [singlePage];
+  }
+
+  const firstPage=createTranscriptPage(payload,model,{
+    ...baseSettings,
+    includeSupplemental:false,
+    pageNumber:1,
+    totalPages:2
+  });
+  const secondPage=createTranscriptSupplementPage(payload,model,{
+    pageNumber:2,
+    totalPages:2
+  });
+
+  return [firstPage,secondPage];
 }
 
-function buildTranscriptModel(records){
+function transcriptPageKeepsHankoSafe(page){
+  if(!page||typeof document==='undefined'||!document.body)return true;
+
+  const mount=document.createElement('div');
+  mount.setAttribute('aria-hidden','true');
+  mount.style.cssText=[
+    'position:fixed',
+    'left:-20000px',
+    'top:0',
+    'width:816px',
+    'visibility:hidden',
+    'pointer-events:none',
+    'z-index:-2147483647'
+  ].join(';');
+
+  document.body.appendChild(mount);
+  mount.appendChild(page);
+
+  const pageRect=page.getBoundingClientRect();
+  const approval=page.querySelector('.transcriptApprovalZone');
+  const footer=page.querySelector('.pdfFooter');
+  const supplementBlocks=page.querySelectorAll('.transcriptAchievementsBlock');
+  const lastSupplement=supplementBlocks.length
+    ? supplementBlocks[supplementBlocks.length-1]
+    : null;
+
+  const approvalRect=approval?approval.getBoundingClientRect():null;
+  const footerRect=footer?footer.getBoundingClientRect():null;
+  const supplementRect=lastSupplement?lastSupplement.getBoundingClientRect():null;
+  const safeFooterTop=footerRect?footerRect.top-8:pageRect.bottom-44;
+  const safeApproval=Boolean(
+    approvalRect&&
+    approvalRect.bottom<=safeFooterTop&&
+    approvalRect.bottom<=pageRect.bottom-40
+  );
+  const safeGap=!supplementRect||!approvalRect||(approvalRect.top-supplementRect.bottom)>=12;
+  const safeOverflow=page.scrollHeight<=page.clientHeight+1;
+
+  mount.removeChild(page);
+  mount.remove();
+
+  return safeApproval&&safeGap&&safeOverflow;
+}
+
+function transcriptNenseiNumber(record){
+  const level=Number(record&&record.nensei);
+  return Number.isInteger(level)&&level>=1&&level<=7?level:7;
+}
+
+function transcriptNenseiLabel(record){
+  const raw=String(record&&record.nenseiLabel||'')
+    .normalize('NFKC')
+    .replace(/\s+/g,' ')
+    .trim();
+  if(raw&&!/^-$/.test(raw)&&!/NENSEI\s+NOT\s+DETECTED/i.test(raw))return raw;
+  return `${transcriptNenseiNumber(record)} NENSEI`;
+}
+
+function buildTranscriptModel(records,contributions){
   const safeRecords=(Array.isArray(records)?records:[])
     .filter(record=>record&&record.sourceAvailable!==false)
     .slice()
@@ -7921,7 +8443,7 @@ function buildTranscriptModel(records){
 
   const subjectRows=[];
   transcriptRecords.forEach(record=>{
-    const level=Number(record.nensei)||0;
+    const level=transcriptNenseiNumber(record);
     const subjects=Array.isArray(record.subjects)?record.subjects:[];
     const retained=isRetainedRecord(record);
 
@@ -7951,10 +8473,7 @@ function buildTranscriptModel(records){
       const achievement=String(item&&item.achievement||'').trim();
       const title=String(item&&item.title||'').trim();
       if(!achievement&&!title)return;
-      const nenseiLabel=String(
-        record&&record.nenseiLabel||
-        (Number(record&&record.nensei)>0?`${Number(record.nensei)} NENSEI`:'-')
-      ).trim()||'-';
+      const nenseiLabel=transcriptNenseiLabel(record);
       achievementRows.push({
         achievement:achievement||'-',
         title:title||'-',
@@ -7963,6 +8482,14 @@ function buildTranscriptModel(records){
       });
     });
   });
+
+  const contributionRows=(Array.isArray(contributions)?contributions:[])
+    .map(item=>({
+      officeEvent:String(item&&item.officeEvent||'').trim()||'-',
+      contribution:String(item&&item.contribution||'').trim()||'-',
+      nensei:String(item&&item.nensei||'').trim()||'7 NENSEI',
+      semester:String(item&&item.semester||'').trim()||'-'
+    }));
 
   const studyMarks=subjectRows
     .map(row=>parseTranscriptNumber(row.score))
@@ -7990,6 +8517,7 @@ function buildTranscriptModel(records){
   return {
     subjectRows,
     achievementRows,
+    contributionRows,
     studyResult,
     devotedStudentTitle,
     devotedStudentMark,
@@ -8115,7 +8643,8 @@ function createTranscriptResultTable(title,rows,className,showColumnHeader=true)
   return block;
 }
 
-function createAcademicDocumentIdentity(student,photoUrls,dormLogoUrls){
+function createAcademicDocumentIdentity(student,photoUrls,dormLogoUrls,options){
+  const settings=options||{};
   const identity=document.createElement('div');
   identity.className='pdfIdentity academicDocumentIdentity academicDocumentIdentityV16';
 
@@ -8153,11 +8682,22 @@ function createAcademicDocumentIdentity(student,photoUrls,dormLogoUrls){
     '<div class="pdfKanji academicIdentityKanji jp">'+escapeHtml(student.namaKanji||'-')+'</div>';
   details.appendChild(nameWrap);
 
+  const showGraduationDates=Boolean(
+    settings.showGraduationDates&&student&&student.isGraduated
+  );
   const idBlock=document.createElement('div');
-  idBlock.className='academicIdentityIdPlate';
-  idBlock.innerHTML=
-    '<div class="academicIdentityIdPlateLabel">GAKUSEI IDENTIFICATION NUMBER</div>'+ 
-    '<div class="academicIdentityIdPlateValue">'+escapeHtml(student.nomorId||'-')+'</div>';
+  idBlock.className='academicIdentityIdPlate'+(showGraduationDates?' academicIdentityIdPlateGraduated':'');
+  idBlock.innerHTML=showGraduationDates
+    ? '<div class="academicIdentityIdPrimary">'+
+        '<div class="academicIdentityIdPlateLabel">GAKUSEI IDENTIFICATION NUMBER</div>'+
+        '<div class="academicIdentityIdPlateValue">'+escapeHtml(student.nomorId||'-')+'</div>'+
+      '</div>'+
+      '<div class="academicIdentityIdMilestones">'+
+        '<div class="academicIdentityIdMilestone"><span>ENROLLMENT DATE</span><strong>'+escapeHtml(String(student.enrollmentDate||'').trim()||'—')+'</strong></div>'+
+        '<div class="academicIdentityIdMilestone"><span>GRADUATION DATE</span><strong>'+escapeHtml(String(student.graduationDate||'').trim()||'—')+'</strong></div>'+
+      '</div>'
+    : '<div class="academicIdentityIdPlateLabel">GAKUSEI IDENTIFICATION NUMBER</div>'+
+      '<div class="academicIdentityIdPlateValue">'+escapeHtml(student.nomorId||'-')+'</div>';
   details.appendChild(idBlock);
 
   identity.appendChild(details);
@@ -8260,7 +8800,49 @@ function createTranscriptAchievementsTable(rows){
       tr.innerHTML=
         '<td>'+escapeHtml(formatAchievementTitleCase(item&&item.achievement||'-'))+'</td>'+ 
         '<td>'+escapeHtml(item&&item.title||'-')+'</td>'+ 
-        '<td>'+escapeHtml(item&&item.nensei||'-')+'</td>'+ 
+        '<td>'+escapeHtml(item&&item.nensei||'7 NENSEI')+'</td>'+ 
+        '<td>'+escapeHtml(item&&item.semester||'-')+'</td>';
+      tbody.appendChild(tr);
+    });
+  }
+  table.appendChild(tbody);
+  block.appendChild(table);
+  return block;
+}
+
+function createTranscriptContributionsTable(rows){
+  const contributions=Array.isArray(rows)?rows:[];
+  const block=document.createElement('section');
+  block.className='transcriptAchievementsBlock';
+
+  const heading=document.createElement('div');
+  heading.className='transcriptAchievementsHeading';
+  heading.textContent='CONTRIBUTIONS';
+  block.appendChild(heading);
+
+  const table=document.createElement('table');
+  table.className='transcriptAchievementsTable transcriptContributionsTable';
+  table.innerHTML=
+    '<thead><tr>'+ 
+      '<th>OFFICE/EVENT</th>'+ 
+      '<th>CONTRIBUTION</th>'+ 
+      '<th>NENSEI</th>'+ 
+      '<th>SEMESTER</th>'+ 
+    '</tr></thead>';
+
+  const tbody=document.createElement('tbody');
+  if(!contributions.length){
+    const tr=document.createElement('tr');
+    tr.className='transcriptAchievementsEmptyRow';
+    tr.innerHTML='<td colspan="4">No contribution recorded.</td>';
+    tbody.appendChild(tr);
+  }else{
+    contributions.forEach(item=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=
+        '<td>'+escapeHtml(item&&item.officeEvent||'-')+'</td>'+ 
+        '<td>'+escapeHtml(item&&item.contribution||'-')+'</td>'+ 
+        '<td>'+escapeHtml(item&&item.nensei||'7 NENSEI')+'</td>'+ 
         '<td>'+escapeHtml(item&&item.semester||'-')+'</td>';
       tbody.appendChild(tr);
     });
@@ -8274,9 +8856,13 @@ function createTranscriptPage(payload,model,options){
   const student=payload.student||{};
   const assets=payload.assets||{};
   const settings=options||{};
+  const includeSupplemental=settings.includeSupplemental!==false;
   const totalRows=Math.max(0,Number(settings.totalRows)||0);
   const page=pdfPage('reportPage transcriptPage compactTranscriptPage singlePageTranscript');
   const achievementCount=Array.isArray(model&&model.achievementRows)?model.achievementRows.length:0;
+  const showContributions=Boolean(student&&student.isGraduated);
+  const contributionCount=showContributions&&Array.isArray(model&&model.contributionRows)?model.contributionRows.length:0;
+  const supplementalCount=achievementCount+contributionCount;
 
   /*
    * Preserve the project's original transcript-density trigger: achievement
@@ -8285,8 +8871,8 @@ function createTranscriptPage(payload,model,options){
    */
   if(totalRows>28)page.classList.add('transcriptDense');
   if(totalRows>40)page.classList.add('transcriptVeryDense');
-  if(achievementCount>4)page.classList.add('transcriptAchievementsDense');
-  if(achievementCount>10)page.classList.add('transcriptAchievementsVeryDense');
+  if(supplementalCount>4)page.classList.add('transcriptAchievementsDense');
+  if(supplementalCount>10)page.classList.add('transcriptAchievementsVeryDense');
 
   const headerLogoUrls=uniqueImageUrls([
     ...(Array.isArray(assets.headerLogoUrls)?assets.headerLogoUrls:[]),
@@ -8324,17 +8910,17 @@ function createTranscriptPage(payload,model,options){
   titleWrap.innerHTML=
     '<div class="reportInstitution"><span class="reportInstitutionJp jp">魔 法 所</span> - MAHOUTOKORO INSTITUTE OF SPIRIT AND MAGIC.</div>'+ 
     '<div class="reportTitle">ACADEMIC TRANSCRIPT</div>'+ 
-    '<div class="reportSub">Complete academic records.</div>';
+    '<div class="reportSub">A complete record of the Gakusei’s academic journey and school life.</div>';
   head.appendChild(titleWrap);
 
   const term=document.createElement('div');
   term.className='termBadge transcriptSummaryBadge';
-  term.innerHTML='<div class="termMain">ACADEMIC SUMMARY</div>';
+  term.innerHTML='<div class="termMain transcriptSummaryBadgeJp jp">学業概要及び補足記録</div><div class="termSub transcriptSummaryBadgeEn">ACADEMIC SUMMARY AND SUPPLEMENTARY RECORDS</div>';
   head.appendChild(term);
   page.appendChild(head);
 
   /* Transcript identity is exactly the same component used by the report. */
-  page.appendChild(createAcademicDocumentIdentity(student,photoUrls,dormLogoUrls));
+  page.appendChild(createAcademicDocumentIdentity(student,photoUrls,dormLogoUrls,{showGraduationDates:true}));
 
   page.appendChild(pdfSection('Recorded Subject Results'));
 
@@ -8359,7 +8945,7 @@ function createTranscriptPage(payload,model,options){
 
   const note=document.createElement('div');
   note.className='transcriptFormulaNote';
-  note.innerHTML='<strong>Notes:</strong> Final Score = (Study Result + Devoted Student Score) ÷ 2.';
+  note.innerHTML='<strong class="transcriptFormulaLabel">Notes:</strong><span class="transcriptFormulaText">Final Score = (Study Result + Devoted Student Score) ÷ 2.</span>';
   devotedBlock.appendChild(note);
   resultGrid.appendChild(devotedBlock);
 
@@ -8375,8 +8961,15 @@ function createTranscriptPage(payload,model,options){
   ));
   page.appendChild(resultGrid);
 
-  /* ACHIEVEMENTS follows the completed result area in the transcript. */
-  page.appendChild(createTranscriptAchievementsTable(model.achievementRows||[]));
+  if(includeSupplemental){
+    /* ACHIEVEMENTS follows the completed result area when there is safe room. */
+    page.appendChild(createTranscriptAchievementsTable(model.achievementRows||[]));
+
+    /* CONTRIBUTIONS is an alumni-only transcript section. */
+    if(showContributions){
+      page.appendChild(createTranscriptContributionsTable(model.contributionRows||[]));
+    }
+  }
 
   /*
    * Flexible protected space belongs to the Hanko/signature zone itself.
@@ -8397,7 +8990,95 @@ function createTranscriptPage(payload,model,options){
 
   const footer=document.createElement('div');
   footer.className='pdfFooter';
-  footer.innerHTML='<div class="pdfDate">MAHOUTOKORO • '+escapeHtml(payload.generatedDateLatin||'')+' • ACADEMIC TRANSCRIPT</div>';
+  const pageNumber=Math.max(1,Number(settings.pageNumber)||1);
+  const totalPages=Math.max(pageNumber,Number(settings.totalPages)||1);
+  const pageLabel=totalPages>1?' • PAGE '+pageNumber+' OF '+totalPages:'';
+  footer.innerHTML='<div class="pdfDate">MAHOUTOKORO • '+escapeHtml(payload.generatedDateLatin||'')+' • ACADEMIC TRANSCRIPT'+pageLabel+'</div>';
+  page.appendChild(footer);
+
+  return page;
+}
+
+function createTranscriptSupplementPage(payload,model,options){
+  const student=payload.student||{};
+  const assets=payload.assets||{};
+  const settings=options||{};
+  const page=pdfPage('reportPage transcriptPage compactTranscriptPage singlePageTranscript transcriptSupplementPage');
+  const showContributions=Boolean(student&&student.isGraduated);
+  const supplementalCount=(Array.isArray(model&&model.achievementRows)?model.achievementRows.length:0)+
+    (showContributions&&Array.isArray(model&&model.contributionRows)?model.contributionRows.length:0);
+
+  if(supplementalCount>10)page.classList.add('transcriptAchievementsDense');
+  if(supplementalCount>18)page.classList.add('transcriptAchievementsVeryDense');
+
+  const headerLogoUrls=uniqueImageUrls([
+    ...(Array.isArray(assets.headerLogoUrls)?assets.headerLogoUrls:[]),
+    assets.headerLogo,
+    PROMOTION_LOGO_DATA_URL
+  ]);
+  const photoUrls=uniqueImageUrls([
+    ...(Array.isArray(assets.photoUrls)?assets.photoUrls:[]),
+    assets.photo
+  ]);
+  const dormLogoUrls=uniqueImageUrls([
+    ...(Array.isArray(assets.dormLogoUrls)?assets.dormLogoUrls:[]),
+    assets.dormLogo
+  ]);
+  const headmasterStampUrls=uniqueImageUrls([
+    ...(Array.isArray(assets.headmasterStampUrls)?assets.headmasterStampUrls:[]),
+    assets.headmasterStamp
+  ]);
+  const studentAffairsStampUrls=uniqueImageUrls([
+    ...(Array.isArray(assets.studentAffairsStampUrls)?assets.studentAffairsStampUrls:[]),
+    assets.studentAffairsStamp
+  ]);
+
+  appendAcademicPageWatermark(page,headerLogoUrls);
+
+  const head=document.createElement('div');
+  head.className='reportHeader transcriptHeader';
+
+  const logoWrap=document.createElement('div');
+  logoWrap.className='reportLogoWrap';
+  appendDocumentImage(logoWrap,headerLogoUrls,'reportLogo','Mahoutokoro school logo','LOGO');
+  head.appendChild(logoWrap);
+
+  const titleWrap=document.createElement('div');
+  titleWrap.innerHTML=
+    '<div class="reportInstitution"><span class="reportInstitutionJp jp">魔 法 所</span> - MAHOUTOKORO INSTITUTE OF SPIRIT AND MAGIC.</div>'+ 
+    '<div class="reportTitle">ACADEMIC TRANSCRIPT</div>'+ 
+    '<div class="reportSub">A complete record of the Gakusei’s academic journey and school life.</div>';
+  head.appendChild(titleWrap);
+
+  const term=document.createElement('div');
+  term.className='termBadge transcriptSummaryBadge';
+  term.innerHTML='<div class="termMain transcriptSummaryBadgeJp jp">学業概要及び補足記録</div><div class="termSub transcriptSummaryBadgeEn">ACADEMIC SUMMARY AND SUPPLEMENTARY RECORDS</div>';
+  head.appendChild(term);
+  page.appendChild(head);
+
+  page.appendChild(createAcademicDocumentIdentity(student,photoUrls,dormLogoUrls,{showGraduationDates:true}));
+  page.appendChild(createTranscriptAchievementsTable(model.achievementRows||[]));
+  if(showContributions){
+    page.appendChild(createTranscriptContributionsTable(model.contributionRows||[]));
+  }
+
+  /* Page 2 carries the same official Hanko/signature area as page 1. */
+  const approvalSpacer=document.createElement('div');
+  approvalSpacer.className='transcriptApprovalSpacer';
+  approvalSpacer.setAttribute('aria-hidden','true');
+  page.appendChild(approvalSpacer);
+
+  const approval=document.createElement('div');
+  approval.className='approvalBlock signatures transcriptSignatures compactTranscriptSignatures transcriptApprovalZone';
+  approval.appendChild(signature('Mahoutokoro Headmaster',headmasterStampUrls,'Ryoumen Shō'));
+  approval.appendChild(signature('MJP Report Administration',studentAffairsStampUrls,'Student Affairs Office'));
+  page.appendChild(approval);
+
+  const footer=document.createElement('div');
+  footer.className='pdfFooter';
+  const pageNumber=Math.max(1,Number(settings.pageNumber)||2);
+  const totalPages=Math.max(pageNumber,Number(settings.totalPages)||2);
+  footer.innerHTML='<div class="pdfDate">MAHOUTOKORO • '+escapeHtml(payload.generatedDateLatin||'')+' • ACADEMIC TRANSCRIPT • PAGE '+pageNumber+' OF '+totalPages+'</div>';
   page.appendChild(footer);
 
   return page;
@@ -8434,7 +9115,7 @@ function createAcademicRecordPage(payload,record,options){
       const a=payload.assets||{};
       const settings=options||{};
       const isTranscript=settings.documentType==='transcript';
-      const page=pdfPage('reportPage'+(isTranscript?' transcriptRecordPage':''));
+      const page=pdfPage('reportPage '+(isTranscript?'transcriptRecordPage':'academicRecordPage'));
 
       const title=isTranscript
         ? 'ACADEMIC TRANSCRIPT'
@@ -8442,7 +9123,7 @@ function createAcademicRecordPage(payload,record,options){
 
       const subtitle=isTranscript
         ? 'Complete Transcript Summary'
-        : 'Official Semester Study Result';
+        : 'Semester Result';
 
       const headerLogoUrls=uniqueImageUrls([
         ...(Array.isArray(a.headerLogoUrls)?a.headerLogoUrls:[]),
@@ -9488,7 +10169,7 @@ async function downloadReviewedDocumentAsPdf(){
       pdf.text(
         settings.isTranscript
           ? 'Complete Transcript Summary'
-          : 'Official Semester Study Result',
+          : 'Semester Result',
         96,
         66
       );
@@ -10634,8 +11315,8 @@ function updateAdminAccessButton(){
   }
   if(title)title.textContent=active?'ADMIN CONTROL':'LOGIN AS ADMIN';
   if(description)description.textContent=active
-    ?'Administrator mode active • manage Academic Records publication'
-    :'Restricted Academic Records publication control';
+    ?'Administrator mode active • manage Academic Records publication & graduation release'
+    :'Restricted Academic Records publication & graduation release control';
   syncGeneralLogoutOption();
 }
 
@@ -10971,6 +11652,7 @@ async function showAdminControlView(forceCatalog){
   $('adminControlView').classList.remove('hidden');
   await Promise.all([
     refreshAdminSemesterCatalog(Boolean(forceCatalog)),
+    refreshAdminGraduationCatalog(Boolean(forceCatalog)),
     refreshAdminSOAAccess(true),
     refreshAdminSOARecap(true)
   ]);
@@ -10978,9 +11660,9 @@ async function showAdminControlView(forceCatalog){
 
 function adminBackendNoticeText(){
   const mode=AcademicPublicationControl.getStorageMode();
-  if(mode==='GLOBAL REMOTE MODE')return 'GLOBAL MODE • Publication settings are shared with every visitor through the configured Apps Script backend.';
-  if(mode==='OFFLINE FALLBACK')return 'OFFLINE FALLBACK • Remote publication settings could not be reached. Changes are not saved globally until the backend connection works.';
-  return 'GLOBAL BACKEND REQUIRED • Publication control could not initialize from the configured Portal backend.';
+  if(mode==='GLOBAL REMOTE MODE')return 'GLOBAL MODE • Academic publication and graduation-release settings are shared with every visitor through the configured Apps Script backend.';
+  if(mode==='OFFLINE FALLBACK')return 'OFFLINE FALLBACK • Remote Admin settings could not be reached. Changes are not saved globally until the backend connection works.';
+  return 'GLOBAL BACKEND REQUIRED • Admin controls could not initialize from the configured Portal backend.';
 }
 
 async function refreshAdminSemesterCatalog(force){
@@ -11075,6 +11757,263 @@ async function saveAdminSemesterSettings(){
   }
 }
 
+const ADMIN_GRADUATION_TIME_ZONE='Asia/Jakarta';
+let adminGraduationCatalog=[];
+
+function scrollAdminGraduationControlIntoView(){
+  const panel=$('adminGraduationControl');
+  if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function formatAdminWibDateTime(value){
+  if(!value)return 'NOT SCHEDULED';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return 'INVALID DATE';
+  try{
+    return new Intl.DateTimeFormat('en-GB',{
+      timeZone:ADMIN_GRADUATION_TIME_ZONE,
+      day:'2-digit',month:'short',year:'numeric',
+      hour:'2-digit',minute:'2-digit',hour12:false
+    }).format(date)+' WIB';
+  }catch(error){
+    return date.toLocaleString()+' WIB';
+  }
+}
+
+function isoToWibDateTimeLocal(value){
+  if(!value)return '';
+  const date=new Date(value);
+  if(Number.isNaN(date.getTime()))return '';
+  try{
+    const parts=new Intl.DateTimeFormat('en-GB',{
+      timeZone:ADMIN_GRADUATION_TIME_ZONE,
+      year:'numeric',month:'2-digit',day:'2-digit',
+      hour:'2-digit',minute:'2-digit',hourCycle:'h23'
+    }).formatToParts(date).reduce((map,part)=>{
+      if(part.type!=='literal')map[part.type]=part.value;
+      return map;
+    },{});
+    return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+  }catch(error){return ''}
+}
+
+function wibDateTimeLocalToIso(value){
+  const match=String(value||'').trim().match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/);
+  if(!match)return '';
+  const [,year,month,day,hour,minute]=match.map((item,index)=>index===0?item:Number(item));
+  /* WIB is fixed UTC+7. datetime-local intentionally has no browser timezone. */
+  const utc=Date.UTC(year,month-1,day,hour-7,minute,0,0);
+  const date=new Date(utc);
+  return Number.isNaN(date.getTime())?'':date.toISOString();
+}
+
+function adminGraduationPreview(item,mode,scheduledAt){
+  const hasCurrent=Boolean(item&&item.hasCurrentSource);
+  const hasGraduated=Boolean(item&&item.hasGraduatedSource);
+  const normalized=String(mode||'AUTO').toUpperCase();
+  if(normalized==='OFF'){
+    return hasCurrent
+      ? {state:'CURRENT',theme:'current',detail:'Graduated release is explicitly OFF.'}
+      : {state:'GRADUATED',theme:'graduated',detail:'Archived-only record; current-student source is unavailable.'};
+  }
+  if(normalized==='ON'){
+    return hasGraduated
+      ? {state:'GRADUATED',theme:'graduated',detail:'Graduated release is ON now.'}
+      : {state:'WAITING DATA',theme:'waiting',detail:'ON is saved, but the GRADUATED source row is not ready yet.'};
+  }
+  if(normalized==='SCHEDULED'){
+    const due=scheduledAt?new Date(scheduledAt):null;
+    const valid=due&&!Number.isNaN(due.getTime());
+    if(!valid)return{state:'SCHEDULE REQUIRED',theme:'waiting',detail:'Choose the activation date and time in WIB.'};
+    if(!hasCurrent&&hasGraduated){
+      return{state:'GRADUATED',theme:'graduated',detail:'Archived-only record cannot be held in current-student mode.'};
+    }
+    if(Date.now()>=due.getTime()){
+      return hasGraduated
+        ? {state:'GRADUATED',theme:'graduated',detail:'Scheduled activation reached '+formatAdminWibDateTime(scheduledAt)+'.'}
+        : {state:'WAITING DATA',theme:'waiting',detail:'Schedule has been reached; waiting for the GRADUATED source row.'};
+    }
+    return{state:'SCHEDULED',theme:'scheduled',detail:'Will activate '+formatAdminWibDateTime(scheduledAt)+'.'};
+  }
+  return hasGraduated
+    ? {state:'GRADUATED',theme:'graduated',detail:'AUTO • following the existing GRADUATED sheet status.'}
+    : {state:'CURRENT',theme:'current',detail:'AUTO • following the existing current-student source.'};
+}
+
+async function refreshAdminGraduationCatalog(force){
+  const list=$('adminGraduationList');
+  const refreshButton=$('adminGraduationRefresh');
+  const message=$('adminGraduationMessage');
+  if(list)list.innerHTML='<div class="adminGraduationLoading">Synchronizing Gakusei graduation status...</div>';
+  if(message){message.className='adminGraduationMessage';message.textContent=''}
+  if(refreshButton){refreshButton.disabled=true;refreshButton.textContent='REFRESHING...'}
+  try{
+    await AcademicPublicationControl.ready();
+    const rows=await GakuseiDataService.getGraduationAdminCatalog(Boolean(force));
+    adminGraduationCatalog=Array.isArray(rows)?rows:[];
+    renderAdminGraduationCatalog(adminGraduationCatalog);
+  }catch(error){
+    adminGraduationCatalog=[];
+    if(list)list.innerHTML='<div class="adminGraduationLoading is-error">'+escapeHtml(error&&error.message?error.message:error)+'</div>';
+    text('adminGraduationCount','0 GAKUSEI');
+  }finally{
+    if(refreshButton){refreshButton.disabled=false;refreshButton.textContent='REFRESH'}
+  }
+}
+
+function renderAdminGraduationCatalog(rows){
+  const list=$('adminGraduationList');
+  if(!list)return;
+  list.innerHTML='';
+  const data=Array.isArray(rows)?rows:[];
+  const readyCount=data.filter(item=>item&&item.hasGraduatedSource).length;
+  text('adminGraduationCount',data.length+' GAKUSEI • '+readyCount+' GRADUATED READY');
+
+  if(!data.length){
+    list.innerHTML='<div class="adminGraduationLoading is-error">No Gakusei source data could be detected.</div>';
+    return;
+  }
+
+  data.forEach(item=>{
+    const control=AcademicPublicationControl.getGraduationControl(item.studentId);
+    const mode=String(control.mode||'AUTO').toUpperCase();
+    const row=document.createElement('article');
+    row.className='adminGraduationRow';
+    row.dataset.studentId=String(item.studentId||'');
+    row.dataset.search=(String(item.studentId||'')+' '+String(item.namaLatin||'')+' '+String(item.namaKanji||'')).toLowerCase();
+    row.dataset.hasCurrent=item.hasCurrentSource?'1':'0';
+    row.dataset.hasGraduated=item.hasGraduatedSource?'1':'0';
+
+    const offDisabled=!item.hasCurrentSource?' disabled':'';
+    const scheduledDisabled=!item.hasCurrentSource?' disabled':'';
+    row.innerHTML=
+      '<div class="adminGraduationIdentity">'+
+        '<span class="adminGraduationMonogram">'+escapeHtml(String(item.namaLatin||'?').trim().charAt(0).toUpperCase()||'?')+'</span>'+
+        '<div class="adminGraduationIdentityCopy">'+
+          '<strong>'+escapeHtml(item.namaLatin||'-')+'</strong>'+
+          '<span class="jp">'+escapeHtml(item.namaKanji||'-')+'</span>'+
+          '<small>'+escapeHtml(item.studentId||'-')+' • '+escapeHtml(item.currentGrade||'-')+'</small>'+
+        '</div>'+
+      '</div>'+
+      '<div class="adminGraduationSourceBadges">'+
+        '<span class="'+(item.hasCurrentSource?'is-ready':'is-missing')+'">CURRENT '+(item.hasCurrentSource?'READY':'MISSING')+'</span>'+
+        '<span class="'+(item.hasGraduatedSource?'is-ready':'is-missing')+'">GRADUATED '+(item.hasGraduatedSource?'READY':'MISSING')+'</span>'+
+      '</div>'+
+      '<div class="adminGraduationControlCell">'+
+        '<label>STATUS CONTROL</label>'+
+        '<select class="adminGraduationMode" aria-label="Graduation status control for '+escapeHtml(item.studentId||'')+'">'+
+          '<option value="AUTO" '+(mode==='AUTO'?'selected':'')+'>AUTO</option>'+
+          '<option value="OFF" '+(mode==='OFF'?'selected':'')+offDisabled+'>OFF</option>'+
+          '<option value="ON" '+(mode==='ON'?'selected':'')+'>ON</option>'+
+          '<option value="SCHEDULED" '+(mode==='SCHEDULED'?'selected':'')+scheduledDisabled+'>SCHEDULED</option>'+
+        '</select>'+
+      '</div>'+
+      '<div class="adminGraduationScheduleCell">'+
+        '<label>ACTIVATE AT • WIB</label>'+
+        '<input class="adminGraduationSchedule" type="datetime-local" value="'+escapeHtml(isoToWibDateTimeLocal(control.scheduledAt||''))+'" aria-label="Graduation activation schedule in WIB for '+escapeHtml(item.studentId||'')+'">'+
+      '</div>'+
+      '<div class="adminGraduationEffective">'+
+        '<span class="adminGraduationEffectiveBadge"></span>'+
+        '<small class="adminGraduationEffectiveDetail"></small>'+
+      '</div>';
+
+    const modeSelect=row.querySelector('.adminGraduationMode');
+    const scheduleInput=row.querySelector('.adminGraduationSchedule');
+    const sync=()=>syncAdminGraduationRow(row,item);
+    modeSelect.addEventListener('change',()=>{row.classList.add('is-dirty');sync()});
+    scheduleInput.addEventListener('change',()=>{row.classList.add('is-dirty');sync()});
+    list.appendChild(row);
+    sync();
+  });
+  filterAdminGraduationRows();
+}
+
+function syncAdminGraduationRow(row,item){
+  if(!row)return;
+  const modeSelect=row.querySelector('.adminGraduationMode');
+  const scheduleInput=row.querySelector('.adminGraduationSchedule');
+  const badge=row.querySelector('.adminGraduationEffectiveBadge');
+  const detail=row.querySelector('.adminGraduationEffectiveDetail');
+  const mode=modeSelect?String(modeSelect.value||'AUTO').toUpperCase():'AUTO';
+  if(scheduleInput) scheduleInput.disabled=mode!=='SCHEDULED'||!Boolean(item&&item.hasCurrentSource);
+  const scheduledAt=mode==='SCHEDULED'&&scheduleInput?wibDateTimeLocalToIso(scheduleInput.value):'';
+  const preview=adminGraduationPreview(item,mode,scheduledAt);
+  if(badge){badge.className='adminGraduationEffectiveBadge is-'+preview.theme;badge.textContent=preview.state}
+  if(detail)detail.textContent=preview.detail;
+}
+
+function filterAdminGraduationRows(){
+  const input=$('adminGraduationSearch');
+  const query=String(input&&input.value||'').trim().toLowerCase();
+  let visible=0;
+  document.querySelectorAll('#adminGraduationList .adminGraduationRow').forEach(row=>{
+    const show=!query||String(row.dataset.search||'').includes(query);
+    row.classList.toggle('is-filtered-out',!show);
+    if(show)visible++;
+  });
+  if(query)text('adminGraduationCount',visible+' MATCHES • '+adminGraduationCatalog.length+' TOTAL');
+  else{
+    const readyCount=adminGraduationCatalog.filter(item=>item&&item.hasGraduatedSource).length;
+    text('adminGraduationCount',adminGraduationCatalog.length+' GAKUSEI • '+readyCount+' GRADUATED READY');
+  }
+}
+
+async function saveAdminGraduationSettings(){
+  if(!AcademicPublicationControl.isAdmin()){openAdminPanel();return}
+  const button=$('adminGraduationSaveButton');
+  const message=$('adminGraduationMessage');
+  const graduationMap={};
+  let validationError='';
+
+  document.querySelectorAll('#adminGraduationList .adminGraduationRow').forEach(row=>{
+    if(validationError)return;
+    const studentId=String(row.dataset.studentId||'').trim();
+    const modeSelect=row.querySelector('.adminGraduationMode');
+    const scheduleInput=row.querySelector('.adminGraduationSchedule');
+    const mode=String(modeSelect&&modeSelect.value||'AUTO').toUpperCase();
+    const hasCurrent=row.dataset.hasCurrent==='1';
+    if(mode==='AUTO'||!studentId)return;
+    if((mode==='OFF'||mode==='SCHEDULED')&&!hasCurrent){
+      validationError=studentId+' has no current-student source, so '+mode+' cannot be used safely.';
+      return;
+    }
+    let scheduledAt='';
+    if(mode==='SCHEDULED'){
+      scheduledAt=wibDateTimeLocalToIso(scheduleInput&&scheduleInput.value||'');
+      if(!scheduledAt){
+        validationError='Choose a valid WIB activation time for '+studentId+'.';
+        return;
+      }
+    }
+    graduationMap[studentId]={mode,scheduledAt};
+  });
+
+  if(validationError){
+    if(message){message.className='adminGraduationMessage is-error';message.textContent=validationError}
+    return;
+  }
+
+  if(button){button.disabled=true;button.textContent='SAVING...'}
+  if(message){message.className='adminGraduationMessage';message.textContent='Saving graduation-release settings globally...'}
+  try{
+    const current=AcademicPublicationControl.getSettings();
+    const result=await AcademicPublicationControl.save(current.semesters||{},graduationMap);
+    if(message){
+      message.className='adminGraduationMessage is-success';
+      message.textContent=result.localOnly
+        ?'Saved in LOCAL TEST MODE. Global graduation release requires the configured Portal backend.'
+        :'Graduation-release settings saved globally. Scheduled times use WIB (UTC+7).';
+    }
+    await refreshAdminGraduationCatalog(false);
+    await refreshAdminHomeSummary(false);
+    if(currentStudentId)fetchStudent(currentStudentId,true);
+  }catch(error){
+    if(message){message.className='adminGraduationMessage is-error';message.textContent=error&&error.message?error.message:String(error)}
+  }finally{
+    if(button){button.disabled=false;button.textContent='SAVE GRADUATION SETTINGS'}
+  }
+}
+
 async function toggleNewestAcademicPublication(){
   if(!AcademicPublicationControl.isAdmin()){openAdminPanel();return}
   const button=$('adminQuickPublishButton');
@@ -11107,9 +12046,10 @@ function startRefresh(){
      * eligible buttons follow Admin changes on other devices without reload.
      * Backend submitSOA still performs its own authoritative gate check.
      */
-    SOAAccessControl.refresh(true)
-      .catch(()=>null)
-      .finally(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)});
+    Promise.allSettled([
+      SOAAccessControl.refresh(true),
+      AcademicPublicationControl.reload()
+    ]).finally(()=>{if(currentStudentId)fetchStudent(currentStudentId,true)});
   },AUTO_REFRESH_MS);
 }function escapeHtml(value){return String(value==null?'':value).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function chunk(items,size){const out=[];for(let i=0;i<items.length;i+=size)out.push(items.slice(i,i+size));return out}function safeName(value){return String(value||'REPORT').replace(/[\\/:*?"<>|]+/g,'-').replace(/\s+/g,'_')}
 

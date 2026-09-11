@@ -17363,3 +17363,1089 @@ body.student-login-open{overflow:hidden}
   }
 }
 
+
+
+/* =====================================================================
+   V143 — TRANSCRIPT SUPPLEMENTARY PAGE POLISH ONLY
+   Scope: supplementary header badge, CONTRIBUTIONS column proportions,
+   and the official Hanko/signature area on transcript page 2.
+   No other project layout, data, or behavior is changed.
+   ===================================================================== */
+
+/* Give the long supplementary badge enough room and keep both words neat. */
+.transcriptSupplementPage .reportHeader{
+  grid-template-columns:74px minmax(0,1fr) 168px;
+  gap:12px;
+}
+.transcriptSupplementPage .transcriptSummaryBadge{
+  min-width:168px;
+  padding:10px 12px;
+}
+.transcriptSupplementPage .transcriptSummaryBadge .termMain{
+  width:100%;
+  font-size:12px;
+  line-height:1.12;
+  letter-spacing:.025em;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+  text-align:center;
+}
+
+/* CONTRIBUTIONS: preserve Office/Event room, narrow Contribution, and open
+   Nensei/Semester so comma lists and ranges wrap only when truly necessary. */
+.singlePageTranscript .transcriptContributionsTable th:nth-child(1),
+.singlePageTranscript .transcriptContributionsTable td:nth-child(1){width:29%}
+.singlePageTranscript .transcriptContributionsTable th:nth-child(2),
+.singlePageTranscript .transcriptContributionsTable td:nth-child(2){width:28%}
+.singlePageTranscript .transcriptContributionsTable th:nth-child(3),
+.singlePageTranscript .transcriptContributionsTable td:nth-child(3){
+  width:20%;
+  text-align:center;
+  overflow-wrap:normal;
+  word-break:normal;
+}
+.singlePageTranscript .transcriptContributionsTable th:nth-child(4),
+.singlePageTranscript .transcriptContributionsTable td:nth-child(4){
+  width:23%;
+  text-align:center;
+  overflow-wrap:normal;
+  word-break:normal;
+}
+
+/* Page 2 uses the same protected official signature geometry as page 1. */
+.transcriptSupplementPage .transcriptApprovalSpacer{
+  flex:1 1 auto;
+  min-height:18px;
+  max-height:58px;
+}
+.transcriptSupplementPage .transcriptApprovalZone{
+  flex:0 0 auto;
+  margin-top:0!important;
+  margin-bottom:24px;
+  padding-top:12px;
+}
+.transcriptSupplementPage.transcriptAchievementsVeryDense .transcriptApprovalSpacer{
+  min-height:12px;
+  max-height:28px;
+}
+
+
+/* =====================================================================
+   V144 — GRADUATED ACADEMIC MILESTONES ONLY
+   Enrollment/Graduation dates are visible only for GRADUATED students.
+   Scope: desktop certificate column, mobile summary, transcript identity.
+   ===================================================================== */
+
+/* Desktop: compact alumni milestone panel directly below certificate. */
+.graduatedDatesPanel{
+  overflow:hidden;
+  border-color:color-mix(in srgb,var(--accent) 46%,transparent);
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 48%),
+    linear-gradient(145deg,rgba(15,14,18,.74),rgba(5,5,8,.82));
+  box-shadow:0 18px 48px rgba(0,0,0,.30),inset 0 0 0 1px color-mix(in srgb,var(--accent) 5%,transparent);
+}
+.resultGrid:not(.graduatedLayout) .graduatedDatesPanel{display:none!important}
+.graduatedDatesPanelHead{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:18px;
+  padding:14px 18px 11px;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 9%,rgba(0,0,0,.34)),transparent);
+}
+.graduatedDatesPanelHead span{
+  color:var(--accent);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.13em;
+}
+.graduatedDatesPanelHead strong{
+  color:var(--strong);
+  font-family:"Cinzel",Georgia,serif;
+  font-size:12px;
+  font-weight:800;
+  letter-spacing:.025em;
+  text-align:right;
+}
+.graduatedDatesPanelGrid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:9px;
+  padding:12px 14px 14px;
+}
+.graduatedDateItem{
+  min-width:0;
+  padding:11px 12px;
+  border:1px solid color-mix(in srgb,var(--border) 82%,transparent);
+  border-radius:14px;
+  background:linear-gradient(145deg,rgba(255,255,255,.04),rgba(0,0,0,.24));
+  box-shadow:inset 3px 0 0 color-mix(in srgb,var(--accent) 72%,transparent);
+}
+.graduatedDateItem span{
+  display:block;
+  color:var(--accent);
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.10em;
+}
+.graduatedDateItem strong{
+  display:block;
+  margin-top:6px;
+  color:var(--strong);
+  font-size:12px;
+  font-weight:850;
+  line-height:1.2;
+  overflow-wrap:anywhere;
+}
+
+/* Transcript only: dates sit inside Student Profile, not semester reports. */
+.academicIdentityMilestones{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  margin-top:8px;
+}
+.academicIdentityMilestone{
+  min-width:0;
+  padding:6px 8px 5px;
+  border:1px solid #d7bd98;
+  border-radius:7px;
+  background:linear-gradient(180deg,rgba(255,253,248,.96),rgba(247,237,222,.90));
+  box-shadow:inset 2px 0 0 #8e1118;
+}
+.academicIdentityMilestone span{
+  display:block;
+  color:#8e1118;
+  font-size:5.3px;
+  font-weight:900;
+  letter-spacing:.095em;
+  line-height:1.1;
+}
+.academicIdentityMilestone strong{
+  display:block;
+  margin-top:3px;
+  color:#2a211a;
+  font-size:7.4px;
+  font-weight:900;
+  line-height:1.15;
+  overflow-wrap:anywhere;
+}
+
+/* Mobile: immediately below Current Grade + Gakusei ID summary row. */
+@media (max-width:768px){
+  .mobileGraduatedDates{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:6px;
+    margin-top:7px;
+  }
+  .mobileGraduatedDates.hidden{display:none!important}
+  .mobileGraduatedDateCard{
+    position:relative;
+    min-width:0;
+    overflow:hidden;
+    padding:8px 9px 9px;
+    border:1px solid color-mix(in srgb,var(--accent) 30%,rgba(255,255,255,.08));
+    border-radius:13px;
+    background:
+      radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 10%,transparent),transparent 58%),
+      rgba(255,255,255,.025);
+    box-shadow:inset 2px 0 0 color-mix(in srgb,var(--accent) 72%,transparent);
+  }
+  .mobileGraduatedDateCard span{
+    display:block;
+    color:var(--accent);
+    font-size:5.5px;
+    font-weight:900;
+    letter-spacing:.09em;
+  }
+  .mobileGraduatedDateCard strong{
+    display:block;
+    margin-top:3px;
+    color:var(--strong);
+    font-size:8px;
+    font-weight:900;
+    line-height:1.15;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+}
+
+/* =====================================================================
+   V145 — TRANSCRIPT ID-PLATE MILESTONES + UNIFIED SUMMARY BADGE ONLY
+   Scope is strictly limited to Academic Transcript presentation.
+   ===================================================================== */
+
+/* The same right-side title is used on every transcript page. */
+.transcriptPage .reportHeader{
+  grid-template-columns:68px minmax(0,1fr) 182px;
+  gap:12px;
+}
+.transcriptPage .transcriptSummaryBadge,
+.transcriptSupplementPage .transcriptSummaryBadge{
+  width:182px;
+  min-width:182px;
+  min-height:52px;
+  padding:8px 10px;
+}
+.transcriptPage .transcriptSummaryBadge .termMain,
+.transcriptSupplementPage .transcriptSummaryBadge .termMain{
+  width:100%;
+  display:block;
+  color:#fff6e8;
+  font-size:8.2px;
+  font-weight:900;
+  line-height:1.12;
+  letter-spacing:.055em;
+  text-align:center;
+  white-space:normal;
+  overflow-wrap:normal;
+  word-break:normal;
+}
+.transcriptPage .transcriptSummaryBadge .termMain span,
+.transcriptSupplementPage .transcriptSummaryBadge .termMain span{
+  display:block;
+  white-space:nowrap;
+}
+.transcriptPage .transcriptSummaryBadge .termMain span+span,
+.transcriptSupplementPage .transcriptSummaryBadge .termMain span+span{
+  margin-top:2px;
+}
+
+/* GRADUATED transcript only: keep Enrollment/Graduation dates inside the
+   existing red identification plate, directly beside the Gakusei ID. */
+.academicIdentityIdPlateGraduated{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(188px,.96fr);
+  gap:10px;
+  align-items:center;
+  padding:8px 12px 8px 13px;
+}
+.academicIdentityIdPrimary,
+.academicIdentityIdMilestones{
+  position:relative;
+  z-index:1;
+  min-width:0;
+}
+.academicIdentityIdPlateGraduated .academicIdentityIdPlateValue{
+  font-size:12.9px;
+  letter-spacing:.065em;
+}
+.academicIdentityIdMilestones{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+  padding-left:10px;
+  border-left:1px solid rgba(255,241,218,.28);
+}
+.academicIdentityIdMilestone{
+  min-width:0;
+}
+.academicIdentityIdMilestone span{
+  display:block;
+  color:#d9bd91;
+  font-size:4.7px;
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:.075em;
+  white-space:nowrap;
+}
+.academicIdentityIdMilestone strong{
+  display:block;
+  margin-top:4px;
+  color:#fff4e2;
+  font-size:6.7px;
+  font-weight:900;
+  line-height:1.05;
+  letter-spacing:.015em;
+  white-space:nowrap;
+}
+
+/* =====================================================
+   V146 — DOCUMENT TYPOGRAPHY ONLY
+   Scope is intentionally restricted to generated .pdfPage documents.
+   Website desktop/mobile typography and layout are untouched.
+   ===================================================== */
+.pdfPage,
+.pdfPage *{
+  font-family:Arial,"Helvetica Neue",Helvetica,"Noto Sans JP",sans-serif!important;
+  font-variant-numeric:lining-nums tabular-nums;
+  font-feature-settings:"lnum" 1,"tnum" 1;
+}
+
+/* Keep numeric document values visually steady on the baseline. */
+.pdfPage .scoreNumber,
+.pdfPage .transcriptDetailNumber,
+.pdfPage .transcriptMarkCell,
+.pdfPage .pdfScoreValue,
+.pdfPage .transcriptSummaryValue,
+.pdfPage .academicIdentityIdPlateValue,
+.pdfPage .academicIdentityIdMilestone strong,
+.pdfPage .summaryValue{
+  font-family:Arial,"Helvetica Neue",Helvetica,sans-serif!important;
+  font-variant-numeric:lining-nums tabular-nums;
+  font-feature-settings:"lnum" 1,"tnum" 1;
+}
+
+/* =====================================================================
+   V147 — GRADUATED DESKTOP BALANCED MILESTONE ROW ONLY
+   Scope: desktop GRADUATED layout. Mobile, document/PDF, data and logic are
+   intentionally untouched.
+
+   Desktop grid becomes:
+   row 1 : Student Profile              | Study Completion Certificate
+   row 2 : Life After Graduation        | Enrollment & Graduation
+   row 3 : Academic Records (full width)
+   ===================================================================== */
+@media (min-width:769px){
+  /* Let the nested desktop sections participate directly in resultGrid so
+     the date panel no longer forces an unexplained empty area on the left. */
+  .resultGrid.graduatedLayout>.rightColumn,
+  .resultGrid.graduatedLayout>.graduatedWideSections{
+    display:contents;
+  }
+
+  .resultGrid.graduatedLayout>#studentProfilePanel{
+    grid-column:1;
+    grid-row:1;
+    align-self:start;
+  }
+  .resultGrid.graduatedLayout>.rightColumn>aside.panel{
+    grid-column:2;
+    grid-row:1;
+    align-self:start;
+    position:relative;
+    z-index:1;
+  }
+
+  /* Balanced second row: both outer panels stretch to exactly the same row
+     height while retaining their existing alumni colors and visual language. */
+  .resultGrid.graduatedLayout>.graduatedWideSections>#occupationCard{
+    grid-column:1;
+    grid-row:2;
+    align-self:stretch;
+    height:100%;
+    min-height:0;
+    display:grid;
+    grid-template-rows:auto minmax(0,1fr);
+    padding:14px 16px 15px;
+    position:relative;
+    z-index:1;
+  }
+  .resultGrid.graduatedLayout>.rightColumn>.graduatedDatesPanel{
+    grid-column:2;
+    grid-row:2;
+    align-self:stretch;
+    height:100%;
+    min-height:0;
+    position:relative;
+    z-index:1;
+  }
+  .resultGrid.graduatedLayout>.graduatedWideSections>#academicCardPanel{
+    grid-column:1/-1;
+    grid-row:3;
+    position:relative;
+    z-index:1;
+  }
+
+  /* Compact Life After Graduation to the same visual scale as the milestone
+     date panel instead of keeping the previous ceremonial full-width height. */
+  .resultGrid.graduatedLayout .graduatedWideSections #occupationSectionTitle{
+    min-height:30px;
+    gap:9px;
+    margin:0 1px 8px;
+    font-size:12px;
+    line-height:1.15;
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections #occupationSectionTitle::before{
+    width:26px;
+    height:26px;
+    flex:0 0 26px;
+    font-size:10px;
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections .lifeAfterGraduation{
+    min-height:0;
+    height:100%;
+    display:grid;
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections .lifeAfterGraduationCard{
+    width:100%;
+    min-height:0;
+    height:100%;
+    display:grid;
+    grid-template-columns:58px minmax(0,1fr);
+    gap:12px;
+    align-items:center;
+    padding:10px 13px;
+    border-radius:15px;
+    box-shadow:
+      inset 4px 0 0 var(--accent),
+      inset 0 0 30px color-mix(in srgb,var(--accent) 6%,transparent),
+      0 12px 30px rgba(0,0,0,.26);
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections .lifeAfterGraduationCard::before{
+    left:0;
+    top:0;
+    right:0;
+    bottom:0;
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections .lifeAfterGraduationCard::after{
+    right:16px;
+    bottom:10px;
+    font-size:22px;
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections .lifeAfterGraduationSigil{
+    width:50px;
+    height:50px;
+    border-radius:50%;
+    font-size:11px;
+    box-shadow:
+      0 8px 20px rgba(0,0,0,.36),
+      0 0 22px color-mix(in srgb,var(--accent) 30%,transparent),
+      inset 0 0 0 4px rgba(255,255,255,.08);
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections .lifeAfterGraduationSigil::after{
+    display:none;
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections .lifeAfterGraduationContent{
+    min-width:0;
+    padding:8px 10px;
+    border-radius:12px;
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections .lifeAfterGraduationEyebrow{
+    font-size:8px;
+    line-height:1.15;
+    letter-spacing:.13em;
+  }
+  .resultGrid.graduatedLayout .graduatedWideSections .lifeAfterGraduationNarrative{
+    max-width:none;
+    margin-top:5px;
+    font-size:11.5px;
+    line-height:1.42;
+  }
+}
+
+/* =====================================================================
+   V148 — TRANSCRIPT DEVOTED / FINAL RESULT EXACT HEIGHT BALANCE ONLY
+   Scope is deliberately limited to the Academic Transcript bottom result row.
+   Data, typography, pagination, Hanko, website desktop/mobile and every other
+   project layout remain untouched.
+   ===================================================================== */
+.singlePageTranscript .transcriptBottomGrid{
+  align-items:stretch;
+}
+.singlePageTranscript .transcriptBottomGrid>.transcriptResultBlock{
+  height:100%;
+  display:grid;
+  align-content:stretch;
+}
+.singlePageTranscript .transcriptBottomGrid>.devotedStudentBlock{
+  grid-template-rows:auto auto minmax(0,1fr);
+}
+.singlePageTranscript .transcriptBottomGrid>.finalResultBlock{
+  grid-template-rows:auto minmax(0,1fr);
+}
+.singlePageTranscript .devotedStudentBlock .transcriptFormulaNote{
+  height:auto;
+  min-height:0;
+  display:flex;
+  align-items:center;
+  align-self:stretch;
+}
+.singlePageTranscript .finalResultBlock .transcriptResultTable{
+  height:100%;
+}
+
+/* =====================================================================
+   V150 — ACADEMIC DOCUMENT LANGUAGE + ALIGNMENT ONLY
+   Scope is deliberately limited to generated Academic Transcript and
+   semester Academic Record pages (.pdfPage.reportPage). Website desktop,
+   mobile UI, data logic, pagination, Hanko and all other document families
+   remain untouched.
+   ===================================================================== */
+
+/* Transcript header: identical copy and bilingual summary badge on page 1/2. */
+.pdfPage.reportPage.transcriptPage .reportSub{
+  max-width:none;
+}
+.pdfPage.reportPage.transcriptPage .transcriptSummaryBadge{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  min-height:58px;
+  padding:8px 10px;
+}
+.pdfPage.reportPage.transcriptPage .transcriptSummaryBadge .transcriptSummaryBadgeJp{
+  display:block;
+  width:100%;
+  margin:0;
+  color:#fff6e8;
+  font-family:"Noto Sans JP",Arial,sans-serif!important;
+  font-size:10.6px;
+  font-weight:900;
+  line-height:1.14;
+  letter-spacing:.045em;
+  text-align:center;
+  white-space:nowrap;
+}
+.pdfPage.reportPage.transcriptPage .transcriptSummaryBadge .transcriptSummaryBadgeEn{
+  display:block;
+  width:100%;
+  margin-top:4px;
+  color:#ead9c2;
+  font-family:Arial,"Helvetica Neue",Helvetica,sans-serif!important;
+  font-size:5.15px;
+  font-weight:800;
+  line-height:1.15;
+  letter-spacing:.035em;
+  text-align:center;
+  white-space:nowrap;
+}
+
+/* Section/table headings are centered; all actual table data reads left. */
+.pdfPage.reportPage .pdfSection,
+.pdfPage.reportPage .transcriptResultHeading,
+.pdfPage.reportPage .transcriptAchievementsHeading{
+  text-align:center!important;
+}
+.pdfPage.reportPage table th{
+  text-align:center!important;
+}
+.pdfPage.reportPage table td{
+  text-align:left!important;
+}
+
+/* Semester-record card columns follow the same title/content convention. */
+.pdfPage.reportPage .pdfScoreLabel,
+.pdfPage.reportPage .pdfPartName,
+.pdfPage.reportPage .pdfOutcomeLabel{
+  text-align:center!important;
+}
+.pdfPage.reportPage .pdfScoreValue,
+.pdfPage.reportPage .pdfPartState,
+.pdfPage.reportPage .pdfOutcomeValue{
+  text-align:left!important;
+}
+
+
+/* =====================================================================
+   V151 — TRANSCRIPT SUPPLEMENTARY TYPOGRAPHY PARITY ONLY
+   The supplementary transcript page previously inherited the older V138
+   Georgia override on ACHIEVEMENTS / CONTRIBUTIONS. Force the complete
+   supplementary page back to the same document sans-serif stack as page 1.
+   Layout, sizing, spacing, pagination and data behavior are untouched.
+   ===================================================================== */
+.pdfPage.reportPage.transcriptPage.transcriptSupplementPage,
+.pdfPage.reportPage.transcriptPage.transcriptSupplementPage *{
+  font-family:Arial,"Helvetica Neue",Helvetica,"Noto Sans JP",sans-serif!important;
+  font-variant-numeric:lining-nums tabular-nums;
+  font-feature-settings:"lnum" 1,"tnum" 1;
+}
+
+/* Preserve the Japanese face used by the bilingual summary title. */
+.pdfPage.reportPage.transcriptPage.transcriptSupplementPage .transcriptSummaryBadgeJp,
+.pdfPage.reportPage.transcriptPage.transcriptSupplementPage .jp{
+  font-family:"Noto Sans JP",Arial,"Helvetica Neue",Helvetica,sans-serif!important;
+}
+
+/* =====================================================================
+   V152 — SEMESTER RECORD ALIGNMENT + STUDENT NAME TYPOGRAPHY ONLY
+   Scope is limited to generated Academic Transcript / Student Academic
+   Record pages. Website desktop/mobile, data, pagination and other document
+   families are untouched.
+   ===================================================================== */
+
+/* Student Latin name uses Cinzel in both Academic Transcript and Semester Record. */
+.pdfPage.reportPage .academicIdentityName{
+  font-family:"Cinzel",Georgia,"Times New Roman",serif!important;
+  font-variant-numeric:normal;
+  font-feature-settings:normal;
+}
+
+/* Page 2 transcript has a stronger supplementary font reset; keep the name Cinzel there too. */
+.pdfPage.reportPage.transcriptPage.transcriptSupplementPage .academicIdentityName{
+  font-family:"Cinzel",Georgia,"Times New Roman",serif!important;
+  font-variant-numeric:normal;
+  font-feature-settings:normal;
+}
+
+/*
+ * STUDENT ACADEMIC RECORD only:
+ * body values are centered again. Transcript keeps the V150 left alignment.
+ */
+.pdfPage.reportPage.academicRecordPage table td,
+.pdfPage.reportPage.academicRecordPage .pdfScoreValue,
+.pdfPage.reportPage.academicRecordPage .pdfPartState,
+.pdfPage.reportPage.academicRecordPage .pdfOutcomeValue{
+  text-align:center!important;
+}
+
+/* Semester Achievements is the deliberate exception: content remains left. */
+.pdfPage.reportPage.academicRecordPage .pdfSemesterAchievementsTable td{
+  text-align:left!important;
+}
+.pdfPage.reportPage.academicRecordPage .pdfSemesterAchievementsEmpty td{
+  text-align:left!important;
+}
+
+
+
+/* =====================================================================
+   V153 — TRANSCRIPT SUPPLEMENT FONT PARITY + CONTRIBUTION VISIBILITY FIX
+   Typography scope only: force ACHIEVEMENTS / CONTRIBUTIONS on every
+   transcript page to use the exact document sans-serif stack. This closes
+   the older V138 Georgia !important rule on page 1 as well as page 2.
+   ===================================================================== */
+.pdfPage.reportPage.transcriptPage.singlePageTranscript .transcriptAchievementsBlock,
+.pdfPage.reportPage.transcriptPage.singlePageTranscript .transcriptAchievementsHeading,
+.pdfPage.reportPage.transcriptPage.singlePageTranscript .transcriptAchievementsTable,
+.pdfPage.reportPage.transcriptPage.singlePageTranscript .transcriptAchievementsTable th,
+.pdfPage.reportPage.transcriptPage.singlePageTranscript .transcriptAchievementsTable td,
+.pdfPage.reportPage.transcriptPage.singlePageTranscript .transcriptContributionsTable,
+.pdfPage.reportPage.transcriptPage.singlePageTranscript .transcriptContributionsTable th,
+.pdfPage.reportPage.transcriptPage.singlePageTranscript .transcriptContributionsTable td{
+  font-family:Arial,"Helvetica Neue",Helvetica,"Noto Sans JP",sans-serif!important;
+  font-variant-numeric:lining-nums tabular-nums;
+  font-feature-settings:"lnum" 1,"tnum" 1;
+}
+
+/* =====================================================================
+   V154 — TRANSCRIPT NOTES + ADMIN GRADUATION RELEASE CONTROL
+   Scope is limited to the requested transcript note cleanup and the new
+   Admin graduated-status release/scheduling workspace. Existing academic,
+   SOA, desktop, mobile, and data layouts remain untouched.
+   ===================================================================== */
+
+/* Transcript Notes: keep label/formula visually separated and vertically tidy. */
+.pdfPage.reportPage.transcriptPage.singlePageTranscript
+.devotedStudentBlock .transcriptFormulaNote{
+  width:100%!important;
+  min-height:34px!important;
+  display:grid!important;
+  grid-template-columns:max-content minmax(0,1fr)!important;
+  align-items:center!important;
+  column-gap:6px!important;
+  row-gap:2px!important;
+  padding:8px 10px!important;
+  margin-top:9px!important;
+  text-align:left!important;
+  line-height:1.4!important;
+}
+.pdfPage.reportPage.transcriptPage.singlePageTranscript
+.devotedStudentBlock .transcriptFormulaLabel{
+  display:inline-block!important;
+  color:#8e1118!important;
+  font-weight:900!important;
+  white-space:nowrap!important;
+}
+.pdfPage.reportPage.transcriptPage.singlePageTranscript
+.devotedStudentBlock .transcriptFormulaText{
+  min-width:0!important;
+  color:#5f4d3e!important;
+  font-weight:700!important;
+  white-space:normal!important;
+  overflow-wrap:normal!important;
+  word-break:normal!important;
+}
+
+/* Admin workspace ordering: Graduation Release sits between publication and SOA. */
+#adminControlView .adminGraduationControl{
+  order:45!important;
+  flex:0 0 auto!important;
+}
+
+.adminGraduationControl{
+  margin:0 22px 16px;
+  overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--accent) 42%,transparent);
+  border-radius:18px;
+  background:
+    radial-gradient(circle at 100% 0%,color-mix(in srgb,var(--accent) 12%,transparent),transparent 42%),
+    radial-gradient(circle at 0 100%,color-mix(in srgb,var(--accent2) 9%,transparent),transparent 40%),
+    rgba(255,255,255,.018);
+  box-shadow:inset 0 0 30px rgba(0,0,0,.18);
+}
+.adminGraduationHead{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:20px;
+  padding:17px 17px 13px;
+  border-bottom:1px solid color-mix(in srgb,var(--border) 68%,transparent);
+}
+.adminGraduationCopy{min-width:0}
+.adminGraduationCopy>span{
+  color:var(--accent);
+  font-size:8px;
+  font-weight:900;
+  letter-spacing:.14em;
+}
+.adminGraduationCopy h3{
+  margin:5px 0 0;
+  color:var(--strong);
+  font-size:16px;
+  font-weight:900;
+}
+.adminGraduationCopy p{
+  max-width:570px;
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:9px;
+  line-height:1.45;
+}
+.adminGraduationTools{
+  width:260px;
+  flex:0 0 260px;
+  display:grid;
+  gap:6px;
+}
+.adminGraduationTools>label,
+.adminGraduationControlCell>label,
+.adminGraduationScheduleCell>label{
+  color:var(--muted);
+  font-size:7px;
+  font-weight:900;
+  letter-spacing:.095em;
+}
+.adminGraduationSearchRow{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:7px;
+}
+.adminGraduationSearchRow input,
+.adminGraduationControlCell select,
+.adminGraduationScheduleCell input{
+  width:100%;
+  min-width:0;
+  height:36px;
+  padding:0 10px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  outline:none;
+  color:var(--strong);
+  background:#09090c;
+  font-size:8px;
+  font-weight:800;
+}
+.adminGraduationSearchRow input:focus,
+.adminGraduationControlCell select:focus,
+.adminGraduationScheduleCell input:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 10%,transparent);
+}
+.adminGraduationSearchRow button{
+  height:36px;
+  padding:0 11px;
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:#111;
+  background:linear-gradient(135deg,var(--accent),var(--strong));
+  font-size:7px;
+  font-weight:900;
+  cursor:pointer;
+}
+.adminGraduationMeta{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin:10px 17px 0;
+  padding:8px 10px;
+  border:1px solid color-mix(in srgb,var(--border) 68%,transparent);
+  border-radius:10px;
+  color:var(--muted);
+  background:rgba(0,0,0,.25);
+  font-size:7px;
+  letter-spacing:.04em;
+}
+.adminGraduationMeta span strong,
+.adminGraduationMeta>strong{color:var(--accent);font-weight:900}
+
+.adminGraduationList{
+  max-height:430px;
+  overflow:auto;
+  display:grid;
+  align-content:start;
+  gap:8px;
+  margin:10px 17px 0;
+  padding:2px 5px 2px 0;
+  scrollbar-width:thin;
+  scrollbar-color:var(--accent) color-mix(in srgb,var(--panel2) 90%,#000);
+}
+.adminGraduationList::-webkit-scrollbar{width:8px}
+.adminGraduationList::-webkit-scrollbar-track{border-radius:999px;background:color-mix(in srgb,var(--panel2) 92%,#000)}
+.adminGraduationList::-webkit-scrollbar-thumb{
+  border:2px solid color-mix(in srgb,var(--panel2) 88%,#000);
+  border-radius:999px;
+  background:linear-gradient(180deg,var(--strong),var(--accent),var(--accent2));
+}
+.adminGraduationLoading{
+  padding:22px;
+  border:1px dashed var(--border);
+  border-radius:12px;
+  color:var(--muted);
+  text-align:center;
+  font-size:9px;
+}
+.adminGraduationLoading.is-error{color:#ffc0c7;border-color:rgba(207,78,91,.34)}
+.adminGraduationRow{
+  display:grid;
+  grid-template-columns:minmax(190px,1.2fr) 154px 108px 184px minmax(150px,.9fr);
+  gap:10px;
+  align-items:center;
+  min-height:82px;
+  padding:10px 11px;
+  border:1px solid var(--border);
+  border-radius:14px;
+  background:
+    radial-gradient(circle at 0 50%,color-mix(in srgb,var(--accent) 7%,transparent),transparent 36%),
+    rgba(255,255,255,.022);
+  transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;
+}
+.adminGraduationRow:hover{
+  border-color:color-mix(in srgb,var(--accent) 62%,transparent);
+  background:color-mix(in srgb,var(--accent) 6%,rgba(255,255,255,.025));
+}
+.adminGraduationRow.is-dirty{
+  box-shadow:inset 3px 0 0 var(--accent);
+}
+.adminGraduationRow.is-filtered-out{display:none!important}
+.adminGraduationIdentity{
+  min-width:0;
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.adminGraduationMonogram{
+  width:38px;
+  height:38px;
+  flex:0 0 38px;
+  display:grid;
+  place-items:center;
+  border:1px solid color-mix(in srgb,var(--accent) 44%,transparent);
+  border-radius:12px;
+  color:var(--strong);
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 13%,rgba(0,0,0,.5)),rgba(0,0,0,.58));
+  font-family:"Cinzel",Georgia,serif;
+  font-size:14px;
+  font-weight:900;
+  box-shadow:inset 0 0 16px color-mix(in srgb,var(--accent) 7%,transparent);
+}
+.adminGraduationIdentityCopy{min-width:0}
+.adminGraduationIdentityCopy strong{
+  display:block;
+  overflow:hidden;
+  color:var(--strong);
+  font-size:10px;
+  line-height:1.15;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.adminGraduationIdentityCopy span{
+  display:block;
+  margin-top:3px;
+  overflow:hidden;
+  color:var(--accent);
+  font-size:8px;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.adminGraduationIdentityCopy small{
+  display:block;
+  margin-top:4px;
+  color:var(--muted);
+  font-size:6.5px;
+  line-height:1.2;
+}
+.adminGraduationSourceBadges{
+  display:grid;
+  gap:5px;
+}
+.adminGraduationSourceBadges span{
+  min-height:25px;
+  display:grid;
+  place-items:center;
+  padding:4px 6px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  font-size:6.2px;
+  font-weight:900;
+  letter-spacing:.035em;
+  text-align:center;
+}
+.adminGraduationSourceBadges .is-ready{
+  color:#bff4d5;
+  border-color:rgba(94,196,139,.30);
+  background:rgba(38,122,76,.14);
+}
+.adminGraduationSourceBadges .is-missing{
+  color:#d1c6bc;
+  border-color:rgba(170,160,150,.20);
+  background:rgba(120,110,105,.08);
+}
+.adminGraduationControlCell,
+.adminGraduationScheduleCell{
+  min-width:0;
+  display:grid;
+  gap:5px;
+}
+.adminGraduationControlCell select:disabled,
+.adminGraduationScheduleCell input:disabled{
+  opacity:.46;
+  cursor:not-allowed;
+}
+.adminGraduationEffective{
+  min-width:0;
+  display:grid;
+  gap:6px;
+  align-content:center;
+}
+.adminGraduationEffectiveBadge{
+  min-height:28px;
+  display:grid;
+  place-items:center;
+  padding:5px 8px;
+  border:1px solid var(--border);
+  border-radius:999px;
+  font-size:6.8px;
+  font-weight:900;
+  letter-spacing:.065em;
+  text-align:center;
+}
+.adminGraduationEffectiveBadge.is-current{
+  color:#c9d6f7;
+  border-color:rgba(111,145,220,.30);
+  background:rgba(57,80,142,.14);
+}
+.adminGraduationEffectiveBadge.is-graduated{
+  color:#bff4d5;
+  border-color:rgba(94,196,139,.34);
+  background:rgba(38,122,76,.18);
+}
+.adminGraduationEffectiveBadge.is-scheduled{
+  color:#f4d7a8;
+  border-color:rgba(220,170,93,.34);
+  background:rgba(128,82,25,.16);
+}
+.adminGraduationEffectiveBadge.is-waiting{
+  color:#ffc0c7;
+  border-color:rgba(207,78,91,.32);
+  background:rgba(139,35,45,.15);
+}
+.adminGraduationEffectiveDetail{
+  color:var(--muted);
+  font-size:6.2px;
+  line-height:1.32;
+}
+.adminGraduationFooter{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  margin-top:11px;
+  padding:12px 17px 15px;
+  border-top:1px solid color-mix(in srgb,var(--border) 65%,transparent);
+  background:rgba(0,0,0,.15);
+}
+.adminGraduationMessage{
+  min-height:15px;
+  color:var(--muted);
+  font-size:7.5px;
+  line-height:1.35;
+}
+.adminGraduationMessage.is-success{color:#a8e8c4}
+.adminGraduationMessage.is-error{color:#ffc0c7}
+.adminGraduationSaveButton{
+  min-height:38px;
+  flex:0 0 auto;
+  padding:8px 13px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:11px;
+  color:#111;
+  background:linear-gradient(135deg,var(--accent),var(--strong) 60%,var(--accent2));
+  font-size:7.5px;
+  font-weight:900;
+  letter-spacing:.035em;
+  cursor:pointer;
+}
+.adminGraduationSaveButton:hover:not(:disabled),
+.adminGraduationSearchRow button:hover:not(:disabled){filter:brightness(1.08);transform:translateY(-1px)}
+
+@media (max-width:768px){
+  #adminControlView .adminGraduationControl{
+    margin:0 10px 12px!important;
+  }
+  .adminGraduationHead{
+    display:grid!important;
+    gap:10px!important;
+    padding:12px!important;
+  }
+  .adminGraduationCopy>span{font-size:6.2px!important}
+  .adminGraduationCopy h3{font-size:13px!important}
+  .adminGraduationCopy p{font-size:7.1px!important;line-height:1.4!important}
+  .adminGraduationTools{
+    width:100%!important;
+    flex-basis:auto!important;
+  }
+  .adminGraduationTools>label,
+  .adminGraduationControlCell>label,
+  .adminGraduationScheduleCell>label{font-size:5.7px!important}
+  .adminGraduationSearchRow input,
+  .adminGraduationControlCell select,
+  .adminGraduationScheduleCell input{
+    height:33px!important;
+    font-size:6.8px!important;
+    border-radius:9px!important;
+  }
+  .adminGraduationSearchRow button{height:33px!important;font-size:5.8px!important;border-radius:9px!important}
+  .adminGraduationMeta{
+    margin:8px 12px 0!important;
+    padding:7px 8px!important;
+    font-size:5.7px!important;
+  }
+  .adminGraduationList{
+    max-height:410px!important;
+    margin:8px 12px 0!important;
+    gap:7px!important;
+    padding-right:3px!important;
+  }
+  .adminGraduationRow{
+    grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;
+    gap:8px!important;
+    min-height:0!important;
+    padding:9px!important;
+    border-radius:12px!important;
+  }
+  .adminGraduationIdentity{grid-column:1/-1!important}
+  .adminGraduationMonogram{width:34px!important;height:34px!important;flex-basis:34px!important;border-radius:10px!important;font-size:12px!important}
+  .adminGraduationIdentityCopy strong{font-size:8.5px!important}
+  .adminGraduationIdentityCopy span{font-size:7px!important}
+  .adminGraduationIdentityCopy small{font-size:5.7px!important}
+  .adminGraduationSourceBadges{grid-column:1/-1!important;grid-template-columns:1fr 1fr!important;gap:6px!important}
+  .adminGraduationSourceBadges span{min-height:23px!important;font-size:5.3px!important}
+  .adminGraduationControlCell{grid-column:1!important}
+  .adminGraduationScheduleCell{grid-column:2!important}
+  .adminGraduationEffective{grid-column:1/-1!important;grid-template-columns:110px minmax(0,1fr)!important;align-items:center!important;gap:7px!important}
+  .adminGraduationEffectiveBadge{min-height:27px!important;font-size:5.7px!important}
+  .adminGraduationEffectiveDetail{font-size:5.7px!important;line-height:1.3!important}
+  .adminGraduationFooter{
+    display:grid!important;
+    gap:8px!important;
+    padding:10px 12px 12px!important;
+  }
+  .adminGraduationMessage{font-size:6px!important}
+  .adminGraduationSaveButton{width:100%!important;min-height:34px!important;font-size:6.2px!important;border-radius:9px!important}
+}
+
+@media (max-width:390px){
+  #adminControlView .adminGraduationControl{margin-left:8px!important;margin-right:8px!important}
+  .adminGraduationRow{grid-template-columns:1fr!important}
+  .adminGraduationControlCell,
+  .adminGraduationScheduleCell,
+  .adminGraduationEffective{grid-column:1!important}
+  .adminGraduationEffective{grid-template-columns:1fr!important}
+}
